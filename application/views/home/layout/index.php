@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
@@ -22,6 +22,9 @@
 		<link rel="stylesheet" href="<?php echo base_url('assets/vendor/bootstrap-fileupload/bootstrap-fileupload.min.css'); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/plugins/magnific-popup/magnific-popup.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/style.css?v=' . version_combine()); ?>">
+		<?php if ($this->router->fetch_class() === 'home' && in_array($this->router->fetch_method(), array('index', 'home'))) { ?>
+		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/landing-modern.css?v=' . version_combine()); ?>">
+		<?php } ?>
 		<script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js'); ?>"></script>
 		<!-- If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF -->
 		<script type="text/javascript">

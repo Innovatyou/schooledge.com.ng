@@ -23,6 +23,10 @@ class Mailer
                 $smtp_encryption = $getConfig->smtp_encryption;
                 $mail->isSMTP();
                 $mail->SMTPDebug = SMTP::DEBUG_OFF;
+                // Do not let an unavailable SMTP server hold AJAX requests for
+                // PHPMailer's 300-second default timeout. Registration emails
+                // are best-effort and must not leave the frontend processing.
+                $mail->Timeout = 10;
                 $mail->Host = trim($getConfig->smtp_host);
                 $mail->Port = trim($getConfig->smtp_port);
                 if (!empty($getConfig->smtp_encryption)) {

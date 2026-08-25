@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html class="no-js" lang="en">
 <head>
     <meta charset="utf-8" />
@@ -20,6 +20,7 @@
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/select2/css/select2.min.css');?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/sweetalert/sweetalert-custom.css');?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas_main.css?v=' . version_combine()); ?>" />
+    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-modern.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-modern.css')); ?>" />
 
     <!-- Google Analytics --> 
     <?php echo $getSettings->google_analytics; ?>
