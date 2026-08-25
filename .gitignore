@@ -1,0 +1,37 @@
+# Environment-specific credentials and licensing
+application/config/database.php
+application/config/purchase_key.php
+
+# Runtime data
+application/cache/*
+!application/cache/index.html
+application/logs/*
+!application/logs/index.html
+application/sessions/*
+!application/sessions/index.html
+
+# Backups and generated/private uploads
+uploads/db_backup/*
+!uploads/db_backup/index.html
+uploads/db_temp/*
+!uploads/db_temp/index.html
+uploads/qr_code/*
+uploads/u2fa_qrcode/*
+uploads/images/student/*
+!uploads/images/student/index.html
+uploads/images/staff/*
+!uploads/images/staff/index.html
+uploads/images/parent/*
+!uploads/images/parent/index.html
+uploads/attachments/*/*
+uploads/online_ad_documents/*
+!uploads/online_ad_documents/index.html
+
+# Local/editor files
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store
