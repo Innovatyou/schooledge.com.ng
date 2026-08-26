@@ -65,7 +65,9 @@ class School_settings extends Admin_Controller
 
                 $post = $this->input->post();
                 $post['brance_id'] = $branchID;
+                $oldBranch = $this->db->where('id', $branchID)->get('branch')->row_array();
                 $this->school_model->branchUpdate($post);
+                audit_log('update', 'branch', $branchID, $oldBranch, audit_redact($post));
                 $id = $branchID;
                 if (isset($_FILES["logo_file"]) && !empty($_FILES['logo_file']['name'])) {
                     $fileInfo = pathinfo($_FILES["logo_file"]["name"]);

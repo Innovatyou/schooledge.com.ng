@@ -1125,6 +1125,7 @@ class Fees extends Admin_Controller
 
             $feeDetails = $this->db->select('id,amount,fine')->where('id', $value)->get('fee_payment_history')->row();
             if (!empty($feeDetails)) {
+                $oldFeePayment = $this->db->where('id', $value)->get('fee_payment_history')->row_array();
 
                 $amount = ($feeDetails->amount + $feeDetails->fine);
 
@@ -1150,6 +1151,7 @@ class Fees extends Admin_Controller
                 }
                 $this->db->where('id', $value);
                 $this->db->delete('fee_payment_history');
+                audit_log('delete', 'fee_payment_history', $value, $oldFeePayment, null);
             }
         }
         echo json_encode($array);

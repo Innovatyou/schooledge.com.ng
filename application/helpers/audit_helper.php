@@ -38,6 +38,27 @@ function audit_log($action, $table, $recordId, $oldValues = null, $newValues = n
 }
 
 /**
+ * Masks likely-sensitive fields (API keys/secrets/tokens/passwords) before an
+ * array is handed to audit_log(), so credential values are never persisted
+ * into the audit_log table itself -- only the fact that they changed is.
+ */
+function audit_redact($data)
+{
+    if (!is_array($data)) {
+        return $data;
+    }
+    $redacted = array();
+    foreach ($data as $key => $value) {
+        if (preg_match('/key|secret|token|password|pin/i', $key)) {
+            $redacted[$key] = empty($value) ? $value : '***redacted***';
+        } else {
+            $redacted[$key] = $value;
+        }
+    }
+    return $redacted;
+}
+
+/**
  * HTML-escaped, pretty-printed rendering of an audit_log old_values/new_values
  * JSON column, safe to echo directly -- these columns can hold user-supplied
  * text (e.g. an expense description), so this must never be echoed raw.

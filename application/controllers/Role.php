@@ -39,6 +39,7 @@ class Role extends Admin_Controller
                 // update information in the database
                 $data = $this->input->post();
                 $this->role_model->save_roles($data);
+                audit_log('create', 'roles', $this->db->insert_id(), null, $data);
                 set_alert('success', translate('information_has_been_saved_successfully'));
                 redirect(base_url('role'));
             }
@@ -66,8 +67,10 @@ class Role extends Admin_Controller
                 $this->data['validation_error'] = true;
             } else {
                 // SAVE ROLE INFORMATION IN THE DATABASE
+                $oldRole = $this->role_model->get('roles', array('id' => $id), true);
                 $data = $this->input->post();
                 $this->role_model->save_roles($data);
+                audit_log('update', 'roles', $id, $oldRole, $data);
                 set_alert('success', translate('information_has_been_updated_successfully'));
                 redirect(base_url('role'));
             }
@@ -102,8 +105,12 @@ class Role extends Admin_Controller
     {
         $systemRole = array(1, 2, 3, 4, 5, 6, 7);
         if (!in_array($role_id, $systemRole)) {
+            $oldRole = $this->role_model->get('roles', array('id' => $role_id), true);
             $this->db->where('id', $role_id);
             $this->db->delete('roles');
+            if ($this->db->affected_rows() > 0) {
+                audit_log('delete', 'roles', $role_id, $oldRole, null);
+            }
         }
     }
 
@@ -117,6 +124,7 @@ class Role extends Admin_Controller
         if (isset($_POST['save'])) {
             $role_id = $this->input->post('role_id');
             $privileges = $this->input->post('privileges');
+            $oldPrivileges = $this->db->select('permission_id,is_add,is_edit,is_view,is_delete')->where('role_id', $role_id)->get('staff_privileges')->result_array();
             foreach ($privileges as $key => $value) {
                 $is_add = (isset($value['add']) ? 1 : 0);
                 $is_edit = (isset($value['edit']) ? 1 : 0);
@@ -137,6 +145,7 @@ class Role extends Admin_Controller
                     $this->db->insert('staff_privileges', $arrayData);
                 }
             }
+            audit_log('update', 'staff_privileges', $role_id, $oldPrivileges, $privileges);
             set_alert('success', translate('information_has_been_updated_successfully'));
             redirect(base_url('role/permission/' . $role_id));
         }

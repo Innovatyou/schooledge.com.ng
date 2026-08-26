@@ -125,7 +125,11 @@ class Employee extends Admin_Controller
                 //save all employee information in the database
                 $post = $this->input->post();
                 $empID = $this->employee_model->save($post);
-                
+
+                $auditPost = $post;
+                unset($auditPost['password'], $auditPost['retype_password']);
+                audit_log('create', 'staff', $empID, null, $auditPost);
+
                 // handle custom fields data
                 $class_slug = $this->router->fetch_class();
                 $customField = $this->input->post("custom_fields[$class_slug]");
@@ -204,6 +208,7 @@ class Employee extends Admin_Controller
             access_denied();
         }
         // check student restrictions
+        $oldStaff = $this->db->where('id', $id)->get('staff')->row_array();
         if (!is_superadmin_loggedin()) {
             $this->db->where('branch_id', get_loggedin_branch_id());
         }
@@ -212,6 +217,7 @@ class Employee extends Admin_Controller
             $this->db->where('user_id', $id);
             $this->db->where_not_in('role', array(1, 6, 7));
             $this->db->delete('login_credential');
+            audit_log('delete', 'staff', $id, $oldStaff, null);
         }
     }
 
