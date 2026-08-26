@@ -47,6 +47,15 @@
         .credential-card .btn:hover { background-color: #081828; color: #fff; }
         .demo-disclaimer { max-width: 700px; margin: 30px auto 0; text-align: center; font-size: 13px; color: #9aa1ac; }
         .demo-empty { max-width: 600px; margin: 0 auto; text-align: center; padding: 60px 20px; }
+        @media (max-width: 767px) {
+            .demo-hero { padding: 120px 0 50px; }
+            .demo-hero h1 { font-size: 28px; }
+            .demo-hero p { font-size: 15px; }
+            .demo-included { padding: 20px 0 10px; }
+            .demo-included ul { grid-template-columns: 1fr; gap: 12px; }
+            .demo-credentials { padding: 20px 0 60px; }
+            .credential-card { padding: 22px 18px; }
+        }
     </style>
 </head>
 <body>
