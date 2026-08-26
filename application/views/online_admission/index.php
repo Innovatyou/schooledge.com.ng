@@ -96,6 +96,8 @@
 									$status = '<span class="label label-success-custom text-xs">' . translate('approved') . '</span>';
 								else if ($row['status']  == 3)
 									$status = '<span class="label label-danger-custom text-xs">' . translate('declined') . '</span>';
+								else if ($row['status']  == 4)
+									$status = '<span class="label label-warning-custom text-xs">' . translate('pending_approval') . '</span>';
 								echo ($status);
 								?>
 							</td>
@@ -116,7 +118,7 @@
 								data-original-title="<?=translate('print')?>">
 									<i class="fas fa-print"></i>
 								</a>
-							<?php if ($row['status']  != 2 && get_permission('online_admission', 'is_add')) { ?>
+							<?php if ($row['status']  != 2 && $row['status'] != 4 && get_permission('online_admission', 'is_add')) { ?>
 								<?php if (!empty($row['doc'])) { ?>
 								<a href="<?php echo base_url('online_admission/download/' . $row['doc']);?>" class="btn btn-default btn-circle icon" data-toggle="tooltip"
 								data-original-title="<?=translate('download')?>">
@@ -125,7 +127,7 @@
 								<?php } ?>
 
 								<a href="<?php echo base_url('online_admission/approved/' . $row['id']);?>" class="btn btn-success btn-circle icon" data-toggle="tooltip"
-								data-original-title="<?=translate('approved')?>">
+								data-original-title="<?=translate('review')?>">
 									<i class="far fa-check-circle"></i>
 								</a>
 
