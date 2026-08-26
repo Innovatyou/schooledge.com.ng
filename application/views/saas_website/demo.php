@@ -12,7 +12,7 @@
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/LineIcons.2.0.css'); ?>" />
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/font-awesome/css/all.min.css');?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/animate.css'); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas_main.css?v=' . version_combine()); ?>" />
+    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas_main.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas_main.css')); ?>" />
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-modern.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-modern.css')); ?>" />
 
     <script type="text/javascript">
@@ -194,6 +194,6 @@
 
     <script src="<?php echo base_url('assets/frontend/js/bootstrap.min.js'); ?>"></script>
     <script src="<?php echo base_url('assets/frontend/js/wow.min.js'); ?>"></script>
-    <script src="<?php echo base_url('assets/frontend/js/saas_main.js?v=' . version_combine()); ?>"></script>
+    <script src="<?php echo base_url('assets/frontend/js/saas_main.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas_main.js')); ?>"></script>
 </body>
 </html>
