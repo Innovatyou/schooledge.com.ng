@@ -204,7 +204,30 @@ $("form.contact-frm").on('submit', function(e) {
 
     //===== mobile-menu-btn
     let navbarToggler = document.querySelector(".mobile-menu-btn");
-    navbarToggler.addEventListener('click', function () {
-        navbarToggler.classList.toggle("active");
-    });
+    let navbarCollapseEl = document.getElementById("navbarSupportedContent");
+    let mobileMenuClose = document.querySelector(".mobile-menu-close");
+
+    if (navbarToggler && navbarCollapseEl) {
+        navbarCollapseEl.addEventListener('shown.bs.collapse', function () {
+            navbarToggler.classList.add("active");
+        });
+        navbarCollapseEl.addEventListener('hidden.bs.collapse', function () {
+            navbarToggler.classList.remove("active");
+        });
+
+        var closeMobileMenu = function () {
+            bootstrap.Collapse.getOrCreateInstance(navbarCollapseEl, { toggle: false }).hide();
+        };
+
+        if (mobileMenuClose) {
+            mobileMenuClose.addEventListener('click', closeMobileMenu);
+        }
+
+        // close the menu when clicking/tapping outside of it
+        document.addEventListener('click', function (e) {
+            if (!navbarCollapseEl.classList.contains('show')) return;
+            if (navbarCollapseEl.contains(e.target) || navbarToggler.contains(e.target)) return;
+            closeMobileMenu();
+        });
+    }
 })();
