@@ -613,6 +613,37 @@ foreach ($collectFeesApproveGrants as $roleId => $grant) {
 }
 echo "719: seeded collect_fees_approve permission\n";
 
+// ---------------------------------------------------------------------
+// Migration 720: online_admission_staging table, online_admission_approve
+// permission (maker/checker for Admissions)
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'online_admission_staging')) {
+    $m->query("CREATE TABLE `online_admission_staging` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `online_admission_id` INT NOT NULL,
+        `branch_id` INT NOT NULL,
+        `staged_by` INT NOT NULL,
+        `staged_payload` LONGTEXT NOT NULL,
+        `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=pending checker,2=approved,3=rejected',
+        `reviewed_by` INT NULL,
+        `comments` VARCHAR(255) NULL,
+        `staged_at` DATETIME NULL,
+        `reviewed_at` DATETIME NULL,
+        `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        KEY `idx_admission` (`online_admission_id`),
+        KEY `idx_branch` (`branch_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    echo "720: created online_admission_staging table\n";
+}
+
+$onlineAdmissionApproveId = seedPermission($m, 2, 'Online Admission Approve', 'online_admission_approve', 1, 1, 0, 0);
+$onlineAdmissionApproveGrants = array(2 => [1, 1, 0, 0], 3 => [0, 0, 0, 0], 4 => [0, 0, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($onlineAdmissionApproveGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $onlineAdmissionApproveId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "720: seeded online_admission_approve permission\n";
+
 
 // ---------------------------------------------------------------------
 // Migration 717: default_subject/default_body on email_templates -- modern

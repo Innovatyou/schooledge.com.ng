@@ -103,6 +103,11 @@ class Online_admission extends Admin_Controller
         if (empty($stuDetails['id'])) {
             access_denied();
         }
+        if ($stuDetails['status'] == 4) {
+            // already staged and awaiting a checker's review -- don't let the maker
+            // (or anyone else) re-enter and edit out from under that review
+            access_denied();
+        }
 
         $branchID = $stuDetails['branch_id'];
         $getBranch = $this->db->where('id', $branchID)->get('branch')->row_array();
@@ -288,36 +293,46 @@ class Online_admission extends Admin_Controller
 
             if ($this->form_validation->run() == true) {
                 $post = $this->input->post();
-                //save all student information in the database file
-                $studentData = $this->online_admission_model->save($post, $getBranch);
-                $studentID = $studentData['student_id'];
-                //save student enroll information in the database file
-                $arrayEnroll = array(
-                    'student_id' => $studentID,
-                    'class_id' => $post['class_id'],
-                    'section_id' => (isset($post['section_id']) ? $post['section_id'] : 0),
-                    'roll' => (isset($post['roll']) ? $post['roll'] : 0),
-                    'session_id' => $post['year_id'],
+
+                // resolve photos now, while $_FILES is actually available -- the
+                // checker's later approval has no file upload of its own
+                $post['student_photo_filename'] = $this->online_admission_model->uploadImage('student', 'student_photo');
+                $post['guardian_photo_filename'] = $this->online_admission_model->uploadImage('parent', 'guardian_photo');
+
+                // credentials: auto-generated ones need nothing staged (the branch's
+                // known default is resolved fresh at approval time); a manually-typed
+                // password is captured now, reversibly encrypted so it is never left
+                // as plaintext at rest, since there is no second form submission at
+                // approval time to type it again.
+                if ($getBranch['stu_generate'] == 0) {
+                    $post['username'] = $this->input->post('username');
+                    $post['password_encrypted'] = $this->online_admission_model->encryptStagedSecret($this->input->post('password'));
+                }
+                unset($post['password'], $post['retype_password']);
+                if ($getBranch['grd_generate'] == 0 && $guardian == true) {
+                    $post['grd_username'] = $this->input->post('grd_username');
+                    $post['grd_password_encrypted'] = $this->online_admission_model->encryptStagedSecret($this->input->post('grd_password'));
+                }
+                unset($post['grd_password'], $post['grd_retype_password']);
+
+                $customField = $this->input->post("custom_fields[student]");
+                $post['custom_fields_student'] = !empty($customField) ? $customField : array();
+
+                $this->db->insert('online_admission_staging', array(
+                    'online_admission_id' => $stuDetails['id'],
                     'branch_id' => $branchID,
-                );
-                $this->db->insert('enroll', $arrayEnroll);
+                    'staged_by' => get_loggedin_user_id(),
+                    'staged_payload' => json_encode($post),
+                    'status' => 1,
+                    'staged_at' => date('Y-m-d H:i:s'),
+                ));
+                $stagingId = $this->db->insert_id();
 
                 $this->db->where('id', $stuDetails['id']);
-                $this->db->update('online_admission', array('status' => 2));
+                $this->db->update('online_admission', array('status' => 4));
 
-                // handle custom fields data
-                $class_slug = "student";
-                $customField = $this->input->post("custom_fields[$class_slug]");
-                if (!empty($customField)) {
-                    saveCustomFields($customField, $studentID);
-                }
-
-                // send student admission email
-                $this->email_model->studentAdmission($studentData);
-                //send account activate sms
-                $this->sms_model->send_sms($arrayEnroll, 1);
-
-                set_alert('success', translate('information_has_been_saved_successfully'));
+                audit_log('submit', 'online_admission_staging', $stagingId, null, array('online_admission_id' => $stuDetails['id'], 'first_name' => $post['first_name']));
+                set_alert('success', translate('admission_submitted_for_approval'));
                 $url = base_url('online_admission');
                 $array = array('status' => 'success', 'url' => $url);
             } else {
@@ -431,5 +446,120 @@ class Online_admission extends Admin_Controller
         $filepath = "./uploads/online_ad_documents/" . $id;
         $data = file_get_contents($filepath);
         force_download($id, $data);
+    }
+
+    // staged-admission approval queue (checker) -- also lists a maker's own
+    // pending/rejected staged reviews
+    public function admission_approvals()
+    {
+        if (!get_permission('online_admission_approve', 'is_view') && !get_permission('online_admission', 'is_add')) {
+            access_denied();
+        }
+        $this->data['title'] = translate('admission_approvals');
+        $this->data['sub_page'] = 'online_admission/admission_approvals';
+        $this->data['main_menu'] = 'admission';
+        $this->data['stagedlist'] = $this->online_admission_model->getStagingList();
+        $this->load->view('layout/index', $this->data);
+    }
+
+    // review modal: staged summary + live uniqueness re-check (approve/reject), or
+    // a read-only view for anyone else
+    public function getAdmissionApprovalDetails()
+    {
+        $id = $this->input->post('id');
+        $this->data['staging_id'] = $id;
+        $this->load->view('online_admission/admission_approval_modalView', $this->data);
+    }
+
+    // checker approves or rejects a staged admission. Approval is the point where
+    // the real student/parent/enroll/login rows actually get created and
+    // credentials emailed -- rejection creates nothing and emails nothing; the
+    // maker can review again from scratch via the existing approved() action,
+    // which already allows re-entry once status is back to declined (3), the same
+    // path a straight decline() already used.
+    public function admission_approval_save()
+    {
+        if ($_POST) {
+            if (!get_permission('online_admission_approve', 'is_add')) {
+                access_denied();
+            }
+            $id = $this->input->post('id');
+            $status = $this->input->post('status');
+            $comments = $this->input->post('comments');
+            $staging = $this->online_admission_model->getStagingList(array('oas.id' => $id), true);
+            if (empty($staging) || $staging['status'] != 1) {
+                access_denied();
+            }
+            if ($staging['staged_by'] == get_loggedin_user_id()) {
+                // self-approval is not allowed -- a different person must review
+                access_denied();
+            }
+
+            if ($status == 2) {
+                $branchID = $staging['branch_id'];
+                $payload = json_decode($staging['staged_payload'], true);
+
+                // check saas student add limit again -- time may have passed since staging
+                if ($this->app_lib->isExistingAddon('saas')) {
+                    if (!checkSaasLimit('student')) {
+                        set_alert('error', translate('update_your_package'));
+                        redirect(base_url('online_admission/admission_approvals'));
+                    }
+                }
+
+                $conflicts = $this->online_admission_model->checkStagedUniqueness($payload, $branchID);
+                if (!empty($conflicts)) {
+                    set_alert('error', implode(' ', $conflicts) . ' ' . translate('please_ask_the_submitter_to_review_and_resubmit'));
+                    redirect(base_url('online_admission/admission_approvals'));
+                }
+
+                $getBranch = $this->db->where('id', $branchID)->get('branch')->row_array();
+                $studentData = $this->online_admission_model->finalizeSave($payload, $getBranch);
+                $studentID = $studentData['student_id'];
+
+                $arrayEnroll = array(
+                    'student_id' => $studentID,
+                    'class_id' => $payload['class_id'],
+                    'section_id' => (isset($payload['section_id']) ? $payload['section_id'] : 0),
+                    'roll' => (isset($payload['roll']) ? $payload['roll'] : 0),
+                    'session_id' => $payload['year_id'],
+                    'branch_id' => $branchID,
+                );
+                $this->db->insert('enroll', $arrayEnroll);
+
+                $this->db->where('id', $staging['online_admission_id']);
+                $this->db->update('online_admission', array('status' => 2));
+
+                if (!empty($payload['custom_fields_student'])) {
+                    saveCustomFields($payload['custom_fields_student'], $studentID);
+                }
+
+                $this->email_model->studentAdmission($studentData);
+                $this->sms_model->send_sms($arrayEnroll, 1);
+
+                $this->db->where('id', $id);
+                $this->db->update('online_admission_staging', array(
+                    'status' => 2,
+                    'reviewed_by' => get_loggedin_user_id(),
+                    'comments' => $comments,
+                    'reviewed_at' => date('Y-m-d H:i:s'),
+                ));
+                audit_log('approve', 'online_admission_staging', $id, array('status' => 1), array('status' => 2, 'student_id' => $studentID));
+                set_alert('success', translate('admission_has_been_approved'));
+            } else {
+                $this->db->where('id', $id);
+                $this->db->update('online_admission_staging', array(
+                    'status' => 3,
+                    'reviewed_by' => get_loggedin_user_id(),
+                    'comments' => $comments,
+                    'reviewed_at' => date('Y-m-d H:i:s'),
+                ));
+                $this->db->where('id', $staging['online_admission_id']);
+                $this->db->update('online_admission', array('status' => 3));
+                audit_log('reject', 'online_admission_staging', $id, array('status' => 1), array('status' => 3, 'comments' => $comments));
+                set_alert('success', translate('admission_has_been_rejected'));
+            }
+            redirect(base_url('online_admission/admission_approvals'));
+        }
     }
 }

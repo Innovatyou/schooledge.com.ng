@@ -291,7 +291,8 @@
                     if (get_permission('student', 'is_add') ||
                         get_permission('multiple_import', 'is_add') ||
                         get_permission('online_admission', 'is_view') ||
-                        get_permission('student_category', 'is_view')) { 
+                        get_permission('online_admission_approve', 'is_view') ||
+                        get_permission('student_category', 'is_view')) {
                             ?>
                     <!-- admission -->
                     <li class="nav-parent <?php if ($main_menu == 'admission') echo 'nav-expanded nav-active';?>">
@@ -311,7 +312,13 @@
                                     <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('online_admission')?></span>
                                 </a>
                             </li>
-                        <?php } 
+                        <?php } if(get_permission('online_admission_approve', 'is_view') || get_permission('online_admission', 'is_add')){ ?>
+                            <li class="<?php if ($sub_page == 'online_admission/admission_approvals') echo 'nav-active';?>">
+                                <a href="<?=base_url('online_admission/admission_approvals')?>">
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('admission_approvals')?></span>
+                                </a>
+                            </li>
+                        <?php }
                         if (moduleIsEnabled('multi_class')) {
                             if(get_permission('multi_class', 'is_add')) { ?>
 
