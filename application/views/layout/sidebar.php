@@ -1383,6 +1383,7 @@
                         get_permission('voucher_head', 'is_view') ||
                         get_permission('deposit', 'is_view') ||
                         get_permission('expense', 'is_view') ||
+                        get_permission('expense_approve', 'is_view') ||
                         get_permission('all_transactions', 'is_view')) {
                         ?>
                     <!-- office accounting -->
@@ -1407,6 +1408,12 @@
                             <li class="<?php if ($sub_page == 'accounting/voucher_expense' || $sub_page == 'accounting/voucher_expense_edit') echo 'nav-active'; ?>">
                                 <a href="<?php echo base_url('accounting/voucher_expense'); ?>">
                                     <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('new_expense'); ?></span>
+                                </a>
+                            </li>
+                            <?php } if(get_permission('expense_approve', 'is_view') || get_permission('expense', 'is_add')){ ?>
+                            <li class="<?php if ($sub_page == 'accounting/expense_approvals') echo 'nav-active'; ?>">
+                                <a href="<?php echo base_url('accounting/expense_approvals'); ?>">
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('expense_approvals'); ?></span>
                                 </a>
                             </li>
                             <?php } if(get_permission('all_transactions', 'is_view')){ ?>
@@ -1724,6 +1731,7 @@
                     get_permission('cron_job', 'is_view') ||
                     get_permission('system_update', 'is_add') ||
                     get_permission('custom_field', 'is_view') ||
+                    get_permission('audit_log', 'is_view') ||
                     get_permission('backup', 'is_view')) {
                     ?>
                     <!-- setting -->
@@ -1802,6 +1810,12 @@
                             <li class="<?php if ($sub_page == 'user_login_log/index') echo 'nav-active';?>">
                                 <a href="<?=base_url('user_login_log/index')?>">
                                     <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('user_login_log')?></span>
+                                </a>
+                            </li>
+                            <?php } if(get_permission('audit_log', 'is_view')){ ?>
+                            <li class="<?php if ($sub_page == 'audit_log/index') echo 'nav-active';?>">
+                                <a href="<?=base_url('audit_log')?>">
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('audit_log')?></span>
                                 </a>
                             </li>
                             <?php } ?>

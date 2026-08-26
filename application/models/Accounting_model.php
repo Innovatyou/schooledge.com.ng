@@ -254,4 +254,100 @@ class Accounting_model extends MY_Model
             return true;
         }
     }
+
+    // stage a new expense request (maker) -- does NOT touch transactions/accounts
+    public function saveExpenseRequest($data, $requestId = '')
+    {
+        $branchID = $this->application_model->get_branch_id();
+        $arrayRequest = array(
+            'branch_id' => $branchID,
+            'account_id' => $data['account_id'],
+            'voucher_head_id' => $data['voucher_head_id'],
+            'ref_no' => $data['ref_no'],
+            'amount' => $data['amount'],
+            'date' => date("Y-m-d", strtotime($data['date'])),
+            'pay_via' => $data['pay_via'],
+            'description' => $data['description'],
+        );
+        if (!empty($requestId)) {
+            // resubmission of a previously rejected request
+            $arrayRequest['status'] = 1;
+            $arrayRequest['approved_by'] = null;
+            $arrayRequest['comments'] = null;
+            $arrayRequest['approve_date'] = null;
+            $this->db->where('id', $requestId);
+            $this->db->update('expense_requests', $arrayRequest);
+            return $requestId;
+        } else {
+            $arrayRequest['requested_by'] = get_loggedin_user_id();
+            $arrayRequest['status'] = 1;
+            $arrayRequest['submit_date'] = date('Y-m-d H:i:s');
+            $this->db->insert('expense_requests', $arrayRequest);
+            return $this->db->insert_id();
+        }
+    }
+
+    // list of expense requests (approval queue) for the current branch
+    public function getExpenseRequestList($where = array(), $single = false)
+    {
+        $this->db->select('er.*, a.name as ac_name, vh.name as v_head, pt.name as via_name');
+        $this->db->from('expense_requests as er');
+        $this->db->join('accounts as a', 'a.id = er.account_id', 'left');
+        $this->db->join('voucher_head as vh', 'vh.id = er.voucher_head_id', 'left');
+        $this->db->join('payment_types as pt', 'pt.id = er.pay_via', 'left');
+        if (!is_superadmin_loggedin()) {
+            $this->db->where('er.branch_id', get_loggedin_branch_id());
+        }
+        if (!empty($where)) {
+            $this->db->where($where);
+        }
+        if ($single == false) {
+            $this->db->order_by('er.id', 'DESC');
+            return $this->db->get()->result_array();
+        } else {
+            return $this->db->get()->row_array();
+        }
+    }
+
+    // checker approves a staged expense request: posts it via the existing saveVoucher() primitive
+    public function approveExpenseRequest($requestId, $comments = '')
+    {
+        $request = $this->db->where('id', $requestId)->get('expense_requests')->row_array();
+        $voucherData = array(
+            'account_id' => $request['account_id'],
+            'voucher_head_id' => $request['voucher_head_id'],
+            'voucher_type' => 'expense',
+            'ref_no' => $request['ref_no'],
+            'amount' => $request['amount'],
+            'date' => $request['date'],
+            'pay_via' => $request['pay_via'],
+            'description' => $request['description'],
+        );
+        $transactionId = $this->saveVoucher($voucherData);
+        if (!empty($request['attachments'])) {
+            $this->db->where('id', $transactionId);
+            $this->db->update('transactions', array('attachments' => $request['attachments']));
+        }
+        $this->db->where('id', $requestId);
+        $this->db->update('expense_requests', array(
+            'status' => 2,
+            'approved_by' => get_loggedin_user_id(),
+            'comments' => $comments,
+            'approve_date' => date('Y-m-d H:i:s'),
+            'transaction_id' => $transactionId,
+        ));
+        return $transactionId;
+    }
+
+    // checker rejects a staged expense request -- nothing is posted
+    public function rejectExpenseRequest($requestId, $comments = '')
+    {
+        $this->db->where('id', $requestId);
+        $this->db->update('expense_requests', array(
+            'status' => 3,
+            'approved_by' => get_loggedin_user_id(),
+            'comments' => $comments,
+            'approve_date' => date('Y-m-d H:i:s'),
+        ));
+    }
 }

@@ -462,6 +462,99 @@ EOT,
     echo "716: redesigned 4 saas_email_templates rows\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 718: audit_log + expense_requests tables, expense_approve
+// and audit_log permissions (maker/checker for Expenses, phase 1)
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'audit_log')) {
+    $m->query("CREATE TABLE `audit_log` (
+        `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        `actor_user_id` INT NULL,
+        `actor_role_id` INT NULL,
+        `branch_id` INT NULL,
+        `action` VARCHAR(30) NOT NULL,
+        `table_name` VARCHAR(100) NOT NULL,
+        `record_id` INT NULL,
+        `old_values` TEXT NULL,
+        `new_values` TEXT NULL,
+        `ip_address` VARCHAR(45) NULL,
+        `request_url` VARCHAR(255) NULL,
+        `created_at` DATETIME NOT NULL,
+        PRIMARY KEY (`id`),
+        KEY `idx_table_record` (`table_name`, `record_id`),
+        KEY `idx_actor` (`actor_user_id`),
+        KEY `idx_branch_created` (`branch_id`, `created_at`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    echo "718: created audit_log table\n";
+}
+
+if (!tableExists($m, 'expense_requests')) {
+    $m->query("CREATE TABLE `expense_requests` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `branch_id` INT NOT NULL,
+        `account_id` INT NOT NULL,
+        `voucher_head_id` INT NOT NULL,
+        `ref_no` VARCHAR(255) NULL,
+        `amount` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `date` DATE NOT NULL,
+        `pay_via` VARCHAR(20) NULL,
+        `description` TEXT NULL,
+        `attachments` VARCHAR(255) NULL,
+        `requested_by` INT NOT NULL,
+        `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=pending,2=approved,3=rejected',
+        `approved_by` INT NULL,
+        `comments` VARCHAR(255) NULL,
+        `submit_date` DATETIME NULL,
+        `approve_date` DATETIME NULL,
+        `transaction_id` INT NULL COMMENT 'transactions.id once approved/posted',
+        `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        KEY `idx_branch` (`branch_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    echo "718: created expense_requests table\n";
+}
+
+function seedPermission($m, $moduleId, $name, $prefix, $showView, $showAdd, $showEdit, $showDelete)
+{
+    $stmt = $m->prepare("SELECT id FROM permission WHERE prefix = ?");
+    $stmt->bind_param('s', $prefix);
+    $stmt->execute();
+    $row = $stmt->get_result()->fetch_assoc();
+    if ($row) {
+        return (int) $row['id'];
+    }
+    $stmt2 = $m->prepare("INSERT INTO permission (module_id, name, prefix, show_view, show_add, show_edit, show_delete) VALUES (?, ?, ?, ?, ?, ?, ?)");
+    $stmt2->bind_param('issiiii', $moduleId, $name, $prefix, $showView, $showAdd, $showEdit, $showDelete);
+    $stmt2->execute();
+    return $m->insert_id;
+}
+
+function seedStaffPrivilege($m, $roleId, $permissionId, $isView, $isAdd, $isEdit, $isDelete)
+{
+    $stmt = $m->prepare("SELECT id FROM staff_privileges WHERE role_id = ? AND permission_id = ?");
+    $stmt->bind_param('ii', $roleId, $permissionId);
+    $stmt->execute();
+    if ($stmt->get_result()->fetch_assoc()) {
+        return;
+    }
+    $stmt2 = $m->prepare("INSERT INTO staff_privileges (role_id, permission_id, is_view, is_add, is_edit, is_delete) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt2->bind_param('iiiiii', $roleId, $permissionId, $isView, $isAdd, $isEdit, $isDelete);
+    $stmt2->execute();
+}
+
+$expenseApproveId = seedPermission($m, 17, 'Expense Approve', 'expense_approve', 1, 1, 0, 0);
+$expenseApproveGrants = array(2 => [1, 1, 0, 0], 3 => [0, 0, 0, 0], 4 => [1, 1, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($expenseApproveGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $expenseApproveId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+
+$auditLogId = seedPermission($m, 18, 'Audit Log', 'audit_log', 1, 0, 0, 0);
+$auditLogGrants = array(2 => [1, 0, 0, 0], 3 => [0, 0, 0, 0], 4 => [1, 0, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($auditLogGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $auditLogId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "718: seeded expense_approve and audit_log permissions\n";
+
 
 // ---------------------------------------------------------------------
 // Migration 717: default_subject/default_body on email_templates -- modern

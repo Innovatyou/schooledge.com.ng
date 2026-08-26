@@ -369,17 +369,122 @@ if (is_superadmin_loggedin()){
             $this->form_validation->set_rules('date', translate('date'), 'trim|required|callback_get_valid_date');
             if ($this->form_validation->run() !== false) {
                 $post = $this->input->post();
-                //save data into table
-                $insert_id = $this->accounting_model->saveVoucher($post);
+                if ($type == 'expense') {
+                    // maker: stage the request for a second person's approval -- never
+                    // touches transactions/accounts directly
+                    $insert_id = $this->accounting_model->saveExpenseRequest($post);
+                    if (isset($_FILES["attachment_file"]) && !empty($_FILES['attachment_file']['name'])) {
+                        $ext = pathinfo($_FILES["attachment_file"]["name"], PATHINFO_EXTENSION);
+                        $file_name = 'req_' . $insert_id . '.' . $ext;
+                        move_uploaded_file($_FILES["attachment_file"]["tmp_name"], "./uploads/attachments/voucher/" . $file_name);
+                        $this->db->where('id', $insert_id);
+                        $this->db->update('expense_requests', array('attachments' => $file_name));
+                    }
+                    audit_log('submit', 'expense_requests', $insert_id, null, $post);
+                    set_alert('success', translate('expense_submitted_for_approval'));
+                } else {
+                    //save data into table
+                    $insert_id = $this->accounting_model->saveVoucher($post);
+                    if (isset($_FILES["attachment_file"]) && !empty($_FILES['attachment_file']['name'])) {
+                        $ext = pathinfo($_FILES["attachment_file"]["name"], PATHINFO_EXTENSION);
+                        $file_name = $insert_id . '.' . $ext;
+                        move_uploaded_file($_FILES["attachment_file"]["tmp_name"], "./uploads/attachments/voucher/" . $file_name);
+                        $this->db->where('id', $insert_id);
+                        $this->db->update('transactions', array('attachments' => $file_name));
+                    }
+                    set_alert('success', translate('information_has_been_saved_successfully'));
+                }
+                $array  = array('status' => 'success',  'error' => '');
+            } else {
+                $error = $this->form_validation->error_array();
+                $array = array('status' => 'fail', 'error' => $error);
+            }
+            echo json_encode($array);
+        }
+    }
+
+    // expense approval queue (checker) -- also lists a maker's own pending/rejected requests
+    public function expense_approvals()
+    {
+        if (!get_permission('expense_approve', 'is_view') && !get_permission('expense', 'is_add')) {
+            access_denied();
+        }
+        $this->data['title'] = translate('expense_approvals');
+        $this->data['sub_page'] = 'accounting/expense_approvals';
+        $this->data['main_menu'] = 'accounting';
+        $this->data['requestlist'] = $this->accounting_model->getExpenseRequestList();
+        $this->load->view('layout/index', $this->data);
+    }
+
+    // approve/reject modal contents (or resubmit form, for the maker's own rejected request)
+    public function getExpenseApprovalDetails()
+    {
+        $id = $this->input->post('id');
+        $this->data['request_id'] = $id;
+        $this->data['branch_id'] = $this->application_model->get_branch_id();
+        $this->load->view('accounting/expense_approval_modalView', $this->data);
+    }
+
+    // checker approves or rejects a staged expense request
+    public function expense_approval_save()
+    {
+        if ($_POST) {
+            if (!get_permission('expense_approve', 'is_add')) {
+                access_denied();
+            }
+            $id = $this->input->post('id');
+            $status = $this->input->post('status');
+            $comments = $this->input->post('comments');
+            $request = $this->accounting_model->getExpenseRequestList(array('er.id' => $id), true);
+            if (empty($request) || $request['status'] != 1) {
+                access_denied();
+            }
+            if ($request['requested_by'] == get_loggedin_user_id()) {
+                // self-approval is not allowed -- a different person must review
+                access_denied();
+            }
+            if ($status == 2) {
+                $transactionId = $this->accounting_model->approveExpenseRequest($id, $comments);
+                audit_log('approve', 'expense_requests', $id, $request, array('status' => 2, 'transaction_id' => $transactionId, 'comments' => $comments));
+                set_alert('success', translate('expense_has_been_approved'));
+            } else {
+                $this->accounting_model->rejectExpenseRequest($id, $comments);
+                audit_log('reject', 'expense_requests', $id, $request, array('status' => 3, 'comments' => $comments));
+                set_alert('success', translate('expense_has_been_rejected'));
+            }
+            redirect(base_url('accounting/expense_approvals'));
+        }
+    }
+
+    // maker edits and resubmits a request the checker rejected
+    public function expense_resubmit()
+    {
+        if ($_POST) {
+            if (!get_permission('expense', 'is_add')) {
+                ajax_access_denied();
+            }
+            $id = $this->input->post('request_id');
+            $existing = $this->accounting_model->getExpenseRequestList(array('er.id' => $id), true);
+            if (empty($existing) || $existing['status'] != 3 || $existing['requested_by'] != get_loggedin_user_id()) {
+                ajax_access_denied();
+            }
+            $this->form_validation->set_rules('account_id', translate('account'), 'trim|required');
+            $this->form_validation->set_rules('voucher_head_id', translate('voucher_head'), 'trim|required');
+            $this->form_validation->set_rules('amount', translate('amount'), 'trim|required|numeric');
+            $this->form_validation->set_rules('date', translate('date'), 'trim|required|callback_get_valid_date');
+            if ($this->form_validation->run() !== false) {
+                $post = $this->input->post();
+                $this->accounting_model->saveExpenseRequest($post, $id);
                 if (isset($_FILES["attachment_file"]) && !empty($_FILES['attachment_file']['name'])) {
                     $ext = pathinfo($_FILES["attachment_file"]["name"], PATHINFO_EXTENSION);
-                    $file_name = $insert_id . '.' . $ext;
+                    $file_name = 'req_' . $id . '.' . $ext;
                     move_uploaded_file($_FILES["attachment_file"]["tmp_name"], "./uploads/attachments/voucher/" . $file_name);
-                    $this->db->where('id', $insert_id);
-                    $this->db->update('transactions', array('attachments' => $file_name));
+                    $this->db->where('id', $id);
+                    $this->db->update('expense_requests', array('attachments' => $file_name));
                 }
-                set_alert('success', translate('information_has_been_saved_successfully'));
-                $array  = array('status' => 'success',  'error' => '');
+                audit_log('resubmit', 'expense_requests', $id, $existing, $post);
+                set_alert('success', translate('expense_submitted_for_approval'));
+                $array = array('status' => 'success', 'url' => base_url('accounting/expense_approvals'));
             } else {
                 $error = $this->form_validation->error_array();
                 $array = array('status' => 'fail', 'error' => $error);
@@ -715,6 +820,24 @@ if (is_superadmin_loggedin()){
                     $this->db->where('branch_id', get_loggedin_branch_id());
                 }
                 $file_name = $this->db->select('attachments')->where(['id' => $encrypt_name, 'type' => 'expense'])->get('transactions')->row()->attachments;
+                if (!empty($file_name)) {
+                    force_download($file_name, file_get_contents('uploads/attachments/voucher/' . $file_name));
+                }
+            }
+        }
+    }
+
+    // attachment for a not-yet-approved expense request (lives in expense_requests, not transactions)
+    public function expense_request_download()
+    {
+        if (get_permission('expense_approve', 'is_view') || get_permission('expense', 'is_add')) {
+            $this->load->helper('download');
+            $id = html_escape(urldecode($this->input->get('id')));
+            if (!empty($id)) {
+                if (!is_superadmin_loggedin()) {
+                    $this->db->where('branch_id', get_loggedin_branch_id());
+                }
+                $file_name = $this->db->select('attachments')->where(['id' => $id])->get('expense_requests')->row()->attachments;
                 if (!empty($file_name)) {
                     force_download($file_name, file_get_contents('uploads/attachments/voucher/' . $file_name));
                 }
