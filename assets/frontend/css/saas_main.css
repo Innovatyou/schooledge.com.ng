@@ -1039,7 +1039,7 @@ ol {
 }
 
 .mobile-menu-close {
-    display: none;
+    display: none !important;
 }
 
 .navbar-nav .nav-item {
