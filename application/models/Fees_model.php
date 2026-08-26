@@ -881,4 +881,169 @@ class Fees_model extends MY_Model
         $this->db->order_by('h.id', 'asc');
         return $this->db->get()->result_array();
     }
+
+    // stage a fee collection (maker) -- does NOT touch fee_payment_history/transactions.
+    // $items: array of ['allocation_id'=>, 'type_id'=>, 'transport_fee_details_id'=>, 'amount'=>, 'discount'=>, 'fine'=>]
+    // amount/discount here use the same net-of-discount convention as fee_payment_history.amount.
+    public function saveFeeCollectionRequest($header, $items, $requestId = '')
+    {
+        $branchID = $this->application_model->get_branch_id();
+        $totalAmount = 0;
+        $totalDiscount = 0;
+        $totalFine = 0;
+        foreach ($items as $item) {
+            $totalAmount += $item['amount'];
+            $totalDiscount += $item['discount'];
+            $totalFine += $item['fine'];
+        }
+        $headerData = array(
+            'branch_id' => $branchID,
+            'student_enroll_id' => $header['student_enroll_id'],
+            'date' => date("Y-m-d", strtotime($header['date'])),
+            'pay_via' => $header['pay_via'],
+            'account_id' => !empty($header['account_id']) ? $header['account_id'] : null,
+            'remarks' => $header['remarks'],
+            'guardian_sms' => !empty($header['guardian_sms']) ? 1 : 0,
+            'total_amount' => $totalAmount,
+            'total_discount' => $totalDiscount,
+            'total_fine' => $totalFine,
+        );
+        if (!empty($requestId)) {
+            $headerData['status'] = 1;
+            $headerData['approved_by'] = null;
+            $headerData['comments'] = null;
+            $headerData['approve_date'] = null;
+            $this->db->where('id', $requestId);
+            $this->db->update('fee_collection_requests', $headerData);
+            $this->db->where('request_id', $requestId);
+            $this->db->delete('fee_collection_request_items');
+        } else {
+            $headerData['collected_by'] = get_loggedin_user_id();
+            $headerData['status'] = 1;
+            $headerData['submit_date'] = date('Y-m-d H:i:s');
+            $this->db->insert('fee_collection_requests', $headerData);
+            $requestId = $this->db->insert_id();
+        }
+        foreach ($items as $item) {
+            // each item carries its own effective date/pay_via/account_id/remarks
+            // (selectedFeesPay allows these to differ per row); falls back to the
+            // header's values when the item doesn't specify its own.
+            $this->db->insert('fee_collection_request_items', array(
+                'request_id' => $requestId,
+                'allocation_id' => isset($item['allocation_id']) ? $item['allocation_id'] : null,
+                'type_id' => isset($item['type_id']) ? $item['type_id'] : null,
+                'transport_fee_details_id' => isset($item['transport_fee_details_id']) ? $item['transport_fee_details_id'] : null,
+                'amount' => $item['amount'],
+                'discount' => $item['discount'],
+                'fine' => $item['fine'],
+                'date' => date("Y-m-d", strtotime(!empty($item['date']) ? $item['date'] : $header['date'])),
+                'pay_via' => !empty($item['pay_via']) ? $item['pay_via'] : $header['pay_via'],
+                'account_id' => !empty($item['account_id']) ? $item['account_id'] : (!empty($header['account_id']) ? $header['account_id'] : null),
+                'remarks' => isset($item['remarks']) && $item['remarks'] !== '' ? $item['remarks'] : $header['remarks'],
+            ));
+        }
+        return $requestId;
+    }
+
+    // approval queue / list. $where keys are prefixed 'fcr.' where ambiguous.
+    public function getFeeCollectionRequestList($where = array(), $single = false)
+    {
+        $this->db->select('fcr.*, CONCAT_WS(" ", student.first_name, student.last_name) as fullname, student.register_no, class.name as class_name, section.name as section_name, pt.name as via_name, a.name as ac_name');
+        $this->db->from('fee_collection_requests as fcr');
+        $this->db->join('enroll', 'enroll.id = fcr.student_enroll_id', 'left');
+        $this->db->join('student', 'student.id = enroll.student_id', 'left');
+        $this->db->join('class', 'class.id = enroll.class_id', 'left');
+        $this->db->join('section', 'section.id = enroll.section_id', 'left');
+        $this->db->join('payment_types as pt', 'pt.id = fcr.pay_via', 'left');
+        $this->db->join('accounts as a', 'a.id = fcr.account_id', 'left');
+        if (!is_superadmin_loggedin()) {
+            $this->db->where('fcr.branch_id', get_loggedin_branch_id());
+        }
+        if (!empty($where)) {
+            $this->db->where($where);
+        }
+        if ($single == false) {
+            $this->db->order_by('fcr.id', 'DESC');
+            return $this->db->get()->result_array();
+        } else {
+            return $this->db->get()->row_array();
+        }
+    }
+
+    public function getFeeCollectionRequestItems($requestId)
+    {
+        $this->db->select('fcri.*, ft.name as fee_type_name');
+        $this->db->from('fee_collection_request_items as fcri');
+        $this->db->join('fees_type as ft', 'ft.id = fcri.type_id', 'left');
+        $this->db->where('fcri.request_id', $requestId);
+        $this->db->order_by('fcri.id', 'asc');
+        return $this->db->get()->result_array();
+    }
+
+    // checker approves a staged fee collection: materializes every item into
+    // fee_payment_history + a linked ledger transaction, exactly as the direct
+    // (non-staged) collection flows already do -- then, only now, the deferred
+    // guardian SMS.
+    public function approveFeeCollectionRequest($requestId, $comments = '')
+    {
+        $request = $this->db->where('id', $requestId)->get('fee_collection_requests')->row_array();
+        $items = $this->getFeeCollectionRequestItems($requestId);
+        $paymentIds = array();
+        foreach ($items as $item) {
+            $arrayFees = array(
+                'allocation_id' => $item['allocation_id'],
+                'type_id' => $item['type_id'],
+                'transport_fee_details_id' => $item['transport_fee_details_id'],
+                'collect_by' => $request['collected_by'],
+                'amount' => $item['amount'],
+                'discount' => $item['discount'],
+                'fine' => $item['fine'],
+                'pay_via' => $item['pay_via'],
+                'remarks' => $item['remarks'],
+                'date' => $item['date'],
+            );
+            $this->db->insert('fee_payment_history', $arrayFees);
+            $paymentHistoryID = $this->db->insert_id();
+            $paymentIds[] = $paymentHistoryID;
+
+            if (!empty($item['account_id'])) {
+                $arrayTransaction = array(
+                    'account_id' => $item['account_id'],
+                    'amount' => ($item['amount'] + $item['fine']),
+                    'date' => $item['date'],
+                );
+                $this->saveTransaction($arrayTransaction, $paymentHistoryID);
+            }
+        }
+
+        if (!empty($request['guardian_sms'])) {
+            $arrayData = array(
+                'student_id' => $request['student_enroll_id'],
+                'amount' => ($request['total_amount'] + $request['total_fine']),
+                'paid_date' => _d($request['date']),
+            );
+            $this->sms_model->send_sms($arrayData, 2);
+        }
+
+        $this->db->where('id', $requestId);
+        $this->db->update('fee_collection_requests', array(
+            'status' => 2,
+            'approved_by' => get_loggedin_user_id(),
+            'comments' => $comments,
+            'approve_date' => date('Y-m-d H:i:s'),
+        ));
+        return $paymentIds;
+    }
+
+    // checker rejects a staged fee collection -- nothing is posted, no SMS sent.
+    public function rejectFeeCollectionRequest($requestId, $comments = '')
+    {
+        $this->db->where('id', $requestId);
+        $this->db->update('fee_collection_requests', array(
+            'status' => 3,
+            'approved_by' => get_loggedin_user_id(),
+            'comments' => $comments,
+            'approve_date' => date('Y-m-d H:i:s'),
+        ));
+    }
 }

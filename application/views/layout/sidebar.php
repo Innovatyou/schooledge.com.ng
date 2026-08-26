@@ -1312,6 +1312,7 @@
                         get_permission('fees_allocation', 'is_view') ||
                         get_permission('invoice', 'is_view') ||
                         get_permission('due_invoice', 'is_view') ||
+                        get_permission('collect_fees_approve', 'is_view') ||
                         get_permission('offline_payments', 'is_view') ||
                         get_permission('offline_payments_type', 'is_view') ||
                         get_permission('fees_reminder', 'is_view')) {
@@ -1368,6 +1369,10 @@
                             <?php } if(get_permission('due_invoice', 'is_view')) { ?>
                             <li class="<?php if ($sub_page == 'fees/due_invoice') echo 'nav-active';?>">
                                 <a href="<?=base_url('fees/due_invoice')?>"><span><i class="fas fa-caret-right"></i><?=translate('due_fees_invoice')?></span></a>
+                            </li>
+                            <?php } if(get_permission('collect_fees_approve', 'is_view') || get_permission('collect_fees', 'is_add')) { ?>
+                            <li class="<?php if ($sub_page == 'fees/collection_approvals') echo 'nav-active';?>">
+                                <a href="<?=base_url('fees/collection_approvals')?>"><span><i class="fas fa-caret-right"></i><?=translate('fee_collection_approvals')?></span></a>
                             </li>
                             <?php } if(get_permission('fees_reminder', 'is_view')) { ?>
                             <li class="<?php if ($sub_page == 'fees/reminder') echo 'nav-active';?>">

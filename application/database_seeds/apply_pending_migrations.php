@@ -555,6 +555,64 @@ foreach ($auditLogGrants as $roleId => $grant) {
 }
 echo "718: seeded expense_approve and audit_log permissions\n";
 
+// ---------------------------------------------------------------------
+// Migration 719: fee_collection_requests + fee_collection_request_items
+// tables, collect_fees_approve permission (maker/checker for Fee Collection)
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'fee_collection_requests')) {
+    $m->query("CREATE TABLE `fee_collection_requests` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `branch_id` INT NOT NULL,
+        `student_enroll_id` INT NOT NULL,
+        `collected_by` INT NOT NULL,
+        `date` DATE NOT NULL,
+        `pay_via` VARCHAR(20) NULL,
+        `account_id` INT NULL,
+        `remarks` TEXT NULL,
+        `guardian_sms` TINYINT(1) NOT NULL DEFAULT 0,
+        `total_amount` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `total_discount` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `total_fine` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `status` TINYINT(1) NOT NULL DEFAULT 1 COMMENT '1=pending,2=approved,3=rejected',
+        `approved_by` INT NULL,
+        `comments` VARCHAR(255) NULL,
+        `submit_date` DATETIME NULL,
+        `approve_date` DATETIME NULL,
+        `created_at` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (`id`),
+        KEY `idx_branch` (`branch_id`),
+        KEY `idx_enroll` (`student_enroll_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    echo "719: created fee_collection_requests table\n";
+}
+
+if (!tableExists($m, 'fee_collection_request_items')) {
+    $m->query("CREATE TABLE `fee_collection_request_items` (
+        `id` INT NOT NULL AUTO_INCREMENT,
+        `request_id` INT NOT NULL,
+        `allocation_id` INT NULL,
+        `type_id` INT NULL,
+        `transport_fee_details_id` INT NULL,
+        `amount` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `discount` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `fine` DECIMAL(18,2) NOT NULL DEFAULT 0.00,
+        `date` DATE NULL,
+        `pay_via` VARCHAR(20) NULL,
+        `account_id` INT NULL,
+        `remarks` TEXT NULL,
+        PRIMARY KEY (`id`),
+        KEY `idx_request` (`request_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8");
+    echo "719: created fee_collection_request_items table\n";
+}
+
+$collectFeesApproveId = seedPermission($m, 16, 'Collect Fees Approve', 'collect_fees_approve', 1, 1, 0, 0);
+$collectFeesApproveGrants = array(2 => [1, 1, 0, 0], 3 => [0, 0, 0, 0], 4 => [1, 1, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($collectFeesApproveGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $collectFeesApproveId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "719: seeded collect_fees_approve permission\n";
+
 
 // ---------------------------------------------------------------------
 // Migration 717: default_subject/default_body on email_templates -- modern
