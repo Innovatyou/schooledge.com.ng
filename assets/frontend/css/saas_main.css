@@ -345,6 +345,17 @@ ol {
     background-color: #081828;
 }
 
+@media (max-width: 767px) {
+    .scroll-top {
+        width: 36px;
+        height: 36px;
+        line-height: 36px;
+        font-size: 12px;
+        bottom: 15px;
+        right: 15px;
+    }
+}
+
 
 /* Overlay */
 
@@ -604,7 +615,7 @@ ol {
         padding: 18px 0 !important;
     }
     .header .mobile-menu-btn .toggler-icon {
-        background-color: #fff;
+        background-color: #222;
     }
     .header .button {
         margin: 0;
@@ -702,7 +713,7 @@ ol {
         padding: 18px 0 !important;
     }
     .header .mobile-menu-btn .toggler-icon {
-        background-color: #fff;
+        background-color: #222;
     }
     .header .navbar-collapse {
         position: absolute;
