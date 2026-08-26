@@ -771,46 +771,30 @@ class Fees extends Admin_Controller
             $discountAmount = $this->input->post('discount_amount');
             $date = $this->input->post('date');
             $payVia = $this->input->post('pay_via');
-            $arrayFees = array(
+            $item = array(
                 'allocation_id' => $feesType[0],
                 'type_id' => $feesType[1],
-                'collect_by' => get_loggedin_user_id(),
                 'amount' => ($amount - $discountAmount),
                 'discount' => $discountAmount,
                 'fine' => $fineAmount,
-                'pay_via' => $payVia,
-                'remarks' => $this->input->post('remarks'),
-                'date' => $date,
             );
             // transport fees data processing
             if ($feesType[0] == 'transport') {
-                $arrayFees['allocation_id'] = NULL;
-                $arrayFees['type_id'] = NULL;
-                $arrayFees['transport_fee_details_id'] = $feesType[1];
+                $item['allocation_id'] = NULL;
+                $item['type_id'] = NULL;
+                $item['transport_fee_details_id'] = $feesType[1];
             }
-            $this->db->insert('fee_payment_history', $arrayFees);
-            $payment_historyID = $this->db->insert_id();
-
-            // transaction voucher save function
-            if (isset($_POST['account_id'])) {
-                $arrayTransaction = array(
-                    'account_id' => $this->input->post('account_id'),
-                    'amount' => ($amount + $fineAmount) - $discountAmount,
-                    'date' => $date,
-                );
-                $this->fees_model->saveTransaction($arrayTransaction, $payment_historyID);
-            }
-
-            // send payment confirmation sms
-            if (isset($_POST['guardian_sms'])) {
-                $arrayData = array(
-                    'student_id' => $this->input->post('student_id'),
-                    'amount' => ($amount + $fineAmount) - $discountAmount,
-                    'paid_date' => _d($date),
-                );
-                $this->sms_model->send_sms($arrayData, 2);
-            }
-            set_alert('success', translate('information_has_been_saved_successfully'));
+            $header = array(
+                'student_enroll_id' => $this->input->post('student_id'),
+                'date' => $date,
+                'pay_via' => $payVia,
+                'account_id' => $this->input->post('account_id'),
+                'remarks' => $this->input->post('remarks'),
+                'guardian_sms' => isset($_POST['guardian_sms']) ? 1 : 0,
+            );
+            $requestId = $this->fees_model->saveFeeCollectionRequest($header, array($item));
+            audit_log('submit', 'fee_collection_requests', $requestId, null, $header + $item);
+            set_alert('success', translate('fee_collection_submitted_for_approval'));
             $array = array('status' => 'success');
         } else {
             $error = $this->form_validation->error_array();
@@ -1187,28 +1171,20 @@ class Fees extends Admin_Controller
                 ajax_access_denied();
 
             $allocations = $this->fees_model->getInvoiceDetails($invoiceID);
-            $totalBalance = 0;
-            $totalFine = 0;
+            $items = array();
 
             foreach ($allocations as $row) {
                 $fine = $this->fees_model->feeFineCalculation($row['allocation_id'], $row['fee_type_id']);
                 $b = $this->fees_model->getBalance($row['allocation_id'], $row['fee_type_id']);
                 $fine = abs($fine - $b['fine']);
                 if ($b['balance'] != 0) {
-                    $totalBalance += $b['balance'];
-                    $totalFine += $fine;
-                    $arrayFees = array(
+                    $items[] = array(
                         'allocation_id' => $row['allocation_id'],
                         'type_id' => $row['fee_type_id'],
-                        'collect_by' => get_loggedin_user_id(),
                         'amount' => $b['balance'],
                         'discount' => 0,
                         'fine' => $fine,
-                        'pay_via' => $payVia,
-                        'remarks' => $this->input->post('remarks'),
-                        'date' => $date,
                     );
-                    $this->db->insert('fee_payment_history', $arrayFees);
                 }
             }
 
@@ -1217,49 +1193,38 @@ class Fees extends Admin_Controller
                 foreach ($transport_fees as $key => $value) {
                     $fine = $this->fees_model->transportFeeFineCalculation($value->id);
                     $b = $this->fees_model->getTransportBalance($value->id);
-                    $balance = $b['balance'];
                     $fine = abs($fine - $b['fine']);
-                
+
                     if ($b['balance'] != 0) {
-                        $totalBalance += $b['balance'];
-                        $totalFine += $fine;
-                        $arrayFees = array(
+                        $items[] = array(
                             'allocation_id' => NULL,
                             'type_id' => NULL,
                             'transport_fee_details_id' => $value->id,
-                            'collect_by' => get_loggedin_user_id(),
                             'amount' => $b['balance'],
                             'discount' => 0,
                             'fine' => $fine,
-                            'pay_via' => $payVia,
-                            'remarks' => $this->input->post('remarks'),
-                            'date' => $date,
                         );
-                        $this->db->insert('fee_payment_history', $arrayFees);
                     }
                 }
             }
 
-            // transaction voucher save function
-            if (isset($_POST['account_id'])) {
-                $arrayTransaction = array(
-                    'account_id' => $this->input->post('account_id'),
-                    'amount' => ($totalBalance + $totalFine),
-                    'date' => $date,
-                );
-                $this->fees_model->saveTransaction($arrayTransaction);
+            if (empty($items)) {
+                $array = array('status' => 'fail', 'url' => '', 'error' => array('amount' => translate('nothing_due')));
+                echo json_encode($array);
+                exit();
             }
 
-            // send payment confirmation sms
-            if (isset($_POST['guardian_sms'])) {
-                $arrayData = array(
-                    'student_id' => $this->input->post('student_id'),
-                    'amount' => ($totalBalance + $totalFine),
-                    'paid_date' => $date,
-                );
-                $this->sms_model->send_sms($arrayData, 2);
-            }
-            set_alert('success', translate('information_has_been_saved_successfully'));
+            $header = array(
+                'student_enroll_id' => $this->input->post('student_id'),
+                'date' => $date,
+                'pay_via' => $payVia,
+                'account_id' => $this->input->post('account_id'),
+                'remarks' => $this->input->post('remarks'),
+                'guardian_sms' => isset($_POST['guardian_sms']) ? 1 : 0,
+            );
+            $requestId = $this->fees_model->saveFeeCollectionRequest($header, $items);
+            audit_log('submit', 'fee_collection_requests', $requestId, null, $header + array('item_count' => count($items)));
+            set_alert('success', translate('fee_collection_submitted_for_approval'));
             $array = array('status' => 'success');
         } else {
             $error = $this->form_validation->error_array();
@@ -1387,49 +1352,42 @@ class Fees extends Admin_Controller
 
         if ($this->form_validation->run() !== false) {
             $studentID = $this->input->post('student_id');
+            $stagedItems = array();
             foreach ($items as $key => $value) {
                 $amount = $value['amount'];
                 $fineAmount = $value['fine_amount'];
                 $discountAmount = $value['discount_amount'];
-                $date = $value['date'];
-                $payVia = $value['pay_via'];
-                $arrayFees = array(
+                $item = array(
                     'allocation_id' => $value['allocation_id'],
                     'type_id' => $value['type_id'],
-                    'collect_by' => get_loggedin_user_id(),
                     'amount' => ($amount - $discountAmount),
                     'discount' => $discountAmount,
                     'fine' => $fineAmount,
-                    'pay_via' => $payVia,
+                    'date' => $value['date'],
+                    'pay_via' => $value['pay_via'],
+                    'account_id' => isset($value['account_id']) ? $value['account_id'] : null,
                     'remarks' => $value['remarks'],
-                    'date' => $date,
                 );
                 // transport fees data processing
                 if ($value['fee_type'] == 'transport') {
-                    $arrayFees['allocation_id'] = NULL;
-                    $arrayFees['type_id'] = NULL;
-                    $arrayFees['transport_fee_details_id'] = $value['trans_fd_id'];
+                    $item['allocation_id'] = NULL;
+                    $item['type_id'] = NULL;
+                    $item['transport_fee_details_id'] = $value['trans_fd_id'];
                 }
-                $this->db->insert('fee_payment_history', $arrayFees);
-
-                // transaction voucher save function
-                if (isset($value['account_id'])) {
-                    $arrayTransaction = array(
-                        'account_id' => $value['account_id'],
-                        'amount' => ($amount + $fineAmount) - $discountAmount,
-                        'date' => $date,
-                    );
-                    $this->fees_model->saveTransaction($arrayTransaction);
-                }
-                // send payment confirmation sms
-                $arrayData = array(
-                    'student_id' => $studentID,
-                    'amount' => ($amount + $fineAmount) - $discountAmount,
-                    'paid_date' => _d($date),
-                );
-                $this->sms_model->send_sms($arrayData, 2);
+                $stagedItems[] = $item;
             }
-            set_alert('success', translate('information_has_been_saved_successfully'));
+            $firstItem = $stagedItems[0];
+            $header = array(
+                'student_enroll_id' => $studentID,
+                'date' => $firstItem['date'],
+                'pay_via' => $firstItem['pay_via'],
+                'account_id' => $firstItem['account_id'],
+                'remarks' => $firstItem['remarks'],
+                'guardian_sms' => 1,
+            );
+            $requestId = $this->fees_model->saveFeeCollectionRequest($header, $stagedItems);
+            audit_log('submit', 'fee_collection_requests', $requestId, null, $header + array('item_count' => count($stagedItems)));
+            set_alert('success', translate('fee_collection_submitted_for_approval'));
             $array = array('status' => 'success');
         } else {
             $error = $this->form_validation->error_array();
@@ -1447,6 +1405,122 @@ class Fees extends Admin_Controller
             $this->data['branch_id'] = $this->application_model->get_branch_id();
             $this->data['record_array'] = $record_array;
             $this->load->view('fees/selectedFeesCollect', $this->data);
+        }
+    }
+
+    // fee collection approval queue (checker) -- also lists a maker's own pending/rejected requests
+    public function collection_approvals()
+    {
+        if (!get_permission('collect_fees_approve', 'is_view') && !get_permission('collect_fees', 'is_add')) {
+            access_denied();
+        }
+        $this->data['title'] = translate('fee_collection_approvals');
+        $this->data['sub_page'] = 'fees/collection_approvals';
+        $this->data['main_menu'] = 'fees';
+        $this->data['requestlist'] = $this->fees_model->getFeeCollectionRequestList();
+        $this->load->view('layout/index', $this->data);
+    }
+
+    // approve/reject modal contents (or resubmit form, for the maker's own rejected request)
+    public function getCollectionApprovalDetails()
+    {
+        $id = $this->input->post('id');
+        $this->data['request_id'] = $id;
+        $this->data['branch_id'] = $this->application_model->get_branch_id();
+        $this->load->view('fees/collection_approval_modalView', $this->data);
+    }
+
+    // checker approves or rejects a staged fee collection
+    public function collection_approval_save()
+    {
+        if ($_POST) {
+            if (!get_permission('collect_fees_approve', 'is_add')) {
+                access_denied();
+            }
+            $id = $this->input->post('id');
+            $status = $this->input->post('status');
+            $comments = $this->input->post('comments');
+            $request = $this->fees_model->getFeeCollectionRequestList(array('fcr.id' => $id), true);
+            if (empty($request) || $request['status'] != 1) {
+                access_denied();
+            }
+            if ($request['collected_by'] == get_loggedin_user_id()) {
+                // self-approval is not allowed -- a different person must review
+                access_denied();
+            }
+            if ($status == 2) {
+                $paymentIds = $this->fees_model->approveFeeCollectionRequest($id, $comments);
+                audit_log('approve', 'fee_collection_requests', $id, $request, array('status' => 2, 'payment_ids' => $paymentIds, 'comments' => $comments));
+                set_alert('success', translate('fee_collection_has_been_approved'));
+            } else {
+                $this->fees_model->rejectFeeCollectionRequest($id, $comments);
+                audit_log('reject', 'fee_collection_requests', $id, $request, array('status' => 3, 'comments' => $comments));
+                set_alert('success', translate('fee_collection_has_been_rejected'));
+            }
+            redirect(base_url('fees/collection_approvals'));
+        }
+    }
+
+    // maker edits and resubmits a fee collection request the checker rejected.
+    // Reuses the same collect_fees[] item structure as selectedFeesPay().
+    public function collection_resubmit()
+    {
+        if ($_POST) {
+            if (!get_permission('collect_fees', 'is_add')) {
+                ajax_access_denied();
+            }
+            $requestId = $this->input->post('request_id');
+            $existing = $this->fees_model->getFeeCollectionRequestList(array('fcr.id' => $requestId), true);
+            if (empty($existing) || $existing['status'] != 3 || $existing['collected_by'] != get_loggedin_user_id()) {
+                ajax_access_denied();
+            }
+            $items = $this->input->post('collect_fees');
+            foreach ($items as $key => $value) {
+                $this->form_validation->set_rules('collect_fees[' . $key . '][date]', translate('date'), 'trim|required');
+                $this->form_validation->set_rules('collect_fees[' . $key . '][pay_via]', translate('payment_method'), 'trim|required');
+                $this->form_validation->set_rules('collect_fees[' . $key . '][amount]', translate('amount'), 'trim|required|numeric|greater_than[0]');
+                $this->form_validation->set_rules('collect_fees[' . $key . '][discount_amount]', translate('discount'), 'trim|numeric');
+                $this->form_validation->set_rules('collect_fees[' . $key . '][fine_amount]', translate('fine'), 'trim|numeric');
+            }
+            if ($this->form_validation->run() !== false) {
+                $stagedItems = array();
+                foreach ($items as $key => $value) {
+                    $item = array(
+                        'allocation_id' => $value['allocation_id'],
+                        'type_id' => $value['type_id'],
+                        'amount' => ($value['amount'] - $value['discount_amount']),
+                        'discount' => $value['discount_amount'],
+                        'fine' => $value['fine_amount'],
+                        'date' => $value['date'],
+                        'pay_via' => $value['pay_via'],
+                        'account_id' => isset($value['account_id']) ? $value['account_id'] : null,
+                        'remarks' => $value['remarks'],
+                    );
+                    if ($value['fee_type'] == 'transport') {
+                        $item['allocation_id'] = NULL;
+                        $item['type_id'] = NULL;
+                        $item['transport_fee_details_id'] = $value['trans_fd_id'];
+                    }
+                    $stagedItems[] = $item;
+                }
+                $firstItem = $stagedItems[0];
+                $header = array(
+                    'student_enroll_id' => $existing['student_enroll_id'],
+                    'date' => $firstItem['date'],
+                    'pay_via' => $firstItem['pay_via'],
+                    'account_id' => $firstItem['account_id'],
+                    'remarks' => $firstItem['remarks'],
+                    'guardian_sms' => $existing['guardian_sms'],
+                );
+                $this->fees_model->saveFeeCollectionRequest($header, $stagedItems, $requestId);
+                audit_log('resubmit', 'fee_collection_requests', $requestId, $existing, $header + array('item_count' => count($stagedItems)));
+                set_alert('success', translate('fee_collection_submitted_for_approval'));
+                $array = array('status' => 'success', 'url' => base_url('fees/collection_approvals'));
+            } else {
+                $error = $this->form_validation->error_array();
+                $array = array('status' => 'fail', 'error' => $error);
+            }
+            echo json_encode($array);
         }
     }
 }
