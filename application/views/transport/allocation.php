@@ -88,7 +88,7 @@
 									?>
 								</td>
 								<td><?php echo $row['vehicle_no']; ?></td>
-								<td><?php echo $global_config['currency_symbol'] . $row['route_fare'];?></td>
+								<td><?php echo currencyFormat($row['route_fare']);?></td>
 								<td>
 									<!-- deletion link -->
 									<?php echo btn_delete('transport/allocation_delete/' . $row['enroll_id']);?>

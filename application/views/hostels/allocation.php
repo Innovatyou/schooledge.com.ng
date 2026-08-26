@@ -89,7 +89,7 @@
 							<td><?php echo $row['hostel_name'];?></td>
 							<td><?php echo $row['room_name'];?></td>
 							<td><?php echo $row['room_category'];?></td>
-							<td><?php echo $global_config['currency_symbol'] . $row['bed_fee'];?></td>
+							<td><?php echo currencyFormat($row['bed_fee']);?></td>
 							<td>
 								<!-- deletion link -->
 								<?php echo btn_delete('hostels/allocation_delete/' . $row['enroll_id']);?>

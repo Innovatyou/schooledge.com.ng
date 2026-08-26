@@ -271,12 +271,12 @@
 
 
                         <?php if ($value->discount == 0) { ?>
-                                <?php echo $currency_symbol . number_format($value->price, 1, '.', '') ?><span>/ <?php echo ($value->period_value == 0 ? '' : $value->period_value) . " " . $getPeriodType[$value->period_type] ?></span>
+                                <?php echo $currency_symbol . number_format($value->price, 0, '.', ',') ?><span>/ <?php echo ($value->period_value == 0 ? '' : $value->period_value) . " " . $getPeriodType[$value->period_type] ?></span>
                         <?php } else { ?>
                             <div class="discount">
-                                <?php echo $currency_symbol . number_format($value->price, 1, '.', '') ?>
+                                <?php echo $currency_symbol . number_format($value->price, 0, '.', ',') ?>
                             </div>
-                            <?php echo $currency_symbol . number_format(($value->price - $value->discount), 1, '.', ''); ?><span>/ <?php echo ($value->period_value == 0 ? '' : $value->period_value) . " " . $getPeriodType[$value->period_type]?> </span>
+                            <?php echo $currency_symbol . number_format(($value->price - $value->discount), 0, '.', ','); ?><span>/ <?php echo ($value->period_value == 0 ? '' : $value->period_value) . " " . $getPeriodType[$value->period_type]?> </span>
                         <?php } ?>
                                 </div>
                             </div>

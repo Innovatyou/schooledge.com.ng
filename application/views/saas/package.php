@@ -37,8 +37,8 @@
 						<tr>
 							<td><?php echo $count++;?></td>
 							<td><?php echo $row->name;?></td>
-							<td><?php echo $currency_symbol . $row->price;?></td>
-							<td><?php echo $currency_symbol . $row->discount;?></td>
+							<td><?php echo $currency_symbol . number_format($row->price, 0, '.', ',');?></td>
+							<td><?php echo $currency_symbol . number_format($row->discount, 0, '.', ',');?></td>
 							<td><?php echo $arrayPeriod[$row->period_type];?></td>
 							<td><?php echo $row->period_value;?></td>
 							<td>

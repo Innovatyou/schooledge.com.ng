@@ -194,7 +194,7 @@ if ($periodType == 4) {
                             <li><?php echo translate('subscription') ?> <span></span></li>
                             <li><?php echo translate('start_date') ?> <span><?php echo date("d-M-Y") ?></span></li>
                             <li><?php echo translate('expiry_date') ?> <span><?php echo $periodType == 1 ? translate('lifetime') : date("d-M-Y", strtotime("+$period_value $strtotimeType")) ?></span></li>
-                            <li class="total-costs"><?php echo translate('total_amount') ?> <span><?php echo $currency_symbol .number_format($price, 2, '.', ''); ?></span></li>
+                            <li class="total-costs"><?php echo translate('total_amount') ?> <span><?php echo $currency_symbol .number_format($price, 2, '.', ','); ?></span></li>
                         </ul>
                     </div>
                 </div>

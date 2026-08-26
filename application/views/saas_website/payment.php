@@ -34,7 +34,7 @@
                     <div class="col-md-6" style="margin: auto 0;">
                         <h1>Subscription Fees Payment</h1>
                         <h4><strong style="color: #5e5e5e;"><?php echo $get_school['name'] . " " . translate('plan'); ?></strong> subscription fees amount</h4>
-                        <span style="font-weight: bold; color: #4d4d4d; font-size: 22px;"><?php echo $global_config['currency_symbol'] .  number_format($get_school['price'] - $get_school['discount'], 2, '.', ''); ?></span>
+                        <span style="font-weight: bold; color: #4d4d4d; font-size: 22px;"><?php echo $global_config['currency_symbol'] .  number_format($get_school['price'] - $get_school['discount'], 2, '.', ','); ?></span>
                         <div class="pasha-image"> 
                             <img src="<?=base_url('uploads/app_image/logo.png')?>"/>
                         </div>
