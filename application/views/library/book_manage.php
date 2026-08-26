@@ -50,7 +50,7 @@
 							</td>
 							<td><?php echo _d($row['date_of_issue']); ?></td>
 							<td><?php echo _d($row['date_of_expiry']); ?></td>
-							<td><?php echo $global_config['currency_symbol'] . $row['fine_amount']; ?></td>
+							<td><?php echo currencyFormat($row['fine_amount']); ?></td>
 							<td>
 								<?php
 								$status = $row['status'];

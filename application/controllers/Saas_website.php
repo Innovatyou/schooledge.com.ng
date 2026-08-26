@@ -144,7 +144,7 @@ class Saas_website extends MY_Controller
                 // send email submit school registered
                 $arrayData['plan_name'] = $getPlanDetails->name;
                 $arrayData['date'] = _d($arrayData['created_at']);
-                $arrayData['fees_amount'] = number_format(($getPlanDetails->price - $getPlanDetails->discount), 2, '.', '');
+                $arrayData['fees_amount'] = number_format(($getPlanDetails->price - $getPlanDetails->discount), 2, '.', ',');
                 $arrayData['invoice_url'] = base_url('subscription_review/' . $arrayData['reference_no']);
                 $arrayData['payment_url'] = base_url('saas_payment/index/' . $arrayData['reference_no']);
                 $this->saas_email_model->sentSchoolRegister($arrayData);
@@ -223,7 +223,7 @@ class Saas_website extends MY_Controller
             $html = "<li>" . translate('plan') . " " . translate('name') . "<span>" . $getPlanDetails->name . "</span></li>
             <li>" . translate('start_date') . "<span>" . date('d-M-Y') . "</span></li>
             <li>" . translate('expiry_date') . "<span>" . $expiryDate . "</span></li>
-            <li class='total-costs'>" . translate('total_cost') . "<span>" . ($getPlanDetails->free_trial == 1 ? translate('free') : $this->data['global_config']['currency_symbol'] . number_format(($getPlanDetails->price - $getPlanDetails->discount), 2, '.', '')) . "</span></li>";
+            <li class='total-costs'>" . translate('total_cost') . "<span>" . ($getPlanDetails->free_trial == 1 ? translate('free') : $this->data['global_config']['currency_symbol'] . number_format(($getPlanDetails->price - $getPlanDetails->discount), 0, '.', ',')) . "</span></li>";
 
             $recaptchaStatus = 0;
             $getSettings = $this->saas_model->getSettings('captcha_status');

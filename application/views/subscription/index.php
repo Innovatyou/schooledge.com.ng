@@ -112,7 +112,7 @@
 										<td><?php echo _d($value->purchase_date); ?></td>
 										<td><?php echo empty($value->expire_date) ? "-" : _d($value->expire_date); ?></td>
 										<td><?php echo $value->payment_id; ?></td>
-										<td><?php echo ($value->free_trial == 0) ? $currency_symbol . number_format(($value->amount - $value->discount), 2, '.', '') : translate('free_trial'); ?></td>
+										<td><?php echo ($value->free_trial == 0) ? $currency_symbol . number_format(($value->amount - $value->discount), 2, '.', ',') : translate('free_trial'); ?></td>
 										<td><?php echo $value->payvia; ?></td>
 									</tr>
 								<?php  } ?>

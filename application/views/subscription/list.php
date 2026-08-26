@@ -170,12 +170,12 @@ unset($getPeriodType['']);
 					        <div class="panel-header pricing-header">
 					            <div class="price text-center">
 								<?php if ( $value['discount'] == 0) { ?>
-									<?php echo $currency_symbol . " " .  $value['price'] ?><span>/ <?php 
-									
+									<?php echo $currency_symbol . " " .  number_format($value['price'], 0, '.', ',') ?><span>/ <?php
+
 									echo ($periodType == 1 ? $getPeriodType[$periodType] : ($value['period_value'] . " " . $getPeriodType[$periodType]));
 								?></span>
 								<?php } else { ?>
-									<div class="discount"><?php echo $currency_symbol . " " . number_format($value['price'], 1, '.', '') ?></div> <?php echo $currency_symbol . " " . number_format(($value['price'] - $value['discount']), 1, '.', ''); ?><span> / <?php echo ($periodType == 1 ? $getPeriodType[$periodType] : ($value['period_value'] . " " . $getPeriodType[$periodType])) ?></span>
+									<div class="discount"><?php echo $currency_symbol . " " . number_format($value['price'], 0, '.', ',') ?></div> <?php echo $currency_symbol . " " . number_format(($value['price'] - $value['discount']), 0, '.', ','); ?><span> / <?php echo ($periodType == 1 ? $getPeriodType[$periodType] : ($value['period_value'] . " " . $getPeriodType[$periodType])) ?></span>
 								<?php } ?>
 					            </div>
 					        </div>

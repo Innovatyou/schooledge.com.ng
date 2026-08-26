@@ -340,7 +340,7 @@ $expiryDate = $this->saas_model->getPlanExpiryDate($schoolRegDetails['package_id
                                 <tr>
                                     <td><?php echo $schoolRegDetails['name']; ?> Plan - Subscription Fee (<?php echo date('d-M-Y', strtotime($schoolRegDetails['updated_at'])) ?> - <?php echo $expiryDate ?>)</td>
                                     <td class="text-right">
-                                        <?php echo $currency_symbol . number_format($schoolRegDetails['price'], 2, '.', ''); ?>
+                                        <?php echo $currency_symbol . number_format($schoolRegDetails['price'], 2, '.', ','); ?>
                                     </td>
                                 </tr>
                             </tbody>
@@ -350,16 +350,16 @@ $expiryDate = $this->saas_model->getPlanExpiryDate($schoolRegDetails['package_id
                                 <div class="col-md-5 col-xs-12">
                                     <ul class="amounts">
                                         <li><strong>Sub Total :</strong>
-                                            <?php echo $currency_symbol . number_format($schoolRegDetails['price'], 2, '.', ''); ?>
+                                            <?php echo $currency_symbol . number_format($schoolRegDetails['price'], 2, '.', ','); ?>
                                         </li>
                                         <li><strong>Discount :</strong>
-                                            <?php echo $currency_symbol . number_format($schoolRegDetails['discount'], 2, '.', ''); ?>
+                                            <?php echo $currency_symbol . number_format($schoolRegDetails['discount'], 2, '.', ','); ?>
                                         </li>
                                         <li><strong>Paid : </strong>
-                                            <?php echo $currency_symbol . number_format($schoolRegDetails['payment_amount'], 2, '.', ''); ?>
+                                            <?php echo $currency_symbol . number_format($schoolRegDetails['payment_amount'], 2, '.', ','); ?>
                                         </li>
                                         <li><strong>Total : </strong>
-                                            <?php echo $currency_symbol .  number_format(($schoolRegDetails['price'] - $schoolRegDetails['discount']), 2, '.', ''); ?>
+                                            <?php echo $currency_symbol .  number_format(($schoolRegDetails['price'] - $schoolRegDetails['discount']), 2, '.', ','); ?>
                                         </li>
                                     </ul>
                                 </div>

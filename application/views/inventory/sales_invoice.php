@@ -255,7 +255,7 @@ $active_tab = $this->session->flashdata('active_tab');
 										<td><?php echo get_type_name_by_id('payment_types', $payment['pay_via']) ; ?></td>
 										<td><?php echo html_escape($payment['remarks']); ?></td>
 										<td><?php echo _d($payment['paid_on']); ?></td>
-										<td class="text-center"><?php echo html_escape($currency_symbol . $payment['amount']); ?></td>
+										<td class="text-center"><?php echo html_escape(currencyFormat($payment['amount'])); ?></td>
 									</tr>
 									<?php } ?>
 								</tbody>

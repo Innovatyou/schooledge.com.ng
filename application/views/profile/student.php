@@ -426,7 +426,7 @@ if ($last_name['status'] == 1 || $gender['status'] == 1 || $blood_group['status'
 										<th><?=translate('occupation')?></th>
 										<td><?php echo $getParent['occupation']?></td>
 										<th><?=translate('income')?></th>
-										<td><?php echo $global_config['currency_symbol'] . $getParent['income']?></td>
+										<td><?php echo currencyFormat($getParent['income'])?></td>
 									</tr>
 									<tr>
 										<th><?=translate('education')?></th>
@@ -485,11 +485,7 @@ if ($last_name['status'] == 1 || $gender['status'] == 1 || $blood_group['status'
 											<td><?php echo _d($book['date_of_expiry']);?></td>
 											<td>
 												<?php
-												if(empty($book['fine_amount'])){ 
-													echo $global_config['currency_symbol'] . "0.00";
-												} else {
-													echo $global_config['currency_symbol'] . $book['fine_amount'];
-												}
+												echo currencyFormat($book['fine_amount']);
 												?>
 											</td>
 											<td>

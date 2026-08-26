@@ -39,7 +39,7 @@
 							<td><?php echo get_type_name_by_id('hostel', $row['hostel_id']);?></td>
 							<td><?php echo get_type_name_by_id('hostel_category', $row['category_id']);?></td>
 							<td><?php echo $row['no_beds'];?></td>
-							<td><?php echo $global_config['currency_symbol'] . $row['bed_fee']; ?></td>
+							<td><?php echo currencyFormat($row['bed_fee']); ?></td>
 							<td><?php echo $row['remarks'];?></td>
 							<td>
 							<?php if (get_permission('hostel_room', 'is_edit')): ?>

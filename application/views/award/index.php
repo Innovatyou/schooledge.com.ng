@@ -53,7 +53,7 @@
 							<td><?php echo $row['role_name']; ?></td>
 							<td><?php echo $row['name']; ?></td>
 							<td><?php echo $row['gift_item']; ?></td>
-							<td><?php echo $global_config['currency_symbol'] . $row['award_amount']; ?></td>
+							<td><?php echo currencyFormat($row['award_amount']); ?></td>
 							<td><?php echo $row['award_reason']; ?></td>
 							<td><?php echo _d($row['given_date']); ?></td>
 							<td class="min-w-c">
