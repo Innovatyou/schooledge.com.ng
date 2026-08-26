@@ -46,14 +46,24 @@
 																</label>
 															</div>
 														</div>
+														<?php
+														$hasCustomTemplate = !empty($getRow['subject']) || !empty($getRow['template_body']);
+														$subjectValue = !empty($getRow['subject']) ? $getRow['subject'] : (isset($template['default_subject']) ? $template['default_subject'] : "");
+														$bodyValue = !empty($getRow['template_body']) ? $getRow['template_body'] : (isset($template['default_body']) ? $template['default_body'] : "");
+														?>
+														<?php if (!$hasCustomTemplate && !empty($template['default_body'])) { ?>
+														<div class="alert alert-info">
+															<i class="fas fa-info-circle"></i> <?=translate('showing_a_default_template_edit_and_save_to_customize_it_for_your_school')?>
+														</div>
+														<?php } ?>
 														<div class="form-group">
 															<label class="control-label"><?=translate('subject')?> <span class="required">*</span></label>
-															<input class="form-control" value="<?=isset($getRow['subject']) ? $getRow['subject'] : ""; ?>" name="subject" type="text">
+															<input class="form-control" value="<?=$subjectValue; ?>" name="subject" type="text">
 															<span class="error"></span>
 														</div>
 														<div class="form-group">
 															<label class=" control-label"><?=translate('body')?></label>
-															<textarea name="template_body" class="summernote"><?=isset($getRow['template_body']) ? $getRow['template_body'] : "";?></textarea>
+															<textarea name="template_body" class="summernote"><?=$bodyValue;?></textarea>
 															<span class="error"></span>
 														</div>
 														<div class="md">
