@@ -194,11 +194,13 @@ class Offline_payments extends Admin_Controller
                     'approve_date' => date('Y-m-d H:i:s'),
                 );
                 $id = $this->input->post('id');
+                $oldPayment = $this->db->where('id', $id)->get('offline_fees_payments')->row_array();
                 $this->db->where('id', $id);
                 $this->db->update('offline_fees_payments', $arrayLeave);
                 if ($status == 2) {
                     $this->offline_payments_model->update($id);
                 }
+                audit_log($status == 2 ? 'approve' : 'reject', 'offline_fees_payments', $id, $oldPayment, $arrayLeave);
                 set_alert('success', translate('information_has_been_updated_successfully'));
 
             }

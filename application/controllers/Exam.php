@@ -105,11 +105,15 @@ class Exam extends Admin_Controller
         if (!get_permission('exam', 'is_delete')) {
             access_denied();
         }
+        $oldExam = $this->db->where('id', $id)->get('exam')->row_array();
         if (!is_superadmin_loggedin()) {
             $this->db->where('branch_id', get_loggedin_branch_id());
         }
         $this->db->where('id', $id);
         $this->db->delete('exam');
+        if ($this->db->affected_rows() > 0) {
+            audit_log('delete', 'exam', $id, $oldExam, null);
+        }
     }
 
     /* term form validation rules */
@@ -415,6 +419,16 @@ class Exam extends Admin_Controller
                 $subjectID = $this->input->post('subject_id');
                 $examID = $this->input->post('exam_id');
                 $inputMarks = $this->input->post('mark');
+
+                // marks are graded routinely before results are published -- only
+                // audit-log this save when it can change a result students/parents
+                // can already see, since that is the high-value, low-frequency event
+                $examRow = $this->db->select('publish_result')->where('id', $examID)->get('exam')->row_array();
+                if (!empty($examRow) && $examRow['publish_result'] == 1) {
+                    $oldMarks = $this->db->where(array('exam_id' => $examID, 'class_id' => $classID, 'section_id' => $sectionID, 'subject_id' => $subjectID))->get('mark')->result_array();
+                    audit_log('update', 'mark', $examID, $oldMarks, array('class_id' => $classID, 'section_id' => $sectionID, 'subject_id' => $subjectID, 'mark' => $inputMarks));
+                }
+
                 foreach ($inputMarks as $key => $value) {
                     $assMark = array();
                     foreach ($value['assessment'] as $i => $row) {
@@ -615,11 +629,15 @@ class Exam extends Admin_Controller
     public function grade_delete($id = '')
     {
         if (get_permission('exam_grade', 'is_delete')) {
+            $oldGrade = $this->db->where('id', $id)->get('grade')->row_array();
             if (!is_superadmin_loggedin()) {
                 $this->db->where('branch_id', get_loggedin_branch_id());
             }
             $this->db->where('id', $id);
             $this->db->delete('grade');
+            if ($this->db->affected_rows() > 0) {
+                audit_log('delete', 'grade', $id, $oldGrade, null);
+            }
         }
     }
 

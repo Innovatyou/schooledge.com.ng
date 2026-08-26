@@ -53,8 +53,10 @@ class Settings extends Admin_Controller
             if (empty($config['reg_prefix'])) {
                 $config['reg_prefix'] = false;
             }
+            $oldConfig = $this->db->where('id', 1)->get('global_settings')->row_array();
             $this->db->where('id', 1);
             $this->db->update('global_settings', $config);
+            audit_log('update', 'global_settings', 1, $oldConfig, $config);
 
             $isRTL = $this->app_lib->getRTLStatus($config['translation']);
             $this->session->set_userdata(['set_lang' => $config['translation'], 'is_rtl' => $isRTL]);

@@ -1036,6 +1036,7 @@ class Student extends Admin_Controller
     {
         if (get_permission('student', 'is_delete')) {
             $branchID = get_type_name_by_id('enroll', $eid, 'branch_id');
+            $oldStudent = $this->db->where('id', $sid)->get('student')->row_array();
             // Check student restrictions
             if (!is_superadmin_loggedin()) {
                 $this->db->where('branch_id', get_loggedin_branch_id());
@@ -1044,6 +1045,7 @@ class Student extends Admin_Controller
             if ($this->db->affected_rows() > 0) {
                 $this->db->where('id', $sid)->delete('student');
                 $this->db->where(array('user_id' => $sid, 'role' => 7))->delete('login_credential');
+                audit_log('delete', 'student', $sid, $oldStudent, null);
 
                 $r = $this->db->select('id')->where('student_id', $sid)->get('fee_allocation')->result_array();
                 $this->db->where_in('student_id', $sid)->delete('fee_allocation');
@@ -1068,6 +1070,7 @@ class Student extends Admin_Controller
             $message = translate('information_deleted');
             if (get_permission('student', 'is_delete')) {
                 $arrayID = $this->input->post('array_id');
+                $oldStudents = $this->db->where_in('id', $arrayID)->get('student')->result_array();
                 foreach ($arrayID as $key => $row) {
                     $branchID = $this->student_model->get('enroll', ['student_id' => $row], true, false,'branch_id')['branch_id'];
                     if (!is_superadmin_loggedin()) {
@@ -1093,6 +1096,10 @@ class Student extends Admin_Controller
                     $r = array_column($r, 'id');
                     if (!empty($r)) {
                         $this->db->where_in('allocation_id', $r)->delete('fee_payment_history');
+                    }
+
+                    foreach ($oldStudents as $oldStudent) {
+                        audit_log('delete', 'student', $oldStudent['id'], $oldStudent, null);
                     }
                 }
             } else {
