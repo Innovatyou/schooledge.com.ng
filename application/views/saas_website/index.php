@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/glightbox.min.css'); ?>" />
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/select2/css/select2.min.css');?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/sweetalert/sweetalert-custom.css');?>">
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas_main.css?v=' . version_combine()); ?>" />
+    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas_main.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas_main.css')); ?>" />
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-modern.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-modern.css')); ?>" />
 
     <!-- Google Analytics --> 
@@ -554,7 +554,7 @@
     <script src="<?php echo base_url('assets/frontend/js/wow.min.js'); ?>"></script>
     <script src="<?php echo base_url('assets/frontend/js/tiny-slider.js'); ?>"></script>
     <script src="<?php echo base_url('assets/frontend/js/glightbox.min.js'); ?>"></script>
-    <script src="<?php echo base_url('assets/frontend/js/saas_main.js?v=' . version_combine()); ?>"></script>
+    <script src="<?php echo base_url('assets/frontend/js/saas_main.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas_main.js')); ?>"></script>
     <script src="<?php echo base_url('assets/vendor/select2/js/select2.full.min.js');?>"></script>
     <script src="<?php echo base_url('assets/vendor/sweetalert/sweetalert.min.js');?>"></script>
 </body>
