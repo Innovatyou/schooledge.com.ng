@@ -69,6 +69,9 @@
                                 <img src="<?=$this->application_model->getBranchImage(get_loggedin_branch_id(), 'logo-small')?>" alt="Logo">
                             </a>
                             <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent">
+                                <button type="button" class="mobile-menu-close" aria-label="Close menu">
+                                    <i class="fas fa-times"></i>
+                                </button>
                                 <ul id="nav" class="navbar-nav ms-auto">
                                     <li class="nav-item"><a href="<?php echo base_url() ?>#home" aria-label="Toggle navigation"><?php echo translate('home'); ?></a></li>
                                     <li class="nav-item"><a href="<?php echo base_url() ?>#features" aria-label="Toggle navigation"><?php echo translate('features'); ?></a></li>
