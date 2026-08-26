@@ -118,6 +118,9 @@
                                         <a href="#pricing" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('pricing'); ?></a>
                                     </li>
                                     <li class="nav-item">
+                                        <a href="<?php echo base_url('saas_website/demo') ?>" aria-label="Toggle navigation"><?php echo translate('live_demo'); ?></a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a href="#faq" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('faq'); ?></a>
                                     </li>
                                     <li class="nav-item">
@@ -172,7 +175,9 @@
                         if (!empty($getSettings->button_text_2)) {
                              echo '<a href="' . $getSettings->button_url_2 . '" class="btn btn-alt">' . $getSettings->button_text_2 . '</a>';
                         }
-                        ?></div>
+                        ?>
+                        <a href="<?php echo base_url('saas_website/demo') ?>" class="btn btn-alt"><?php echo translate('try_live_demo'); ?></a>
+                        </div>
                     </div>
                 </div>
                 <div class="col-lg-7 col-md-12 col-12">
@@ -477,6 +482,7 @@
                                         <li><a href="#home" class="page-scroll active" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('home'); ?></a></li>
                                         <li><a href="#features" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('features'); ?></a></li>
                                         <li><a href="#pricing" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('pricing'); ?></a></li>
+                                        <li><a href="<?php echo base_url('saas_website/demo') ?>" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('live_demo'); ?></a></li>
                                         <li><a href="#faq" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('faq'); ?></a></li>
                                         <li><a href="#contact" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('contact'); ?></a></li>
                                         <?php if ($getSettings->terms_status == 1) { ?>

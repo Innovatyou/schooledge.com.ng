@@ -74,6 +74,7 @@ class Exam_model extends CI_Model
     {
         $arrayTerm = array(
             'name' => $post['term_name'],
+            'next_term_begins' => empty($post['next_term_begins']) ? null : $post['next_term_begins'],
             'branch_id' => $this->application_model->get_branch_id(),
             'session_id' => get_session_id(),
         );
@@ -128,6 +129,30 @@ class Exam_model extends CI_Model
         }
     }
 
+    public function seedDefaultGrades($branchID)
+    {
+        $existing = $this->db->where('branch_id', $branchID)->get('grade');
+        if ($existing->num_rows() > 0) {
+            return false;
+        }
+        $waecGrades = array(
+            array('name' => 'A1', 'grade_point' => 9, 'lower_mark' => 75, 'upper_mark' => 100, 'remark' => 'Excellent'),
+            array('name' => 'B2', 'grade_point' => 8, 'lower_mark' => 70, 'upper_mark' => 74, 'remark' => 'Very Good'),
+            array('name' => 'B3', 'grade_point' => 7, 'lower_mark' => 65, 'upper_mark' => 69, 'remark' => 'Good'),
+            array('name' => 'C4', 'grade_point' => 6, 'lower_mark' => 60, 'upper_mark' => 64, 'remark' => 'Credit'),
+            array('name' => 'C5', 'grade_point' => 5, 'lower_mark' => 55, 'upper_mark' => 59, 'remark' => 'Credit'),
+            array('name' => 'C6', 'grade_point' => 4, 'lower_mark' => 50, 'upper_mark' => 54, 'remark' => 'Credit'),
+            array('name' => 'D7', 'grade_point' => 3, 'lower_mark' => 45, 'upper_mark' => 49, 'remark' => 'Pass'),
+            array('name' => 'E8', 'grade_point' => 2, 'lower_mark' => 40, 'upper_mark' => 44, 'remark' => 'Pass'),
+            array('name' => 'F9', 'grade_point' => 1, 'lower_mark' => 0, 'upper_mark' => 39, 'remark' => 'Fail'),
+        );
+        foreach ($waecGrades as $grade) {
+            $grade['branch_id'] = $branchID;
+            $this->db->insert('grade', $grade);
+        }
+        return true;
+    }
+
     public function get_grade($mark, $branch_id)
     {
         $this->db->where('branch_id', $branch_id);
@@ -151,7 +176,6 @@ class Exam_model extends CI_Model
         $this->db->where('t.section_id', $sectionID);
         $this->db->where('t.session_id', $sessionID);
         $this->db->where('t.branch_id', $branchID);
-        $this->db->group_by('t.subject_id');
         return $this->db->get()->result_array();
     }
 
@@ -180,6 +204,70 @@ class Exam_model extends CI_Model
         $this->db->where('en.session_id', get_session_id());
         $this->db->order_by('en.roll', 'ASC');
         return $this->db->get()->result_array();
+    }
+
+    public function getPsychomotorStudents($branchID, $classID, $sectionID, $examID)
+    {
+        $this->db->select('en.id as enroll_id,en.roll,st.id as student_id,st.first_name,st.last_name,st.register_no,st.category_id');
+        $this->db->from('enroll as en');
+        $this->db->join('student as st', 'st.id = en.student_id', 'inner');
+        $this->db->where('en.class_id', $classID);
+        $this->db->where('st.active', 1);
+        $this->db->where('en.section_id', $sectionID);
+        $this->db->where('en.branch_id', $branchID);
+        $this->db->where('en.session_id', get_session_id());
+        $this->db->order_by('en.roll', 'ASC');
+        $students = $this->db->get()->result_array();
+
+        $existing = array();
+        if (!empty($students)) {
+            $this->db->select('student_id,trait_key,rating');
+            $this->db->where('exam_id', $examID);
+            $this->db->where_in('student_id', array_column($students, 'student_id'));
+            foreach ($this->db->get('psychomotor_rating')->result_array() as $row) {
+                $existing[$row['student_id']][$row['trait_key']] = $row['rating'];
+            }
+        }
+
+        foreach ($students as &$row) {
+            $row['ratings'] = isset($existing[$row['student_id']]) ? $existing[$row['student_id']] : array();
+        }
+        return $students;
+    }
+
+    public function savePsychomotorRatings($branchID, $sessionID, $examID, $ratings)
+    {
+        $now = date('Y-m-d H:i:s');
+        foreach ($ratings as $row) {
+            if (empty($row['student_id']) || empty($row['enroll_id']) || empty($row['trait_key'])) {
+                continue;
+            }
+            $rating = isset($row['rating']) && $row['rating'] !== '' ? (int) $row['rating'] : null;
+            $where = array(
+                'exam_id' => $examID,
+                'student_id' => $row['student_id'],
+                'trait_key' => $row['trait_key'],
+            );
+            if ($rating === null) {
+                $this->db->where($where);
+                $this->db->delete('psychomotor_rating');
+                continue;
+            }
+            $existing = $this->db->where($where)->get('psychomotor_rating');
+            if ($existing->num_rows() > 0) {
+                $this->db->where($where);
+                $this->db->update('psychomotor_rating', array('rating' => $rating, 'updated_at' => $now));
+            } else {
+                $this->db->insert('psychomotor_rating', array_merge($where, array(
+                    'branch_id' => $branchID,
+                    'session_id' => $sessionID,
+                    'enroll_id' => $row['enroll_id'],
+                    'rating' => $rating,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                )));
+            }
+        }
     }
 
     public function getStudentReportCard($studentID, $examID, $sessionID, $classID = '', $sectionID = '')
@@ -213,7 +301,6 @@ class Exam_model extends CI_Model
             $this->db->where('m.class_id', $classID);
         if (!empty($sectionID))
             $this->db->where('m.section_id', $sectionID);
-        $this->db->group_by('m.subject_id');
         $this->db->order_by('subject.id', 'ASC');
         $result['exam'] = $this->db->get()->result_array();
         return $result;

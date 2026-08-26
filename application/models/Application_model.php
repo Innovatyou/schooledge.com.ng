@@ -342,15 +342,16 @@ class Application_model extends CI_Model
             $this->db->from('enroll');
             $this->db->where('student_id', $studentID);
             $whereClause = $this->db->get_compiled_select();
-        
 
-            $this->db->select_max('id');
-            $this->db->select('session_id');
+
+            $this->db->select('id');
             $this->db->from('enroll');
             $this->db->where('student_id', $studentID);
             $this->db->where("`session_id`= ($whereClause)", NULL, FALSE);
-            $multiClass = $this->db->get()->row_array();
-            return $multiClass;
+            $this->db->order_by('id', 'DESC');
+            $this->db->limit(1);
+            $multiClass = $this->db->get()->row();
+            return empty($multiClass) ? '' : $multiClass->id;
         } else {
             return $default_login->id;
         }

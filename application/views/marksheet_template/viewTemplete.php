@@ -1,7 +1,9 @@
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 	.mark-container {
 		height: 100%;
-		min-width: 1000px;
+		width: 100%;
+		max-width: 1000px;
 	    position: relative;
 	    z-index: 2;
 	    margin: 0 auto;
@@ -43,9 +45,9 @@
 	<?php } ?>
 	}
 </style>
-	<div style="position: relative; width: 100%; height: 100%;"> 
+	<div style="position: relative; width: 100%; height: 100%;">
 		<div class="background"></div>
-		<div class="mark-container">
+		<div class="mark-container <?=document_template_class($marksheet_template)?>">
 			<?=$marksheet_template['header_content']?>
 
 			<table class="table table-condensed table-bordered mt-lg">
@@ -174,7 +176,7 @@
 <?php } if ($marksheet_template['position'] == 1) { ?>
 					<tr class="text-weight-semibold">
 						<td valign="top">Position :</td>
-						<td valign="top" colspan="13"> 1</td>
+						<td valign="top" colspan="13"> 1 out of 45</td>
 					</tr>
 <?php } ?>
 				</tbody>
@@ -182,19 +184,23 @@
 
 		<div style="width: 100%; display: flex;">
 <?php if ($marksheet_template['attendance_percentage'] == 1) { ?>
-			<div style="width: 50%; padding-right: 15px;">
+			<div class="marksheet-summary-panel" style="width: 50%; padding-right: 15px;">
 				<table class="table table-bordered table-condensed">
 					<tbody>
 						<tr>
 							<th colspan="2" class="text-center">Attendance</th>
 						</tr>
 						<tr>
-							<th style="width: 65%;">No. of working days</th>
+							<th style="width: 65%;">Times School Opened</th>
 							<td>100</td>
 						</tr>
 						<tr>
-							<th style="width: 65%;">No. of days attended</th>
+							<th style="width: 65%;">Times Present</th>
 							<td>75</td>
+						</tr>
+						<tr>
+							<th style="width: 65%;">Times Absent</th>
+							<td>25</td>
 						</tr>
 						<tr>
 							<th style="width: 65%;">Attendance Percentage</th>
@@ -205,62 +211,80 @@
 			</div>
 <?php } ?>
 <?php if ($marksheet_template['grading_scale'] == 1) { ?>
-			<div style="width: 50%; padding-left: 15px;">
+			<div class="marksheet-summary-panel" style="width: 50%; padding-left: 15px;">
 				<table class="table table-condensed table-bordered">
 					<tbody>
 						<tr>
-							<th colspan="3" class="text-center">Grading Scale</th>
+							<th colspan="4" class="text-center">Grading Scale</th>
 						</tr>
 						<tr>
 							<th>Grade</th>
 							<th>Min Percentage</th>
 							<th>Max Percentage</th>
+							<th>Remark</th>
 						</tr>
 						<tr>
-							<td style="width: 30%;">A+</td>
-							<td style="width: 30%;">80%</td>
-							<td style="width: 30%;">100%</td>
+							<td style="width: 25%;">A1</td>
+							<td style="width: 25%;">75%</td>
+							<td style="width: 25%;">100%</td>
+							<td style="width: 25%;">Excellent</td>
 						</tr>
 						<tr>
-							<td style="width: 30%;">A</td>
-							<td style="width: 30%;">70%</td>
-							<td style="width: 30%;">79%</td>
+							<td style="width: 25%;">B2</td>
+							<td style="width: 25%;">70%</td>
+							<td style="width: 25%;">74%</td>
+							<td style="width: 25%;">Very Good</td>
 						</tr>
 						<tr>
-							<td style="width: 30%;">A-</td>
-							<td style="width: 30%;">60%</td>
-							<td style="width: 30%;">69%</td>
+							<td style="width: 25%;">B3</td>
+							<td style="width: 25%;">65%</td>
+							<td style="width: 25%;">69%</td>
+							<td style="width: 25%;">Good</td>
 						</tr>
 						<tr>
-							<td style="width: 30%;">B</td>
-							<td style="width: 30%;">50%</td>
-							<td style="width: 30%;">59%</td>
+							<td style="width: 25%;">C4</td>
+							<td style="width: 25%;">60%</td>
+							<td style="width: 25%;">64%</td>
+							<td style="width: 25%;">Credit</td>
 						</tr>
 						<tr>
-							<td style="width: 30%;">C</td>
-							<td style="width: 30%;">40%</td>
-							<td style="width: 30%;">49%</td>
+							<td style="width: 25%;">D7</td>
+							<td style="width: 25%;">45%</td>
+							<td style="width: 25%;">49%</td>
+							<td style="width: 25%;">Pass</td>
 						</tr>
 						<tr>
-							<td style="width: 30%;">D</td>
-							<td style="width: 30%;">33%</td>
-							<td style="width: 30%;">39%</td>
-						</tr>
-						<tr>
-							<td style="width: 30%;">F</td>
-							<td style="width: 30%;">0%</td>
-							<td style="width: 30%;">32%</td>
-						</tr>
-						<tr>
-							<td style="width: 30%;">D</td>
-							<td style="width: 30%;">33%</td>
-							<td style="width: 30%;">39%</td>
+							<td style="width: 25%;">F9</td>
+							<td style="width: 25%;">0%</td>
+							<td style="width: 25%;">39%</td>
+							<td style="width: 25%;">Fail</td>
 						</tr>
 					</tbody>
 				</table>
 			</div>
 <?php } ?>
 		</div>
+<?php if ($marksheet_template['term_position'] == 1) { ?>
+		<div class="marksheet-summary-panel" style="margin-top: 15px;">
+			<table class="table table-condensed table-bordered">
+				<tbody>
+					<tr>
+						<th colspan="3" class="text-center">Position Per Term</th>
+					</tr>
+					<tr>
+						<th class="text-center">First Term</th>
+						<th class="text-center">Second Term</th>
+						<th class="text-center">Third Term</th>
+					</tr>
+					<tr>
+						<td class="text-center">3 / 45</td>
+						<td class="text-center">1 / 45</td>
+						<td class="text-center">2 / 45</td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+<?php } ?>
 		<?=$marksheet_template['footer_content']?>
 		</div>
 	</div>

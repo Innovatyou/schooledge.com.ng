@@ -166,8 +166,8 @@ class Sendsmsmail extends Admin_Controller
                 $sendLater = (isset($_POST['send_later']) ? 1 : 2);
                 $emailSubject = $this->input->post('email_subject');
                 $smsGateway = $this->input->post('sms_gateway');
-                $dlt_templateID = $this->input->post('dlt_template_id');
-                
+                $dlt_templateID = '';
+
                 if ($recipientType == 1) {
                     $roleGroup = $this->input->post('role_group[]');
                     $receivedDetails['role'] = $roleGroup;

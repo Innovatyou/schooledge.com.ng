@@ -23,6 +23,11 @@
 						<input type="text" class="form-control" name="term_name" value="<?=set_value('term_name')?>" />
 						<span class="error"><?=form_error('term_name')?></span>
 					</div>
+					<div class="form-group mb-md">
+						<label class="control-label"><?=translate('next_term_begins')?></label>
+						<input type="text" class="form-control" name="next_term_begins" autocomplete="off" value="<?=set_value('next_term_begins')?>" data-plugin-datepicker data-plugin-options='{ "todayHighlight" : true }' />
+						<span class="error"><?=form_error('next_term_begins')?></span>
+					</div>
 				</div>
 				<div class="panel-footer">
 					<div class="row">
@@ -67,8 +72,8 @@
 								<td>
 								<?php if (get_permission('exam_term', 'is_edit')): ?>
 									<!-- update link -->
-									<a class="btn btn-default btn-circle icon" href="javascript:void(0);" onclick="getCategoryModal(this)"
-									data-id="<?=$row['id']?>" data-name="<?=$row['name']?>" data-branch="<?=$row['branch_id']?>">
+									<a class="btn btn-default btn-circle icon" href="javascript:void(0);" onclick="getTermModal(this)"
+									data-id="<?=$row['id']?>" data-name="<?=$row['name']?>" data-branch="<?=$row['branch_id']?>" data-next-term-begins="<?=$row['next_term_begins']?>">
 										<i class="fas fa-pen-nib"></i>
 									</a>
 								<?php endif; if (get_permission('exam_term', 'is_delete')): ?>
@@ -116,6 +121,11 @@
 					<input type="text" class="form-control" name="term_name" id="ename" value="" />
 					<span class="error"></span>
 				</div>
+				<div class="form-group mb-md">
+					<label class="control-label"><?=translate('next_term_begins')?></label>
+					<input type="text" class="form-control" name="next_term_begins" id="enext_term_begins" autocomplete="off" value="" data-plugin-datepicker data-plugin-options='{ "todayHighlight" : true }' />
+					<span class="error"></span>
+				</div>
 			</div>
 			<footer class="panel-footer">
 				<div class="row">
@@ -131,3 +141,20 @@
 	</section>
 </div>
 <?php endif; ?>
+
+<script type="text/javascript">
+	function getTermModal(obj) {
+		var id = $(obj).data("id");
+		var name = $(obj).data('name');
+		var branch = $(obj).data('branch');
+		var nextTermBegins = $(obj).data('next-term-begins');
+		$('.error').html("");
+		$('#ecategory_id').val(id);
+		$('#ename').val(name);
+		$('#enext_term_begins').val(nextTermBegins);
+		if ($('#ebranch_id').length) {
+			$('#ebranch_id').val(branch).trigger('change');
+		}
+		mfp_modal('#modal');
+	}
+</script>

@@ -81,7 +81,7 @@ class Card_manage extends Admin_Controller
         );
         $this->data['branch_id'] = $this->application_model->get_branch_id();
         $this->data['certificatelist'] = $this->card_manage_model->getList();
-        $this->data['title'] = translate('id_card') . " " . translate('templete');
+        $this->data['title'] = translate('id_card') . " " . translate('template');
         $this->data['sub_page'] = 'card_manage/id_card_templete';
         $this->data['main_menu'] = 'card_manage';
         $this->load->view('layout/index', $this->data);
@@ -110,7 +110,7 @@ class Card_manage extends Admin_Controller
             exit();
         }
         $this->data['certificate'] = $this->app_lib->getTable('card_templete', array('t.id' => $id), true);
-        $this->data['title'] = translate('id_card') . " " . translate('templete');
+        $this->data['title'] = translate('id_card') . " " . translate('template');
         $this->data['headerelements'] = array(
             'css' => array(
                 'css/certificate.css',
@@ -257,7 +257,11 @@ class Card_manage extends Admin_Controller
         }
         if (!empty($branchID)) {
             $this->db->select('id,name');
-            $this->db->where(array('branch_id' => $branchID, 'user_type' => $userType, 'card_type' => $cardType));
+            $this->db->group_start();
+            $this->db->where('branch_id', $branchID);
+            $this->db->or_where('available_all_branches', 1);
+            $this->db->group_end();
+            $this->db->where(array('user_type' => $userType, 'card_type' => $cardType));
             $result = $this->db->get('card_templete')->result_array();
             if (count($result)) {
                 $html .= '<option value="">' . translate('select') . '</option>';
@@ -329,7 +333,7 @@ class Card_manage extends Admin_Controller
         );
         $this->data['branch_id'] = $this->application_model->get_branch_id();
         $this->data['certificatelist'] = $this->card_manage_model->getList(2);
-        $this->data['title'] = translate('admit_card') . " " . translate('templete');
+        $this->data['title'] = translate('admit_card') . " " . translate('template');
         $this->data['sub_page'] = 'card_manage/admit_card_templete';
         $this->data['main_menu'] = 'card_manage';
         $this->load->view('layout/index', $this->data);
@@ -358,7 +362,7 @@ class Card_manage extends Admin_Controller
             exit();
         }
         $this->data['templete'] = $this->app_lib->getTable('card_templete', array('t.id' => $id), true);
-        $this->data['title'] = translate('admit_card') . " " . translate('templete');
+        $this->data['title'] = translate('admit_card') . " " . translate('template');
         $this->data['headerelements'] = array(
             'css' => array(
                 'css/certificate.css',

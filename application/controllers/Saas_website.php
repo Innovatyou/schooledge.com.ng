@@ -38,6 +38,51 @@ class Saas_website extends MY_Controller
         $this->load->view('saas_website/index', $this->data);
     }
 
+    public function demo()
+    {
+        $this->data['getSettings'] = $this->saas_model->getSettings();
+        $this->data['demoPassword'] = 'Demo@2026';
+
+        $branch = $this->db->where('name', 'SchoolEdge Demo Academy')->get('branch')->row();
+        $this->data['demoBranch'] = $branch;
+        $this->data['demoAdmin'] = null;
+        $this->data['demoTeacher'] = null;
+        $this->data['demoStudent'] = null;
+        $this->data['demoParent'] = null;
+
+        if ($branch) {
+            $this->data['demoAdmin'] = $this->db->select('login_credential.username, staff.name')
+                ->from('login_credential')
+                ->join('staff', 'staff.id = login_credential.user_id')
+                ->where(array('login_credential.role' => 2, 'staff.branch_id' => $branch->id))
+                ->order_by('staff.id', 'ASC')->limit(1)->get()->row();
+
+            $this->data['demoTeacher'] = $this->db->select('login_credential.username, staff.name')
+                ->from('login_credential')
+                ->join('staff', 'staff.id = login_credential.user_id')
+                ->where(array('login_credential.role' => 3, 'staff.branch_id' => $branch->id))
+                ->order_by('staff.id', 'ASC')->limit(1)->get()->row();
+
+            $studentRow = $this->db->select('login_credential.username, student.id as student_id, student.first_name, student.last_name, student.parent_id')
+                ->from('login_credential')
+                ->join('student', 'student.id = login_credential.user_id')
+                ->join('enroll', 'enroll.student_id = student.id')
+                ->where(array('login_credential.role' => 7, 'enroll.branch_id' => $branch->id))
+                ->order_by('student.id', 'ASC')->limit(1)->get()->row();
+            $this->data['demoStudent'] = $studentRow;
+
+            if ($studentRow) {
+                $this->data['demoParent'] = $this->db->select('login_credential.username, parent.name')
+                    ->from('login_credential')
+                    ->join('parent', 'parent.id = login_credential.user_id')
+                    ->where(array('login_credential.role' => 6, 'parent.id' => $studentRow->parent_id))
+                    ->get()->row();
+            }
+        }
+
+        $this->load->view('saas_website/demo', $this->data);
+    }
+
     public function register()
     {
         if ($_POST) {

@@ -54,19 +54,38 @@
 					<div class="form-group">
 						<label class="control-label col-md-3">Page Layout <span class="required">*</span></label>
 						<div class="col-md-8">
+							<select name="page_layout" class="form-control layout-preset" data-width='100%'
+							data-plugin-selectTwo  data-minimum-results-for-search='Infinity'>
+								<option value="" data-desc="Choose the certificate orientation" <?=$certificate['page_layout'] == '' ? 'selected' : ''?>><?=translate('select')?></option>
+								<option value="1" data-desc="210mm x 297mm &mdash; standard upright certificate, ideal for formal awards and diplomas" <?=$certificate['page_layout'] == 1 ? 'selected' : ''?>>A4 (Portrait)</option>
+								<option value="2" data-desc="297mm x 210mm &mdash; wide layout, good for certificates with side-by-side signatures or seals" <?=$certificate['page_layout'] == 2 ? 'selected' : ''?>>A4 (Landscape)</option>
+							</select>
+							<small class="preset-desc text-muted"><?=$certificate['page_layout'] == 2 ? 'Wide layout, good for certificates with side-by-side signatures or seals' : 'Standard upright certificate, ideal for formal awards and diplomas'?></small>
+							<span class="error"></span>
+						</div>
+					</div>
+
+					<div class="form-group">
+						<label class="control-label col-md-3"><?=translate('design_style')?> <span class="required">*</span></label>
+						<div class="col-md-8">
 							<?php
-								$arrayType = array(
-									'' => translate('select'),
-									'1' => "A4 (Portrait)",
-									'2' => "A4 (Landscape)"
-								);
-								echo form_dropdown("page_layout", $arrayType, $certificate['page_layout'], "class='form-control' data-width='100%'
+								echo form_dropdown("design_style", document_template_styles(), document_template_style($certificate), "class='form-control' data-width='100%'
 								data-plugin-selectTwo  data-minimum-results-for-search='Infinity'");
 							?>
 							<span class="error"></span>
 						</div>
 					</div>
-
+<?php if (is_superadmin_loggedin()): ?>
+					<div class="form-group">
+						<label class="control-label col-md-3">Availability</label>
+						<div class="col-md-8">
+							<div class="checkbox-replace">
+								<label class="i-checks"><input type="checkbox" name="available_all_branches" value="1" <?=(isset($certificate['available_all_branches']) && $certificate['available_all_branches'] == 1) ? 'checked' : ''?>><i></i> Available for all schools</label>
+							</div>
+							<span class="error"></span>
+						</div>
+					</div>
+<?php endif; ?>
 					<div class="form-group studenttags" style="<?=$certificate['user_type'] == 1 ? '' : 'display: none;' ?>">
 						<label class="control-label col-md-3">QR Code Text <span class="required">*</span></label>
 						<div class="col-md-8">
@@ -126,7 +145,15 @@
 					<div class="form-group">
 						<label class="col-md-3 control-label">Layout Spacing <span class="required">*</span></label>
 						<div class="col-md-8">
-							<div class="row">
+							<select class="form-control layout-preset" data-target="input[name=top_space],input[name=bottom_space],input[name=right_space],input[name=left_space]">
+								<option value="" data-desc="Choose a preset, or edit the custom spacing below">Select a preset (optional)</option>
+								<option value="0,0,0,0" data-desc="No padding &mdash; content touches the edges">None (0px)</option>
+								<option value="8,8,8,8" data-desc="Minimal breathing room">Tight (8px)</option>
+								<option value="16,16,16,16" data-desc="Balanced spacing &mdash; a good default">Normal (16px)</option>
+								<option value="30,30,30,30" data-desc="Generous margins for a spacious look">Wide (30px)</option>
+							</select>
+							<small class="preset-desc text-muted">Choose a preset, or edit the custom spacing below</small>
+							<div class="row mt-sm">
 								<div class="col-xs-6">
 									<input type="text" class="form-control" name="top_space" value="<?=$certificate['top_space']?>" placeholder="Top Space (px)" />
 								</div>

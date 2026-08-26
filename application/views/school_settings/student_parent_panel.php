@@ -75,11 +75,11 @@
                         <h5 class="chart-title mb-xs"><?php echo translate('default_template'); ?></h5>
                         <div class="mt-md">
                             <div class="form-group mt-md">
-                                <label class="col-md-3 control-label"><?php echo translate('admit_card') . " " . translate('templete'); ?> <span class="required">*</span></label>
+                                <label class="col-md-3 control-label"><?php echo translate('admit_card') . " " . translate('template'); ?> <span class="required">*</span></label>
                                 <div class="col-md-7">
 
                                         <?php
-                                            $arrayClass = $this->app_lib->getSelectByBranch('card_templete', $branch_id, false, array('user_type' => 1, 'card_type' => 2));
+                                            $arrayClass = $this->app_lib->getTemplateSelectByBranch('card_templete', $branch_id, false, array('user_type' => 1, 'card_type' => 2));
                                             echo form_dropdown("admit_card_id", $arrayClass, set_value('admit_card_id', $school['default_admitcard_temp']), "class='form-control' id='templete_id'
                                             data-plugin-selectTwo data-width='100%' ");
                                         ?>
@@ -92,7 +92,7 @@
                                 <label class="col-md-3 control-label"><?php echo translate('marksheet') . " " . translate('template'); ?> <span class="required">*</span></label>
                                 <div class="col-md-7 mb-md">
                                     <?php
-                                        $arraySection = $this->app_lib->getSelectByBranch('marksheet_template', $branch_id);
+                                        $arraySection = $this->app_lib->getTemplateSelectByBranch('marksheet_template', $branch_id);
                                         echo form_dropdown("marksheet_template_id", $arraySection, set_value('marksheet_template_id', $school['default_marksheet_temp']), "class='form-control' id='templateID'
                                         data-plugin-selectTwo data-width='100%' ");
                                     ?>

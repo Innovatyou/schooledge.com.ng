@@ -32,9 +32,9 @@
                     </div>
 					<div class="col-md-<?=$widget?> mb-sm">
 						<div class="form-group">
-							<label class="control-label"><?=translate('templete')?> <span class="required">*</span></label>
+							<label class="control-label"><?=translate('template')?> <span class="required">*</span></label>
 							<?php
-								$arrayClass = $this->app_lib->getSelectByBranch('card_templete', $branch_id, false, array('user_type' => 2, 'card_type' => 1));
+								$arrayClass = $this->app_lib->getTemplateSelectByBranch('card_templete', $branch_id, false, array('user_type' => 2, 'card_type' => 1));
 								echo form_dropdown("templete_id", $arrayClass, set_value('templete_id'), "class='form-control' id='templete_id'
 								required data-plugin-selectTwo data-width='100%' ");
 							?>
@@ -146,6 +146,11 @@
         $('form.printIn').on('submit', function(e){
             e.preventDefault();
             var btn = $(this).find('[type="submit"]');
+            var countRow = $(this).find('input[name="user_id[]"]:checked').length;
+            if (countRow == 0) {
+                popupMsg("<?php echo translate('no_row_are_selected') ?>", "error");
+                return;
+            }
             $.ajax({
                 url: $(this).attr('action'),
                 type: "POST",

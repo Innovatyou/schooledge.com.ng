@@ -1127,6 +1127,9 @@ class Student extends Admin_Controller
     public function password_reset($type)
     {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                ajax_access_denied();
+            }
             $this->form_validation->set_rules('new_password', 'New Password', 'trim|required|min_length[4]');
             $this->form_validation->set_rules('confirm_password', 'Confirm Password', 'trim|required|min_length[4]|matches[new_password]');
             if ($this->form_validation->run() == true) {

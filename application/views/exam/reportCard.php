@@ -1,8 +1,10 @@
 <?php $marksheet_template = $this->marksheet_template_model->getTemplate($templateID, $branchID); ?>
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 	.mark-container {
 		height: 100%;
-		min-width: 1000px;
+		width: 100%;
+		max-width: 1000px;
 	    position: relative;
 	    z-index: 2;
 	    margin: 0 auto;
@@ -18,6 +20,12 @@
 	@page {
 		margin: -2px;
 		size: <?php echo $marksheet_template['page_layout'] == 1 ? 'portrait' : 'landscape'; ?>;
+	}
+
+	@media print {
+		.mark-container {
+			max-width: none;
+		}
 	}
 
 	@media print {
@@ -69,15 +77,16 @@ if (!empty($student_array)) {
 		$extendsData['print_date'] = $print_date;
 		$extendsData['schoolYear'] = $schoolYear;
 		$extendsData['exam_name'] = $getExam['name'];
+		$extendsData['exam_id'] = $examID;
 		$extendsData['teacher_comments'] = empty($rankDetail->teacher_comments) ? '' : $rankDetail->teacher_comments;
 		$extendsData['principal_comments'] = empty($rankDetail->principal_comments) ? '' : $rankDetail->principal_comments;
 		$header_content = $this->marksheet_template_model->tagsReplace($student, $marksheet_template, $extendsData, 'header_content');
 		$footer_content = $this->marksheet_template_model->tagsReplace($student, $marksheet_template, $extendsData, 'footer_content');
 
 		?>
-<div style="position: relative; width: 100%; height: 100%; <?php echo ($i < $len) ? 'page-break-after:always;' : 'page-break-after:avoid;'; ?>"> 
+<div style="position: relative; width: 100%; height: 100%; <?php echo ($i < $len) ? 'page-break-after:always;' : 'page-break-after:avoid;'; ?>">
 	<div class="background"></div>
-	<div class="mark-container">
+	<div class="mark-container <?=document_template_class($marksheet_template)?>">
 		<?php echo $header_content ?>
 		<table class="table table-condensed table-bordered mt-lg">
 			<thead>
@@ -233,14 +242,23 @@ if (!empty($student_array)) {
 <?php if ($marksheet_template['position'] == 1) { ?>
 				<tr class="text-weight-semibold">
 					<td valign="top">Position :</td>
-					<td valign="top" colspan="<?=$colspan?>"> <?php echo (!empty($rankDetail->rank) ? $rankDetail->rank : translate("not_generated"));?></td>
+					<td valign="top" colspan="<?=$colspan?>">
+					<?php
+						if (!empty($rankDetail->rank)) {
+							$classSize = $this->db->where('exam_id', $examID)->count_all_results('exam_rank');
+							echo $rankDetail->rank . ($classSize > 0 ? ' out of ' . $classSize : '');
+						} else {
+							echo translate('not_generated');
+						}
+					?>
+					</td>
 				</tr>
 <?php } ?>
 			</tbody>
 		</table>
 		
 		<div style="width: 100%; display: flex;">
-			<div style="width: 50%; padding-right: 15px;">
+			<div class="marksheet-summary-panel" style="width: 50%; padding-right: 15px;">
 <?php
 if ($marksheet_template['attendance_percentage'] == 1) {
 					$year = explode('-', $schoolYear);
@@ -254,12 +272,16 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 							<th colspan="2" class="text-center">Attendance</th>
 						</tr>
 						<tr>
-							<th style="width: 65%;">No. of working days</th>
+							<th style="width: 65%;">Times School Opened</th>
 							<td><?=$getTotalWorking?></td>
 						</tr>
 						<tr>
-							<th style="width: 65%;">No. of days attended</th>
+							<th style="width: 65%;">Times Present</th>
 							<td><?=$getTotalAttendance?></td>
+						</tr>
+						<tr>
+							<th style="width: 65%;">Times Absent</th>
+							<td><?=$getTotalWorking - $getTotalAttendance?></td>
 						</tr>
 						<tr>
 							<th style="width: 65%;">Attendance Percentage</th>
@@ -273,25 +295,27 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 	if ($marksheet_template['grading_scale'] == 1) {
 		if ($getExam['type_id'] != 1) {
 			?>
-			<div style="width: 50%; padding-left: 15px;">
+			<div class="marksheet-summary-panel" style="width: 50%; padding-left: 15px;">
 				<table class="table table-condensed table-bordered">
 					<tbody>
 						<tr>
-							<th colspan="3" class="text-center">Grading Scale</th>
+							<th colspan="4" class="text-center">Grading Scale</th>
 						</tr>
 						<tr>
 							<th>Grade</th>
 							<th>Min Percentage</th>
 							<th>Max Percentage</th>
+							<th>Remark</th>
 						</tr>
-					<?php 
+					<?php
 					$grade = $this->db->where('branch_id', $getExam['branch_id'])->get('grade')->result_array();
 					foreach ($grade as $key => $row) {
 					?>
 						<tr>
-							<td style="width: 30%;"><?=$row['name']?></td>
-							<td style="width: 30%;"><?=$row['lower_mark']?>%</td>
-							<td style="width: 30%;"><?=$row['upper_mark']?>%</td>
+							<td style="width: 25%;"><?=$row['name']?></td>
+							<td style="width: 25%;"><?=$row['lower_mark']?>%</td>
+							<td style="width: 25%;"><?=$row['upper_mark']?>%</td>
+							<td style="width: 25%;"><?=$row['remark']?></td>
 						</tr>
 					<?php } ?>
 					</tbody>

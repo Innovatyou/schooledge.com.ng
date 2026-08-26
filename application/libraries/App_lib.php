@@ -353,6 +353,32 @@ class App_lib
         return $array;
     }
 
+    // like getSelectByBranch(), but also includes rows marked available_all_branches = 1
+    // (card_templete, certificates_templete, marksheet_template templates shared across every school)
+    public function getTemplateSelectByBranch($table, $branch_id = '', $all = false, $where = '')
+    {
+        if (empty($branch_id)) {
+            $array = array('' => translate('select_branch_first'));
+        } else {
+            $this->CI->db->group_start();
+            $this->CI->db->where('branch_id', $branch_id);
+            $this->CI->db->or_where('available_all_branches', 1);
+            $this->CI->db->group_end();
+            if (is_array($where)) {
+                $this->CI->db->where($where);
+            }
+            $result = $this->CI->db->get($table)->result();
+            $array = array('' => translate('select'));
+            if ($all == true) {
+                $array['all'] = translate('all_select');
+            }
+            foreach ($result as $row) {
+                $array[$row->id] = $row->name;
+            }
+        }
+        return $array;
+    }
+
     public function getSelectList($table, $all = '')
     {
         $arrayData = array("" => translate('select'));

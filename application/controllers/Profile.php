@@ -31,6 +31,9 @@ class Profile extends Admin_Controller
         $userID = get_loggedin_user_id();
         $loggedinRoleID = loggedin_role_id();
         $branchID = get_loggedin_branch_id();
+        if ($_POST && is_demo_readonly()) {
+            access_denied();
+        }
         if ($loggedinRoleID == 6) {
             if ($_POST) {
                 $this->form_validation->set_rules('name', translate('name'), 'trim|required');
@@ -200,6 +203,9 @@ class Profile extends Admin_Controller
     public function password()
     {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                ajax_access_denied();
+            }
             $this->form_validation->set_rules('current_password', 'Current Password', 'trim|required|min_length[4]|callback_check_validate_password');
             $this->form_validation->set_rules('new_password', 'New Password', 'trim|required|min_length[4]');
             $this->form_validation->set_rules('confirm_password', 'Confirm Password', 'trim|required|min_length[4]|matches[new_password]');
@@ -233,6 +239,9 @@ class Profile extends Admin_Controller
     public function username_change()
     {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                ajax_access_denied();
+            }
             $this->form_validation->set_rules('username', translate('username'), 'trim|required|callback_unique_username');
             if ($this->form_validation->run() == true) {
                 $username = $this->input->post('username');

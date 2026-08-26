@@ -49,6 +49,11 @@ class Authentication extends Authentication_Controller
                         $getUser = $this->authentication_model->getUserNameByRoleID($login_credential->role, $login_credential->user_id);
                         $getConfig = $this->db->select('translation,session_id')->get_where('global_settings', array('id' => 1))->row();
                         $language = $getConfig->translation;
+                        $isDemoBranch = false;
+                        if ($login_credential->role != 1) {
+                            $demoFlag = $this->db->select('is_demo')->where('id', $getUser['branch_id'])->get('branch')->row();
+                            $isDemoBranch = !empty($demoFlag) && $demoFlag->is_demo == 1;
+                        }
                         if($this->app_lib->isExistingAddon('saas')) {
                             if ($login_credential->role != 1) {
                                 $schoolSettings = $this->db->select('id,translation')->where(array('id' => $getUser['branch_id'], 'status' => 1))->get('branch')->row();
@@ -71,6 +76,18 @@ class Authentication extends Authentication_Controller
                                 set_alert('error', translate('parent_login_has_been_disabled'));
                                 redirect(base_url('authentication'));
                                 exit();
+                            }
+                            // auto-select the first child so per-child pages (report card, books, fees, hostel, etc.) work right after login
+                            $firstChild = $this->db->select('e.id, e.student_id')
+                                ->from('enroll as e')
+                                ->join('student as s', 's.id = e.student_id', 'inner')
+                                ->where(array('s.parent_id' => $login_credential->user_id, 'e.session_id' => $getConfig->session_id))
+                                ->order_by('s.id', 'asc')
+                                ->limit(1)
+                                ->get()->row();
+                            if (!empty($firstChild)) {
+                                $this->session->set_userdata('myChildren_id', $firstChild->student_id);
+                                $this->session->set_userdata('enrollID', $firstChild->id);
                             }
                         } elseif($login_credential->role == 7) {
                             // check student login status
@@ -101,6 +118,7 @@ class Authentication extends Authentication_Controller
                             'is_rtl' => $isRTL,
                             'set_session_id' => $getConfig->session_id,
                             'loggedin' => true,
+                            'is_demo_branch' => $isDemoBranch,
                         );
 
                         if($this->app_lib->isExistingAddon('two_fa') && moduleIsEnabled('two_fa')) {

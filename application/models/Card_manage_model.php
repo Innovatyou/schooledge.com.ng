@@ -104,6 +104,8 @@ class Card_manage_model extends MY_Model
         $arrayLive = array(
             'branch_id' => $this->application_model->get_branch_id(),
             'name' => $data['card_name'],
+            'design_style' => in_array($this->input->post('design_style'), array('classic', 'modern', 'premium'), true) ? $this->input->post('design_style') : 'classic',
+            'available_all_branches' => (is_superadmin_loggedin() && $this->input->post('available_all_branches')) ? 1 : 0,
             'card_type' => $data['card_type'],
             'user_type' => $userType,
             'layout_width' => $data['layout_width'],

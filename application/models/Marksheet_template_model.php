@@ -26,6 +26,8 @@ class Marksheet_template_model extends MY_Model
         $arrayLive = array(
             'branch_id' => $this->application_model->get_branch_id(),
             'name' => $data['marksheet_template_name'],
+            'design_style' => in_array($this->input->post('design_style'), array('classic', 'modern', 'premium'), true) ? $this->input->post('design_style') : 'classic',
+            'available_all_branches' => (is_superadmin_loggedin() && $this->input->post('available_all_branches')) ? 1 : 0,
             'page_layout' => $data['page_layout'],
             'photo_style' => $data['photo_style'],
             'photo_size' => empty($data['photo_size']) ? 100 : $data['photo_size'],
@@ -43,6 +45,7 @@ class Marksheet_template_model extends MY_Model
             'attendance_percentage' => isset($_POST['attendance_percentage']) ? 1 : 0,
             'grading_scale' => isset($_POST['grading_scale']) ? 1 : 0,
             'position' => isset($_POST['position']) ? 1 : 0,
+            'term_position' => isset($_POST['term_position']) ? 1 : 0,
             'cumulative_average' => isset($_POST['cumulative_average']) ? 1 : 0,
             'class_average' => isset($_POST['class_average']) ? 1 : 0,
             'subject_position' => isset($_POST['subject_position']) ? 1 : 0,
@@ -92,7 +95,9 @@ class Marksheet_template_model extends MY_Model
         $arrayTags[] = '{institute_email}';
         $arrayTags[] = '{institute_address}';
         $arrayTags[] = '{institute_mobile_no}';
-        
+        $arrayTags[] = '{next_term_begins}';
+        $arrayTags[] = '{psychomotor_ratings}';
+
         return $arrayTags;
     }
 
@@ -153,8 +158,23 @@ class Marksheet_template_model extends MY_Model
                 if (!empty($extendsData['teacher_comments'])) {
                     $body = str_replace($tag, $extendsData['teacher_comments'], $body);
                 } else {
-                   $body = str_replace($tag, "", $body); 
+                   $body = str_replace($tag, "", $body);
                 }
+            } else if ($field == 'next_term_begins') {
+                $nextTermBegins = '';
+                if (!empty($extendsData['exam_id'])) {
+                    $termRow = $this->db->select('exam_term.next_term_begins')
+                        ->from('exam')
+                        ->join('exam_term', 'exam_term.id = exam.term_id', 'left')
+                        ->where('exam.id', $extendsData['exam_id'])
+                        ->get()->row();
+                    if (!empty($termRow->next_term_begins)) {
+                        $nextTermBegins = _d($termRow->next_term_begins);
+                    }
+                }
+                $body = str_replace($tag, $nextTermBegins, $body);
+            } else if ($field == 'psychomotor_ratings') {
+                $body = str_replace($tag, $this->psychomotorRatingsTable($userDetails, $extendsData), $body);
             } else {
                 $body = str_replace($tag, $userDetails[$field], $body);
             }
@@ -165,5 +185,35 @@ class Marksheet_template_model extends MY_Model
     public function getTemplate($templateID = '', $branchID = '')
     {
         return $this->db->where(array('id' => $templateID, 'branch_id' => $branchID))->get('marksheet_template')->row_array();
+    }
+
+    protected function psychomotorRatingsTable($userDetails, $extendsData)
+    {
+        if (empty($extendsData['exam_id']) || empty($userDetails['id'])) {
+            return '';
+        }
+        $ratings = array();
+        $rows = $this->db->select('trait_key,rating')
+            ->where('exam_id', $extendsData['exam_id'])
+            ->where('student_id', $userDetails['id'])
+            ->get('psychomotor_rating')->result_array();
+        foreach ($rows as $row) {
+            $ratings[$row['trait_key']] = $row['rating'];
+        }
+        if (empty($ratings)) {
+            return '';
+        }
+        $scale = psychomotor_rating_scale();
+        $html = '<table class="table table-condensed table-bordered"><tbody>';
+        $html .= '<tr><th colspan="2" class="text-center">Psychomotor / Affective Rating</th></tr>';
+        foreach (psychomotor_traits() as $traitKey => $label) {
+            if (!isset($ratings[$traitKey])) {
+                continue;
+            }
+            $ratingLabel = isset($scale[$ratings[$traitKey]]) ? $scale[$ratings[$traitKey]] : '';
+            $html .= '<tr><td style="width: 65%;">' . $label . '</td><td>' . $ratingLabel . '</td></tr>';
+        }
+        $html .= '</tbody></table>';
+        return $html;
     }
 }

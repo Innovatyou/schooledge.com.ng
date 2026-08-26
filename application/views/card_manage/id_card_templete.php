@@ -42,7 +42,7 @@
 <?php if (is_superadmin_loggedin()): ?>
 							<td><?php echo $row['branchname'];?></td>
 <?php endif; ?>
-							<td><?php echo $row['name']; ?></td>
+							<td><?php echo $row['name']; if (!empty($row['available_all_branches'])) { ?> <span class="label label-success">All Schools</span><?php } ?></td>
 							<td><?php
 							if ($row['user_type'] == 1) {
 								echo translate('student');
@@ -87,6 +87,10 @@
 <?php if (get_permission('id_card_templete', 'is_add')): ?>
 			<div class="tab-pane" id="add">
 					<?php echo form_open($this->uri->uri_string(), array('class' => 'form-bordered form-horizontal frm-submit-data'));?>
+					<?php
+						$idCardStarters = array_filter(starter_templates(), function ($t) { return $t['applies_to'] == 'id_card'; });
+						echo $this->load->view('partials/starter_template_picker', array('starters' => $idCardStarters, 'target' => 'card'), true);
+					?>
 					<?php if (is_superadmin_loggedin()): ?>
 						<div class="form-group">
 							<label class="control-label col-md-3"><?=translate('branch')?> <span class="required">*</span></label>
@@ -125,6 +129,20 @@
 					<div class="form-group">
 						<label class="control-label col-md-3">Page Layout <span class="required">*</span></label>
 						<div class="col-md-8">
+							<div class="row mb-sm">
+								<div class="col-xs-12">
+									<select class="form-control layout-preset" data-target="input[name=layout_width],input[name=layout_height]">
+										<option value="" data-desc="Choose a common size, or enter a custom width/height below">Select a preset (optional)</option>
+										<option value="54,86" data-desc="Compact vertical badge, good for lanyard clips">Portrait Badge (54 x 86mm)</option>
+										<option value="86,54" data-desc="Compact horizontal badge">Landscape Badge (86 x 54mm)</option>
+										<option value="90,120" data-desc="Bigger badge with more room for details">Large Badge (90 x 120mm)</option>
+										<option value="105,148" data-desc="Small slip size, compact printable ID">A6 (105 x 148mm)</option>
+										<option value="148,210" data-desc="Half A4 sheet &mdash; larger printable ID or certificate-style card">A5 (148 x 210mm)</option>
+										<option value="210,297" data-desc="Full page ID / certificate-style layout">A4 Full Page (210 x 297mm)</option>
+									</select>
+									<small class="preset-desc text-muted">Choose a common size, or enter a custom width/height below</small>
+								</div>
+							</div>
 							<div class="row">
 								<div class="col-xs-6">
 									<input type="text" class="form-control" name="layout_width" value="" placeholder="Layout Width (mm)" />
@@ -136,6 +154,27 @@
 							</div>
 						</div>
 					</div>
+					<div class="form-group">
+						<label class="control-label col-md-3"><?=translate('design_style')?> <span class="required">*</span></label>
+						<div class="col-md-8">
+							<?php
+								echo form_dropdown("design_style", document_template_styles(), set_value('design_style', 'classic'), "class='form-control' data-width='100%'
+								data-plugin-selectTwo  data-minimum-results-for-search='Infinity'");
+							?>
+							<span class="error"></span>
+						</div>
+					</div>
+<?php if (is_superadmin_loggedin()): ?>
+					<div class="form-group">
+						<label class="control-label col-md-3">Availability</label>
+						<div class="col-md-8">
+							<div class="checkbox-replace">
+								<label class="i-checks"><input type="checkbox" name="available_all_branches" value="1"><i></i> Available for all schools</label>
+							</div>
+							<span class="error"></span>
+						</div>
+					</div>
+<?php endif; ?>
 					<div class="form-group studenttags" style="display: none;">
 						<label class="control-label col-md-3">QR Code Text <span class="required">*</span></label>
 						<div class="col-md-8">
@@ -201,7 +240,15 @@
 					<div class="form-group">
 						<label class="col-md-3 control-label">Layout Spacing <span class="required">*</span></label>
 						<div class="col-md-8">
-							<div class="row">
+							<select class="form-control layout-preset" data-target="input[name=top_space],input[name=bottom_space],input[name=right_space],input[name=left_space]">
+								<option value="" data-desc="Choose a preset, or enter custom spacing below">Select a preset (optional)</option>
+								<option value="0,0,0,0" data-desc="No padding &mdash; content touches the edges">None (0px)</option>
+								<option value="8,8,8,8" data-desc="Minimal breathing room">Tight (8px)</option>
+								<option value="16,16,16,16" data-desc="Balanced spacing &mdash; a good default">Normal (16px)</option>
+								<option value="30,30,30,30" data-desc="Generous margins for a spacious look">Wide (30px)</option>
+							</select>
+							<small class="preset-desc text-muted">Choose a preset, or enter custom spacing below</small>
+							<div class="row mt-sm">
 								<div class="col-xs-6">
 									<input type="text" class="form-control" name="top_space" value="" placeholder="Top Space (px)" />
 								</div>

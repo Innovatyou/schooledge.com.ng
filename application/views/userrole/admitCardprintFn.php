@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 		@page {
 			margin: -2px;
@@ -38,6 +39,6 @@
 		}
 </style>
 
-<div class="certificate" id="certificate">
+<div class="certificate <?=document_template_class($template)?>" id="certificate">
 	<?=$this->card_manage_model->admitCardTagsReplace($userID, $template, $print_date, $exam_id)?>
 </div>

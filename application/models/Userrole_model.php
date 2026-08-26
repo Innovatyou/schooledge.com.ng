@@ -145,7 +145,6 @@ class Userrole_model extends MY_Model
         $this->datatables->where('e.id', $enrollID);
         $this->datatables->where('homework.status', 0);
         $this->datatables->where('homework.session_id', get_session_id());
-        $this->datatables->group_by('homework.id');
         if ($type == 'live') {
             $this->datatables->where('homework.date_of_submission >=', date("Y-m-d"));
         } else {

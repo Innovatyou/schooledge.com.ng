@@ -471,13 +471,11 @@ class School_settings extends Admin_Controller
         if ($this->form_validation->run() !== false) {
             $branchID = $this->school_model->getBranchID();
             $templateID = $this->input->post('template_id');
-            $dlt_templateID = $this->input->post('dlt_template_id');
             $notify_student = isset($_POST['notify_student']) ? 1 : 0;
             $notify_parent = isset($_POST['notify_parent']) ? 1 : 0;
             $arrayTemplate = array(
                 'notify_student' => $notify_student,
                 'notify_parent' => $notify_parent,
-                'dlt_template_id' => $dlt_templateID,
                 'template_body' => $this->input->post('template_body'),
                 'template_id' => $templateID,
                 'branch_id' => $branchID,
@@ -963,7 +961,7 @@ class School_settings extends Admin_Controller
         }
         $branchID = $this->school_model->getBranchID();
         if ($_POST) {
-            $this->form_validation->set_rules('admit_card_id', translate('admit_card') . " " . translate('templete'), 'trim');
+            $this->form_validation->set_rules('admit_card_id', translate('admit_card') . " " . translate('template'), 'trim');
             $this->form_validation->set_rules('marksheet_template_id', translate('marksheet') . " " . translate('template'), 'trim');
             if ($this->form_validation->run() == true) {
                 $mobile_visible = isset($_POST['teacher_mobile_visible']) ? 1 : 0;

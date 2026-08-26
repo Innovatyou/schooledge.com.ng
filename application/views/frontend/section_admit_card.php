@@ -23,7 +23,7 @@
 					<label class="col-md-2 control-label"><?php echo translate('default_template'); ?> <span class="required">*</span></label>
 					<div class="col-md-8">
 						<?php
-							$arrayClass = $this->app_lib->getSelectByBranch('card_templete', $branch_id, false, array('user_type' => 1, 'card_type' => 2));
+							$arrayClass = $this->app_lib->getTemplateSelectByBranch('card_templete', $branch_id, false, array('user_type' => 1, 'card_type' => 2));
 							echo form_dropdown("templete_id", $arrayClass, set_value('templete_id', $admitcard['templete_id']), "class='form-control' id='templete_id'
 							data-plugin-selectTwo data-width='100%' ");
 						?>

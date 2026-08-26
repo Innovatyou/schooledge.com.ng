@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 		@page {
 			margin: -2px;
@@ -37,10 +38,10 @@
 		}
 </style>
 <?php
-if (count($user_array)) {
+if (!empty($user_array)) {
 	foreach ($user_array as $sc => $userID) {
 	?>
-<div class="certificate">
+<div class="certificate <?=document_template_class($template)?>">
 	<?=$this->card_manage_model->tagsReplace($user_type, $userID, $template, $print_date, $expiry_date)?>
 </div>
 <?php } } ?>
