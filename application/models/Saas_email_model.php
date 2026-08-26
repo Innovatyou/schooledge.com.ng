@@ -27,6 +27,7 @@ class Saas_email_model extends CI_Model
             $message = str_replace("{reference_no}", $data['reference_no'], $message);
             $message = str_replace("{date}", $data['date'], $message);
             $message = str_replace("{fees_amount}", $data['fees_amount'], $message);
+            $message = str_replace("{login_url}", base_url('authentication/index'), $message);
             $msgData['branch_id'] = 9999;
             $msgData['recipient'] = $data['email'];
             $msgData['subject'] = $emailTemplate['subject'];
@@ -48,6 +49,7 @@ class Saas_email_model extends CI_Model
             $message = str_replace("{reference_no}", $data['reference_no'], $message);
             $message = str_replace("{date}", $data['date'], $message);
             $message = str_replace("{paid_amount}", $data['paid_amount'], $message);
+            $message = str_replace("{login_url}", base_url('authentication/index'), $message);
             $msgData['branch_id'] = 9999;
             $msgData['recipient'] = $data['email'];
             $msgData['subject'] = $emailTemplate['subject'];
@@ -74,6 +76,7 @@ class Saas_email_model extends CI_Model
             $message = str_replace("{subscription_start_date}", $data['subscription_start_date'], $message);
             $message = str_replace("{subscription_expiry_date}", $getPlanExpiryDate, $message);
             $message = str_replace("{paid_amount}", number_format(($getPlanDetails->price - $getPlanDetails->discount), 2, '.', ''), $message);
+            $message = str_replace("{login_url}", base_url('authentication/index'), $message);
             $msgData['branch_id'] = 9999;
             $msgData['recipient'] = $data['email'];
             $msgData['subject'] = $emailTemplate['subject'];

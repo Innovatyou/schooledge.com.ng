@@ -19,6 +19,8 @@ class Mailer
         if (!empty($getConfig)) {
             $school_name = get_global_setting('institute_name');
             $mail = new PHPMailer();
+            $mail->CharSet = 'UTF-8';
+            $mail->Encoding = 'base64';
             if ($getConfig->protocol == 'smtp') {
                 $smtp_encryption = $getConfig->smtp_encryption;
                 $mail->isSMTP();
@@ -47,8 +49,9 @@ class Mailer
             $mail->addReplyTo($getConfig->email, $school_name);
             $mail->addAddress($data['recipient']);
             $mail->Subject = $data['subject'];
-            $mail->AltBody = $data['message'];
+            $mail->isHTML(true);
             $mail->Body = $data['message'];
+            $mail->AltBody = $mail->html2text($data['message']);
             if ($mail->send()) {
                 return true;
             } else {
