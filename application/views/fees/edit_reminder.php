@@ -68,13 +68,6 @@
 							</div>
 						</div>
 						<div class="form-group">
-							<label class="col-md-3 control-label">DLT Template ID</label>
-							<div class="col-md-6">
-								<input type="text" class="form-control" name="dlt_template_id" autocomplete="off" value="<?=$reminder['dlt_template_id']?>" placeholder="This field is only required for Indian SMS Gateway (Ex. MSG 91).">
-								<span class="error"></span>
-							</div>
-						</div>
-						<div class="form-group">
 							<label class="col-md-3 control-label"><?=translate('notify')?></label>
 							<div class="col-md-6 mb-md">
 								<div class="checkbox-replace mt-sm pr-xs">

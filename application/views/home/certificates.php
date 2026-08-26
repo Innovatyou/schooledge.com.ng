@@ -35,7 +35,7 @@
                 <div class="form-group">
                     <label class="control-label"> <?=translate('certificate')?> <span class="required">*</span></label>
                     <?php
-                        $arrayClass = $this->app_lib->getSelectByBranch('certificates_templete', $branchID, false, array('user_type' => 1));
+                        $arrayClass = $this->app_lib->getTemplateSelectByBranch('certificates_templete', $branchID, false, array('user_type' => 1));
                         echo form_dropdown("templete_id", $arrayClass, set_value('templete_id'), "class='form-control' id='templete_id'
                         data-plugin-selectTwo data-width='100%' ");
                     ?>

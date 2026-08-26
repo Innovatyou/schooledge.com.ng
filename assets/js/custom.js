@@ -1988,4 +1988,79 @@ window.theme = {};
 		});
 	}
 
+	// layout preset dropdowns (Page Layout / Layout Spacing quick-fill selects)
+	// <select class="layout-preset" data-target="input[name=layout_width],input[name=layout_height]">
+	//   <option value="" data-desc="...">Select a preset</option>
+	//   <option value="85.6,54" data-desc="...">Credit Card / CR80 (85.6 x 54mm)</option>
+	// </select>
+	$(document).on('change', 'select.layout-preset', function () {
+		var $select = $(this);
+		var $option = $select.find('option:selected');
+		var $desc = $select.closest('.form-group').find('.preset-desc');
+		if ($desc.length) {
+			$desc.text($option.data('desc') || '');
+		}
+		var val = $option.val();
+		if (!val) {
+			return;
+		}
+		var targets = ($select.data('target') || '').split(',');
+		var values = String(val).split(',');
+		targets.forEach(function (selector, i) {
+			selector = $.trim(selector);
+			if (selector && typeof values[i] !== 'undefined') {
+				$(selector).val($.trim(values[i]));
+			}
+		});
+	});
+
+	// "Use this template" buttons on the starter-template picker (application/views/partials/starter_template_picker.php)
+	$(document).on('click', '.starter-use-btn', function () {
+		var $btn = $(this);
+		var $card = $btn.closest('.starter-card');
+		var $form = $btn.closest('form');
+		var target = $btn.data('target');
+		var settings = $btn.data('settings') || {};
+
+		function setEditor(selector, raw) {
+			if ($(selector).length && $(selector).data('summernote')) {
+				$(selector).summernote('code', raw);
+			}
+		}
+
+		if (target === 'marksheet') {
+			setEditor('#texteEditor1', $card.find('.starter-raw-header').val());
+			setEditor('#texteEditor2', $card.find('.starter-raw-footer').val());
+		} else {
+			setEditor('#certificateConten', $card.find('.starter-raw-content').val());
+		}
+
+		if (settings.layout_width) {
+			$form.find('[name="layout_width"]').val(settings.layout_width);
+		}
+		if (settings.layout_height) {
+			$form.find('[name="layout_height"]').val(settings.layout_height);
+		}
+		if (settings.page_layout) {
+			$form.find('[name="page_layout"]').val(settings.page_layout).trigger('change');
+		}
+		if (settings.photo_style) {
+			$form.find('[name="photo_style"]').val(settings.photo_style).trigger('change');
+		}
+		if (settings.photo_size) {
+			$form.find('[name="photo_size"]').val(settings.photo_size);
+		}
+		if (settings.spacing) {
+			$form.find('[name="top_space"]').val(settings.spacing[0]);
+			$form.find('[name="bottom_space"]').val(settings.spacing[1]);
+			$form.find('[name="right_space"]').val(settings.spacing[2]);
+			$form.find('[name="left_space"]').val(settings.spacing[3]);
+		}
+		if (settings.design_style) {
+			$form.find('[name="design_style"]').val(settings.design_style).trigger('change');
+		}
+
+		popupMsg("Template applied - review and adjust as needed, then save.", "success");
+	});
+
 }).apply(this, [window.theme, jQuery]);

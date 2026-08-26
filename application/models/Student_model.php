@@ -436,8 +436,8 @@ class Student_model extends MY_Model
         }
         $this->db->where('e.branch_id', $branch_id);
         $this->db->where('e.session_id', get_session_id());
-        $this->db->order_by('s.id', 'ASC');
         $this->db->group_by('p.id');
+        $this->db->order_by('p.id', 'ASC');
         $query = $this->db->get();
         return $query->result_array();
     }

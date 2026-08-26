@@ -71,6 +71,9 @@ class Communication extends Admin_Controller
 
     public function message_send() {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                ajax_access_denied();
+            }
             if (is_superadmin_loggedin()) {
                 $this->form_validation->set_rules('branch_id', translate('branch'), 'required');
             }
@@ -95,6 +98,9 @@ class Communication extends Admin_Controller
     public function message_reply()
     {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                ajax_access_denied();
+            }
             $this->form_validation->set_rules('attachment_file', translate('attachment'), 'callback_handle_upload');
             $this->form_validation->set_rules('message', 'Message', 'trim|required');
             if ($this->form_validation->run() == true) {
@@ -186,6 +192,9 @@ class Communication extends Admin_Controller
     /* message delete */
     public function delete_mail()
     {
+        if (is_demo_readonly()) {
+            ajax_access_denied();
+        }
         $arrayID = $this->input->post('arrayID');
         $mode = $this->input->post('mode');
         if (count($arrayID)) {

@@ -55,7 +55,7 @@ class Exam_progress extends Admin_Controller
                 $this->db->where('e.branch_id', $branchID);
                 $this->db->where('s.active', 1);
                 $this->db->where_in('m.exam_id', $examID);
-                $this->db->group_by('m.student_id');
+                $this->db->group_by('e.id');
                 $this->db->order_by('e.id', 'ASC');
                 $this->data['examIDArr'] = $examID;
                 $this->data['student'] = $this->db->get()->result_array();  
@@ -116,6 +116,7 @@ class Exam_progress extends Admin_Controller
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/vendor/bootstrap/css/bootstrap.min.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/custom-style.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/pdf-style.css')), 1);
+            $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/document-templates.css')), 1);
             $this->html2pdf->mpdf->WriteHTML($html);
             $this->html2pdf->mpdf->SetDisplayMode('fullpage');
             $this->html2pdf->mpdf->autoScriptToLang  = true;
@@ -149,6 +150,7 @@ class Exam_progress extends Admin_Controller
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/vendor/bootstrap/css/bootstrap.min.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/custom-style.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/pdf-style.css')), 1);
+            $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/document-templates.css')), 1);
             $this->html2pdf->mpdf->WriteHTML($html);
             $this->html2pdf->mpdf->SetDisplayMode('fullpage');
             $this->html2pdf->mpdf->autoScriptToLang  = true;

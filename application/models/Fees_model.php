@@ -262,7 +262,7 @@ class Fees_model extends MY_Model
         $this->datatables->search_value('s.first_name,s.last_name,s.register_no,s.mobileno');
         $this->datatables->column_order('e.id,s.first_name,c.id,se.id,s.register_no,e.roll,s.mobileno,fa.id');
         $this->datatables->group_by('fa.student_id');
-        $this->datatables->order_by('fa.id', 'asc');
+        $this->datatables->order_by('e.id', 'asc');
         $results = $this->datatables->generate();
         $records = array();
         $records = json_decode($results);
@@ -325,7 +325,7 @@ class Fees_model extends MY_Model
     {
         $get_session_id = get_session_id();
         if ($feegroup_id == 'transport') {
-            $this->datatables->select('IFNULL(SUM(h.amount), 0) as total_amount, IFNULL(SUM(h.discount), 0) as total_discount, sp.route_fare as full_amount,ff.due_date, e.student_id, e.id as enroll_id,e.roll, s.first_name, s.last_name, s.register_no, s.mobileno, c.name as class_name, se.name as section_name');
+            $this->datatables->select('IFNULL(SUM(h.amount), 0) as total_amount, IFNULL(SUM(h.discount), 0) as total_discount, MAX(sp.route_fare) as full_amount, MAX(ff.due_date) as due_date, e.student_id, e.id as enroll_id,e.roll, s.first_name, s.last_name, s.register_no, s.mobileno, c.name as class_name, se.name as section_name');
             $this->datatables->from('transport_fee_details as fa');
             $this->datatables->join('fee_payment_history as h', 'h ON h.transport_fee_details_id = fa.id', 'left');
             $this->datatables->join('transport_stoppage_point as sp', 'sp.id = fa.stoppage_point_id', 'left');
@@ -333,17 +333,17 @@ class Fees_model extends MY_Model
             $this->datatables->join('enroll as e', 'e.id = fa.enroll_id', 'inner');;
             $this->datatables->where('fa.transport_fee_fine_id', $fee_feetype_id);
             $this->datatables->where('sp.session_id', $get_session_id);
-            $this->datatables->group_by('fa.enroll_id');
+            $this->datatables->group_by('fa.id');
             $this->datatables->search_value('s.first_name,s.register_no,e.roll,s.mobileno,ff.due_date');
         } else {
-            $this->datatables->select('IFNULL(SUM(h.amount), 0) as total_amount, IFNULL(SUM(h.discount), 0) as total_discount, gd.amount as full_amount, fa.prev_due as prev_due, gd.due_date, e.student_id, e.id as enroll_id,e.roll, s.first_name, s.last_name, s.register_no, s.mobileno, c.name as class_name, se.name as section_name');
+            $this->datatables->select('IFNULL(SUM(h.amount), 0) as total_amount, IFNULL(SUM(h.discount), 0) as total_discount, MAX(gd.amount) as full_amount, fa.prev_due as prev_due, MAX(gd.due_date) as due_date, e.student_id, e.id as enroll_id,e.roll, s.first_name, s.last_name, s.register_no, s.mobileno, c.name as class_name, se.name as section_name');
             $this->datatables->from('fee_allocation as fa');
             $this->datatables->join('fee_payment_history as h', 'h ON h.allocation_id = fa.id and h.type_id =' . $this->db->escape($fee_feetype_id), 'left');
             $this->datatables->join('fee_groups_details as gd', 'gd.fee_groups_id = fa.group_id and gd.fee_type_id =' . $this->db->escape($fee_feetype_id), 'inner');
             $this->datatables->join('enroll as e', 'e.id = fa.student_id', 'inner');
             $this->datatables->where('fa.group_id', $feegroup_id);
             $this->datatables->where('fa.session_id', $get_session_id);
-            $this->datatables->group_by('fa.student_id');
+            $this->datatables->group_by('fa.id');
             $this->datatables->search_value('s.first_name,s.register_no,e.roll,s.mobileno,gd.due_date');
         }
         $this->datatables->join('student as s', 's.id = e.student_id', 'left');
@@ -562,7 +562,6 @@ class Fees_model extends MY_Model
             'student' => (isset($data['chk_student']) ? 1 : 0),
             'guardian' => (isset($data['chk_guardian']) ? 1 : 0),
             'message' => $data['message'],
-            'dlt_template_id' => $data['dlt_template_id'],
             'branch_id' => $data['branch_id'],
         );
         if (!isset($data['reminder_id'])) {

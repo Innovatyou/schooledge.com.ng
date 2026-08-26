@@ -75,7 +75,7 @@
                                                 <i class="far fa-user"></i>
                                             </span>
                                         </span>
-                                        <input type="text" class="form-control" name="email" value="<?php echo set_value('email');?>" placeholder="<?php echo translate('username');?>" />
+                                        <input type="text" class="form-control" name="email" value="<?php echo set_value('email', $this->input->get('demo_user'));?>" placeholder="<?php echo translate('username');?>" />
                                     </div>
                                     <span class="error"><?php echo form_error('email'); ?></span>
                                 </div>
@@ -84,7 +84,7 @@
                                         <span class="input-group-addon">
                                             <span class="icon"><i class="fas fa-unlock-alt"></i></span>
                                         </span>
-                                        <input type="password" class="form-control input-rounded" name="password" placeholder="<?php echo translate('password');?>" />
+                                        <input type="password" class="form-control input-rounded" name="password" value="<?php echo set_value('password', $this->input->get('demo_pass'));?>" placeholder="<?php echo translate('password');?>" />
                                     </div>
                                     <span class="error"><?php echo form_error('password'); ?></span>
                                 </div>

@@ -27,7 +27,6 @@
 											'id' => '',
 											'notify_student' => '',
 											'notify_parent' => '',
-											'dlt_template_id' => '',
 											'template_body' => '',
 										);
 									}
@@ -73,11 +72,6 @@
 															</div>
 														</div>
 													<?php } ?>
-														<div class="form-group">
-															<label class="control-label">DLT Template ID</label>
-															<input type="text" class="form-control" name="dlt_template_id" value="<?=$getRow['dlt_template_id']?>" placeholder="This field is only required for Indian SMS Gateway (Ex. MSG 91).">
-															<span class="error"></span>
-														</div>
 														<div class="form-group">
 															<label class=" control-label"><?=translate('body')?> <span class="required">*</span></label>
 															<textarea class="form-control message-text" name="template_body" rows="3" id="txt_<?=$getRow['id']?>"><?=$getRow['template_body']?></textarea>

@@ -1,4 +1,5 @@
 <?php $marksheet_template = $this->marksheet_template_model->getTemplate($templateID, $branchID); ?>
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 	.mark-container {
 		height: 100%;
@@ -74,7 +75,7 @@ if (!empty($studentID)) {
 		?>
 <div style="position: relative; width: 100%; height: 100%;"> 
 	<div class="background"></div>
-	<div class="mark-container">
+	<div class="mark-container <?=document_template_class($marksheet_template)?>">
 		<?php echo $header_content ?>
 		<table class="table table-condensed table-bordered mt-lg">
 			<thead>

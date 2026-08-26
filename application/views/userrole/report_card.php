@@ -4,7 +4,7 @@
     </header>
     <div class="panel-body">
 	<?php
-	$this->db->select('timetable_exam.*,exam.type_id,exam.name as exam_name,exam.term_id');
+	$this->db->select('timetable_exam.exam_id,exam.type_id,exam.name as exam_name,exam.term_id');
 	$this->db->from('timetable_exam');
 	$this->db->join('exam', 'exam.id = timetable_exam.exam_id', 'inner');
 	$this->db->where('timetable_exam.class_id', $stu['class_id']);

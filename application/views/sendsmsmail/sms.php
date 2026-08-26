@@ -68,13 +68,6 @@
 					</div>
 					<div class="col-md-4 mb-sm">
 						<div class="form-group">
-							<label class="control-label">DLT Template ID</label>
-							<input type="text" class="form-control" name="dlt_template_id" value="" placeholder="This field is only required for Indian SMS Gateway (Ex. MSG 91).">
-							<span class="error"></span>
-						</div>
-					</div>
-					<div class="col-md-4 mb-sm">
-						<div class="form-group">
 							<label class="control-label"> <?=translate('type')?> <span class="required">*</span></label>
 							<?php
 							$arrayType = array(

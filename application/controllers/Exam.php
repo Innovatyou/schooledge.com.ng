@@ -263,6 +263,24 @@ class Exam extends Admin_Controller
         $this->db->delete('exam_mark_distribution');
     }
 
+    public function seed_ca_distribution()
+    {
+        if (!get_permission('mark_distribution', 'is_add')) {
+            access_denied();
+        }
+        $branchID = $this->application_model->get_branch_id();
+        $existing = $this->db->where('branch_id', $branchID)->get('exam_mark_distribution');
+        if ($existing->num_rows() > 0) {
+            set_alert('error', translate('mark_distribution_already_exist'));
+        } else {
+            foreach (array('1st CA', '2nd CA', 'Exam') as $name) {
+                $this->db->insert('exam_mark_distribution', array('name' => $name, 'branch_id' => $branchID));
+            }
+            set_alert('success', translate('information_has_been_saved_successfully'));
+        }
+        redirect(base_url('exam/mark_distribution'));
+    }
+
     /* hall form validation rules */
     protected function hall_validation()
     {
@@ -442,6 +460,61 @@ class Exam extends Admin_Controller
         }
     }
 
+    public function psychomotor_entry()
+    {
+        if (!get_permission('psychomotor_rating', 'is_view')) {
+            access_denied();
+        }
+
+        $branchID = $this->application_model->get_branch_id();
+        $classID = $this->input->post('class_id');
+        $sectionID = $this->input->post('section_id');
+        $examID = $this->input->post('exam_id');
+
+        $this->data['branch_id'] = $branchID;
+        $this->data['class_id'] = $classID;
+        $this->data['section_id'] = $sectionID;
+        $this->data['exam_id'] = $examID;
+        if (isset($_POST['search'])) {
+            $this->data['student'] = $this->exam_model->getPsychomotorStudents($branchID, $classID, $sectionID, $examID);
+        }
+
+        $this->data['sub_page'] = 'exam/psychomotor_entry';
+        $this->data['main_menu'] = 'mark';
+        $this->data['title'] = translate('psychomotor_rating');
+        $this->load->view('layout/index', $this->data);
+    }
+
+    public function psychomotor_save()
+    {
+        if ($_POST) {
+            if (!get_permission('psychomotor_rating', 'is_add')) {
+                ajax_access_denied();
+            }
+            $branchID = $this->application_model->get_branch_id();
+            $sessionID = get_session_id();
+            $examID = $this->input->post('exam_id');
+            $inputRatings = $this->input->post('rating');
+            $flat = array();
+            if (!empty($inputRatings)) {
+                foreach ($inputRatings as $row) {
+                    foreach (psychomotor_traits() as $traitKey => $label) {
+                        $flat[] = array(
+                            'student_id' => $row['student_id'],
+                            'enroll_id' => $row['enroll_id'],
+                            'trait_key' => $traitKey,
+                            'rating' => isset($row[$traitKey]) ? $row[$traitKey] : '',
+                        );
+                    }
+                }
+            }
+            $this->exam_model->savePsychomotorRatings($branchID, $sessionID, $examID, $flat);
+            $message = translate('information_has_been_saved_successfully');
+            $array = array('status' => 'success', 'message' => $message);
+            echo json_encode($array);
+        }
+    }
+
     //exam mark register validation check
     public function valid_Mark($val, $i)
     {
@@ -494,6 +567,20 @@ class Exam extends Admin_Controller
         $this->data['sub_page'] = 'exam/grade';
         $this->data['main_menu'] = 'mark';
         $this->load->view('layout/index', $this->data);
+    }
+
+    public function seed_default_grades()
+    {
+        if (!get_permission('exam_grade', 'is_add')) {
+            access_denied();
+        }
+        $branchID = $this->application_model->get_branch_id();
+        if ($this->exam_model->seedDefaultGrades($branchID)) {
+            set_alert('success', translate('information_has_been_saved_successfully'));
+        } else {
+            set_alert('error', translate('grades_already_exist'));
+        }
+        redirect(base_url('exam/grade'));
     }
 
     // exam grade information updating here
@@ -570,7 +657,7 @@ class Exam extends Admin_Controller
                 $this->db->where('m.section_id', $sectionID);
                 $this->db->where('e.branch_id', $branchID);
                 $this->db->where('m.exam_id', $examID);
-                $this->db->group_by('m.student_id');
+                $this->db->group_by(array('e.id', 'r.id'));
                 $this->db->order_by('r.rank', 'ASC');
                 $this->data['student'] = $this->db->get()->result_array();
             }
@@ -622,6 +709,7 @@ class Exam extends Admin_Controller
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/vendor/bootstrap/css/bootstrap.min.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/custom-style.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/pdf-style.css')), 1);
+            $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/document-templates.css')), 1);
             $this->html2pdf->mpdf->WriteHTML($html);
             $this->html2pdf->mpdf->SetDisplayMode('fullpage');
             $this->html2pdf->mpdf->autoScriptToLang  = true;
@@ -654,6 +742,7 @@ class Exam extends Admin_Controller
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/vendor/bootstrap/css/bootstrap.min.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/custom-style.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/pdf-style.css')), 1);
+            $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/document-templates.css')), 1);
             $this->html2pdf->mpdf->WriteHTML($html);
             $this->html2pdf->mpdf->SetDisplayMode('fullpage');
             $this->html2pdf->mpdf->autoScriptToLang  = true;

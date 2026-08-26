@@ -1,8 +1,10 @@
 <?php $marksheet_template = $this->marksheet_template_model->getTemplate($templateID, $branchID); ?>
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 	.mark-container {
 		height: 100%;
-		min-width: 1000px;
+		width: 100%;
+		max-width: 1000px;
 	    position: relative;
 	    z-index: 2;
 	    margin: 0 auto;
@@ -21,6 +23,9 @@
 	}
 
 	@media print {
+		.mark-container {
+			max-width: none;
+		}
 		.pagebreak {
 			page-break-before: always;
 		}
@@ -64,9 +69,9 @@ if (!empty($student_array)) {
 		$header_content = $this->marksheet_template_model->tagsReplace($student, $marksheet_template, $extendsData, 'header_content');
 		$footer_content = $this->marksheet_template_model->tagsReplace($student, $marksheet_template, $extendsData, 'footer_content');
 		?>
-<div style="position: relative; width: 100%; height: 100%;"> 
+<div style="position: relative; width: 100%; height: 100%;">
 	<div class="background"></div>
-	<div class="mark-container">
+	<div class="mark-container <?=document_template_class($marksheet_template)?>">
 		<?php echo $header_content; ?>
 		<table class="table table-condensed table-bordered mt-lg">
 			<thead>
@@ -156,7 +161,7 @@ if ($marksheet_template['cumulative_average'] == 1) { ?>
 			</tbody>
 		</table>
 		<div style="width: 100%; display: flex;">
-			<div style="width: 50%; padding-right: 15px;">
+			<div class="marksheet-summary-panel" style="width: 50%; padding-right: 15px;">
 <?php
 if ($marksheet_template['attendance_percentage'] == 1) {
 					$year = explode('-', $schoolYear);
@@ -170,12 +175,16 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 							<th colspan="2" class="text-center">Attendance</th>
 						</tr>
 						<tr>
-							<th style="width: 65%;">No. of working days</th>
+							<th style="width: 65%;">Times School Opened</th>
 							<td><?=$getTotalWorking?></td>
 						</tr>
 						<tr>
-							<th style="width: 65%;">No. of days attended</th>
+							<th style="width: 65%;">Times Present</th>
 							<td><?=$getTotalAttendance?></td>
+						</tr>
+						<tr>
+							<th style="width: 65%;">Times Absent</th>
+							<td><?=$getTotalWorking - $getTotalAttendance?></td>
 						</tr>
 						<tr>
 							<th style="width: 65%;">Attendance Percentage</th>
@@ -186,25 +195,27 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 				<?php } ?>
 			</div>
 	<?php if ($marksheet_template['grading_scale'] == 1) { ?>
-			<div style="width: 50%; padding-left: 15px;">
+			<div class="marksheet-summary-panel" style="width: 50%; padding-left: 15px;">
 				<table class="table table-condensed table-bordered">
 					<tbody>
 						<tr>
-							<th colspan="3" class="text-center">Grading Scale</th>
+							<th colspan="4" class="text-center">Grading Scale</th>
 						</tr>
 						<tr>
 							<th>Grade</th>
 							<th>Min Percentage</th>
 							<th>Max Percentage</th>
+							<th>Remark</th>
 						</tr>
-					<?php 
+					<?php
 					$grade = $this->db->where('branch_id', $branchID)->get('grade')->result_array();
 					foreach ($grade as $key => $row) {
 					?>
 						<tr>
-							<td style="width: 30%;"><?=$row['name']?></td>
-							<td style="width: 30%;"><?=$row['lower_mark']?>%</td>
-							<td style="width: 30%;"><?=$row['upper_mark']?>%</td>
+							<td style="width: 25%;"><?=$row['name']?></td>
+							<td style="width: 25%;"><?=$row['lower_mark']?>%</td>
+							<td style="width: 25%;"><?=$row['upper_mark']?>%</td>
+							<td style="width: 25%;"><?=$row['remark']?></td>
 						</tr>
 					<?php } ?>
 					</tbody>
@@ -212,6 +223,30 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 			</div>
 	<?php } ?>
 		</div>
+	<?php if ($marksheet_template['term_position'] == 1) { ?>
+		<div class="marksheet-summary-panel" style="margin-top: 15px;">
+			<table class="table table-condensed table-bordered">
+				<tbody>
+					<tr>
+						<th colspan="<?=count($examArray)?>" class="text-center">Position Per Term</th>
+					</tr>
+					<tr>
+					<?php foreach ($examArray as $id) { ?>
+						<th class="text-center"><?php echo get_type_name_by_id('exam', $id) ?></th>
+					<?php } ?>
+					</tr>
+					<tr>
+					<?php foreach ($examArray as $id) {
+						$termRank = $this->db->where(array('exam_id' => $id, 'enroll_id' => $student['enrollID']))->get('exam_rank')->row();
+						$termClassSize = $this->db->where('exam_id', $id)->count_all_results('exam_rank');
+					?>
+						<td class="text-center"><?php echo (!empty($termRank->rank) ? $termRank->rank . ($termClassSize > 0 ? ' / ' . $termClassSize : '') : translate("not_generated")); ?></td>
+					<?php } ?>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+	<?php } ?>
 		<?php echo $footer_content; ?>
 	</div>
 </div>

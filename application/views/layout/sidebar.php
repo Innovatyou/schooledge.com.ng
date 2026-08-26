@@ -465,7 +465,7 @@
                             <?php if(get_permission('id_card_templete', 'is_view')){ ?>
                             <li class="<?php if ($sub_page == 'card_manage/id_card_templete' || $sub_page == 'card_manage/id_card_templete_edit') echo 'nav-active'; ?>">
                                 <a href="<?php echo base_url('card_manage/id_card_templete'); ?>">
-                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('id_card') . " " .  translate('templete'); ?></span>
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('id_card') . " " .  translate('template'); ?></span>
                                 </a>
                             </li>
                             <?php } if(get_permission('generate_student_idcard', 'is_view')){ ?>
@@ -483,7 +483,7 @@
                             <?php } if(get_permission('admit_card_templete', 'is_view')){ ?>
                             <li class="<?php if ($sub_page == 'card_manage/admit_card_templete' || $sub_page == 'card_manage/admit_card_templete_edit') echo 'nav-active'; ?>">
                                 <a href="<?php echo base_url('card_manage/admit_card_templete'); ?>">
-                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('admit_card') . " " .  translate('templete'); ?></span>
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('admit_card') . " " .  translate('template'); ?></span>
                                 </a>
                             </li>
                             <?php } if(get_permission('generate_admit_card', 'is_view')){ ?>
@@ -511,7 +511,7 @@
                             <?php if(get_permission('certificate_templete', 'is_view')){ ?>
                             <li class="<?php if ($sub_page == 'certificate/index' || $sub_page == 'certificate/edit') echo 'nav-active'; ?>">
                                 <a href="<?php echo base_url('certificate'); ?>">
-                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('certificate') . " " .  translate('templete'); ?></span>
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('certificate') . " " .  translate('template'); ?></span>
                                 </a>
                             </li>
                             <?php } if(get_permission('generate_student_certificate', 'is_view')){ ?>
@@ -848,6 +848,7 @@
                     get_permission('exam_timetable', 'is_view') ||
                     get_permission('exam_mark', 'is_view') ||
                     get_permission('generate_position', 'is_view') ||
+                    get_permission('psychomotor_rating', 'is_view') ||
                     get_permission('marksheet_template', 'is_view') ||
                     get_permission('exam_grade', 'is_view')) {
                     ?>
@@ -932,6 +933,7 @@
                             <?php
                             if(get_permission('exam_mark', 'is_view') ||
                                 get_permission('generate_position', 'is_view') ||
+                                    get_permission('psychomotor_rating', 'is_view') ||
                                     get_permission('exam_grade', 'is_view')) {
                                         ?>
                             <!-- marks -->
@@ -950,6 +952,12 @@
                                     <li class="<?php if ($sub_page == 'exam/class_position') echo 'nav-active';?>">
                                         <a href="<?=base_url('exam/class_position')?>">
                                             <span><?=translate('generate_position')?></span>
+                                        </a>
+                                    </li>
+                                    <?php } if(get_permission('psychomotor_rating', 'is_view')) { ?>
+                                    <li class="<?php if ($sub_page == 'exam/psychomotor_entry') echo 'nav-active';?>">
+                                        <a href="<?=base_url('exam/psychomotor_entry')?>">
+                                            <span><?=translate('psychomotor_rating')?></span>
                                         </a>
                                     </li>
                                     <?php } if(get_permission('exam_grade', 'is_view')) { ?>

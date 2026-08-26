@@ -13,8 +13,10 @@ application/sessions/*
 # Backups and generated/private uploads
 uploads/db_backup/*
 !uploads/db_backup/index.html
+!uploads/db_backup/.htaccess
 uploads/db_temp/*
 !uploads/db_temp/index.html
+!uploads/db_temp/.htaccess
 uploads/qr_code/*
 uploads/u2fa_qrcode/*
 uploads/images/student/*

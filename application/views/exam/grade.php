@@ -12,6 +12,25 @@
 		</ul>
 		<div class="tab-content">
 			<div id="list" class="tab-pane active">
+<?php if (get_permission('exam_grade', 'is_add')): ?>
+				<div class="row mb-md">
+					<div class="col-md-12">
+						<?php echo form_open('exam/seed_default_grades', array('class' => 'form-inline'));?>
+<?php if (is_superadmin_loggedin()): ?>
+							<?php
+								$arrayBranch = $this->app_lib->getSelectList('branch');
+								echo form_dropdown("branch_id", $arrayBranch, set_value('branch_id'), "class='form-control' data-width='220px'
+								data-plugin-selectTwo data-minimum-results-for-search='Infinity'");
+							?>
+<?php endif; ?>
+							<button type="submit" class="btn btn-default" onclick="return confirm('<?=translate('load_default_grades_confirm')?>');">
+								<i class="fas fa-magic"></i> <?=translate('load_nigeria_default_grading_scale')?>
+							</button>
+						<?php echo form_close();?>
+						<p class="help-block"><?=translate('load_default_grades_help')?></p>
+					</div>
+				</div>
+<?php endif; ?>
 				<table class="table table-bordered table-hover mb-none table-export">
 					<thead>
 						<tr>

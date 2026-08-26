@@ -1,3 +1,4 @@
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
 <style type="text/css">
 	.certificate{
 	<?php if (empty($template['background'])) { ?>
@@ -15,6 +16,6 @@
 		margin: 0 auto;
 	}
 </style>
-<div class="certificate">
+<div class="certificate <?=document_template_class($template)?>">
 	<?=$template['content']?>
 </div>

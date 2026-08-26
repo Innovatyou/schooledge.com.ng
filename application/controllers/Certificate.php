@@ -78,7 +78,7 @@ class Certificate extends Admin_Controller
         );
         $this->data['branch_id'] = $this->application_model->get_branch_id();
         $this->data['certificatelist'] = $this->certificate_model->getList();
-        $this->data['title'] = translate('certificate') . " " . translate('templete');
+        $this->data['title'] = translate('certificate') . " " . translate('template');
         $this->data['sub_page'] = 'certificate/index';
         $this->data['main_menu'] = 'certificate';
         $this->load->view('layout/index', $this->data);
@@ -105,7 +105,7 @@ class Certificate extends Admin_Controller
             exit();
         }
         $this->data['certificate'] = $this->app_lib->getTable('certificates_templete', array('t.id' => $id), true);
-        $this->data['title'] = translate('certificate') . " " . translate('templete');
+        $this->data['title'] = translate('certificate') . " " . translate('template');
         $this->data['headerelements'] = array(
             'css' => array(
                 'css/certificate.css',
@@ -249,7 +249,11 @@ class Certificate extends Admin_Controller
         }
         if (!empty($branchID)) {
             $this->db->select('id,name');
-            $this->db->where(array('branch_id' => $branchID, 'user_type' => $userType));
+            $this->db->group_start();
+            $this->db->where('branch_id', $branchID);
+            $this->db->or_where('available_all_branches', 1);
+            $this->db->group_end();
+            $this->db->where('user_type', $userType);
             $result = $this->db->get('certificates_templete')->result_array();
             if (count($result)) {
                 $html .= '<option value="">' . translate('select') . '</option>';

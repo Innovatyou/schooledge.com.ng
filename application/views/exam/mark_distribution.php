@@ -43,6 +43,25 @@
 			<header class="panel-heading">
 				<h4 class="panel-title"><i class="fas fa-list-ul"></i>  <?=translate('mark_distribution') . " " . translate('list')?></h4>
 			</header>
+		<?php if (get_permission('mark_distribution', 'is_add')): ?>
+			<div class="row mb-md">
+				<div class="col-md-12">
+					<?php echo form_open('exam/seed_ca_distribution', array('class' => 'form-inline'));?>
+<?php if (is_superadmin_loggedin()): ?>
+						<?php
+							$arrayBranch = $this->app_lib->getSelectList('branch');
+							echo form_dropdown("branch_id", $arrayBranch, set_value('branch_id'), "class='form-control' data-width='220px'
+							data-plugin-selectTwo data-minimum-results-for-search='Infinity'");
+						?>
+<?php endif; ?>
+						<button type="submit" class="btn btn-default" onclick="return confirm('<?=translate('load_ca_distribution_confirm')?>');">
+							<i class="fas fa-magic"></i> <?=translate('load_ca_exam_scoring_template')?>
+						</button>
+					<?php echo form_close();?>
+					<p class="help-block"><?=translate('load_ca_distribution_help')?></p>
+				</div>
+			</div>
+		<?php endif; ?>
 			<div class="panel-body">
 				<div class="table-responsive">
 					<table class="table table-bordered table-hover table-condensed mb-none">

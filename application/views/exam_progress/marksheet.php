@@ -80,7 +80,7 @@
 						<div class="form-group">
 							<label class="control-label"><?=translate('marksheet') . " " . translate('template'); ?> <span class="required">*</span></label>
 							<?php
-								$arraySection = $this->app_lib->getSelectByBranch('marksheet_template', $branch_id);
+								$arraySection = $this->app_lib->getTemplateSelectByBranch('marksheet_template', $branch_id);
 								echo form_dropdown("template_id", $arraySection, set_value('template_id'), "class='form-control' id='templateID'
 								data-plugin-selectTwo data-width='100%' ");
 							?>

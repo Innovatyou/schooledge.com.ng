@@ -66,11 +66,35 @@ class Userrole extends User_Controller
         $this->load->view('layout/index', $this->data);
     }
 
+    /* Student's own ID card */
+    public function idCard()
+    {
+        $stu = $this->userrole_model->getStudentDetails();
+        $this->load->model('card_manage_model');
+        $this->load->library('ciqrcode', array('cacheable' => false));
+        $template = $this->db->where(array('card_type' => 1, 'user_type' => 1, 'branch_id' => $stu['branch_id']))
+            ->order_by('id', 'desc')->limit(1)->get('card_templete')->row_array();
+        $this->data['template'] = $template;
+        $this->data['userID'] = $stu['enroll_id'];
+        $this->data['print_date'] = date('Y-m-d');
+        $this->data['expiry_date'] = '';
+        $this->data['title'] = translate('id_card');
+        $this->data['sub_page'] = 'userrole/idCard';
+        $this->data['main_menu'] = 'idcard';
+        $this->load->view('layout/index', $this->data);
+    }
+
     /* Start Leave Request Controller */
     public function leave_request()
     {
+        if (is_student_loggedin()) {
+            access_denied();
+        }
         $stu = $this->userrole_model->getStudentDetails();
         if (isset($_POST['save'])) {
+            if (is_demo_readonly()) {
+                access_denied();
+            }
             $this->form_validation->set_rules('leave_category', translate('leave_category'), 'required|callback_leave_check');
             $this->form_validation->set_rules('daterange', translate('leave_date'), 'trim|required|callback_date_check');
             $this->form_validation->set_rules('attachment_file', translate('attachment'), 'callback_fileHandleUpload[attachment_file]');
@@ -305,6 +329,9 @@ class Userrole extends User_Controller
     {
         $stu = $this->userrole_model->getStudentDetails();
         if ($_POST) {
+            if (is_demo_readonly()) {
+                access_denied();
+            }
             $this->form_validation->set_rules('book_id', translate('book_title'), 'required|callback_validation_stock');
             $this->form_validation->set_rules('date_of_issue', translate('date_of_issue'), 'trim|required');
             $this->form_validation->set_rules('date_of_expiry', translate('date_of_expiry'), 'trim|required|callback_validation_date');
@@ -414,6 +441,9 @@ class Userrole extends User_Controller
     public function offline_payments()
     {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                access_denied();
+            }
             $this->form_validation->set_rules('fees_type', translate('fees_type'), 'trim|required');
             $this->form_validation->set_rules('date_of_payment', translate('date_of_payment'), 'trim|required');
             $this->form_validation->set_rules('fee_amount', translate('amount'), array('trim', 'required', 'numeric', 'greater_than[0]', array('deposit_verify', array($this->fees_model, 'depositAmountVerify'))));
@@ -510,12 +540,12 @@ class Userrole extends User_Controller
     {
         $stu = $this->userrole_model->getStudentDetails();
         $this->data['student'] = $stu;
-        $this->db->select('*');
+        $this->db->select('exam_id, class_id, section_id');
+        $this->db->distinct();
         $this->db->from('timetable_exam');
         $this->db->where('class_id', $stu['class_id']);
         $this->db->where('section_id', $stu['section_id']);
         $this->db->where('session_id', get_session_id());
-        $this->db->group_by('exam_id');
         $this->db->order_by('exam_id', 'asc');
         $results = $this->db->get()->result_array();
         $this->data['exams'] = $results;
@@ -605,6 +635,7 @@ class Userrole extends User_Controller
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/vendor/bootstrap/css/bootstrap.min.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/custom-style.css')), 1);
             $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/pdf-style.css')), 1);
+            $this->html2pdf->mpdf->WriteHTML(file_get_contents(base_url('assets/css/document-templates.css')), 1);
             $this->html2pdf->mpdf->WriteHTML($html);
             $this->html2pdf->mpdf->SetDisplayMode('fullpage');
             $this->html2pdf->mpdf->autoScriptToLang = true;
@@ -711,6 +742,9 @@ class Userrole extends User_Controller
     public function assignment_upload()
     {
         if ($_POST) {
+            if (is_demo_readonly()) {
+                ajax_access_denied();
+            }
             // homework form validation rules
             $this->form_validation->set_rules('message', translate('message'), 'trim|required');
             $this->form_validation->set_rules('attachment_file', translate('attachment'), 'callback_assignment_handle_upload');
@@ -859,6 +893,9 @@ class Userrole extends User_Controller
 
     public function live_atten()
     {
+        if (is_demo_readonly()) {
+            ajax_access_denied();
+        }
         $stu_id = get_loggedin_user_id();
         $id = $this->input->post('live_id');
         $arrayInsert = array(
@@ -1019,6 +1056,9 @@ class Userrole extends User_Controller
             if (!is_student_loggedin()) {
                 access_denied();
             }
+            if (is_demo_readonly()) {
+                access_denied();
+            }
             $studentID = get_loggedin_user_id();
             $online_examID = $this->input->post('online_exam_id');
             $variable = $this->input->post('answer');
@@ -1073,6 +1113,9 @@ class Userrole extends User_Controller
 
     public function switchClass($enrollID = '')
     {
+        if (is_demo_readonly()) {
+            access_denied();
+        }
         $enrollID = $this->security->xss_clean($enrollID);
         if (!empty($enrollID) && is_student_loggedin()) {
             $getRow = $this->db->where('id', $enrollID)->get('enroll')->row();

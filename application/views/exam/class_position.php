@@ -116,7 +116,7 @@
 								<?php if ($exam_details->type_id != 2) { ?>
 									<th><?=translate('percentage')?></th>
 								<?php } if ($exam_details->type_id != 1) { ?>
-									<th>GPA</th>
+									<th><?=translate('gpa')?></th>
 								<?php } ?>
 									<th><?=translate('result')?></th>
 								<?php if ($generated == true) { ?>

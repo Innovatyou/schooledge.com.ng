@@ -97,8 +97,18 @@ class Ajax extends MY_Controller
         $html = "";
         $table = $this->input->post('table');
         $branch_id = $this->application_model->get_branch_id();
+        $global_tables = array('card_templete', 'certificates_templete', 'marksheet_template');
         if (!empty($branch_id)) {
-            $result = $this->db->select('id,name')->where('branch_id', $branch_id)->get($table)->result_array();
+            $this->db->select('id,name');
+            if (in_array($table, $global_tables, true)) {
+                $this->db->group_start();
+                $this->db->where('branch_id', $branch_id);
+                $this->db->or_where('available_all_branches', 1);
+                $this->db->group_end();
+            } else {
+                $this->db->where('branch_id', $branch_id);
+            }
+            $result = $this->db->get($table)->result_array();
             if (count($result)) {
                 $html .= "<option value=''>" . translate('select') . "</option>";
                 foreach ($result as $row) {

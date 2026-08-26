@@ -45,6 +45,13 @@
                             <i class="far fa-user-circle"></i><span><?=translate('profile')?></span>
                         </a>
                     </li>
+
+                    <!-- id card -->
+                    <li class="<?php if ($main_menu == 'idcard') echo 'nav-active'; ?>">
+                        <a href="<?=base_url('userrole/idCard')?>">
+                            <i class="fas fa-id-card"></i><span><?=translate('id_card')?></span>
+                        </a>
+                    </li>
 <?php
 }
 if ((is_parent_loggedin() && !empty(get_activeChildren_id())) || is_student_loggedin()) {
@@ -85,11 +92,13 @@ if ((is_parent_loggedin() && !empty(get_activeChildren_id())) || is_student_logg
                     </li>
 <?php } ?>
                     <!-- leave -->
+<?php if (is_parent_loggedin()) { ?>
                     <li class="<?php if ($main_menu == 'leave') echo 'nav-active'; ?>">
                         <a href="<?=base_url('userrole/leave_request')?>">
                             <i class="icons icon-docs"></i><span><?=translate('leave_application')?></span>
                         </a>
                     </li>
+<?php } ?>
 
                     <!-- attachments upload -->
                     <li class="<?php if ($main_menu == 'attachments') echo 'nav-active'; ?> ">
