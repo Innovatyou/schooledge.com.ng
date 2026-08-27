@@ -196,7 +196,7 @@ class Fees extends Api_Controller
         if (!$transaction) $this->fail('transaction_not_found', 'Payment transaction not found.', 404);
 
         if ($transaction['status'] === 'success') {
-            $this->ok(array('status' => 'success', 'summary' => $this->summaryForMembership($membership)));
+            $this->ok(array('status' => 'success', 'summary' => $this->summaryForTransaction($membership, $transaction)));
             return;
         }
         if (in_array($transaction['status'], array('failed', 'cancelled', 'refunded'), true)) {
@@ -205,11 +205,22 @@ class Fees extends Api_Controller
         }
 
         $config = $this->db->where('branch_id', $membership['branch_id'])->get('payment_config')->row_array();
-        list($verified, $failureMessage) = $this->verifyWithGateway($transaction, $config);
+        list($verified, $terminal, $failureMessage) = $this->verifyWithGateway($transaction, $config);
 
         if (!$verified) {
-            $this->db->where('id', $transaction['id'])->update('payment_transactions', array('status' => 'failed', 'failure_message' => $failureMessage, 'failed_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')));
-            $this->ok(array('status' => 'failed', 'message' => $failureMessage));
+            // Only persist a permanent 'failed' for outcomes the gateway itself
+            // will never move off of (e.g. Paystack's "failed"/"reversed"). A
+            // still-in-progress reference ("pending"/"processing"/"queued"/
+            // "abandoned" before its own timeout) must stay re-checkable - the
+            // user may tap "I've paid" again before finishing, or after a slow
+            // bank confirmation, and a premature 'failed' would wrongly block
+            // that same reference from ever being verified as paid.
+            if ($terminal) {
+                $this->db->where('id', $transaction['id'])->update('payment_transactions', array('status' => 'failed', 'failure_message' => $failureMessage, 'failed_at' => date('Y-m-d H:i:s'), 'updated_at' => date('Y-m-d H:i:s')));
+                $this->ok(array('status' => 'failed', 'message' => $failureMessage));
+            } else {
+                $this->ok(array('status' => 'pending', 'message' => $failureMessage));
+            }
             return;
         }
 
@@ -221,7 +232,7 @@ class Fees extends Api_Controller
             $this->recordFeePayment($membership, $transaction);
             $this->audit('payment.success', $membership, $transaction['id']);
         }
-        $this->ok(array('status' => 'success', 'summary' => $this->summaryForMembership($membership)));
+        $this->ok(array('status' => 'success', 'summary' => $this->summaryForTransaction($membership, $transaction)));
     }
 
     /** Public landing page Paystack redirects the user's browser to after checkout. No auth: the app never trusts this, it only tells the user to return and re-verifies independently via verify(). */
@@ -303,9 +314,22 @@ class Fees extends Api_Controller
         );
     }
 
-    private function summaryForMembership(array $membership)
+    /**
+     * verify() has no reliable student_id to resolve ownership from (a parent
+     * membership needs one, but the client never resends it here) - so instead of
+     * requiring it, derive the enrollment straight from the transaction's own
+     * resource_id. Ownership was already checked once, when checkout() created
+     * this transaction against that same membership_id.
+     */
+    private function summaryForTransaction(array $membership, array $transaction)
     {
-        $enrollment = $this->resolveOwnedEnrollment($membership, null);
+        $enrollId = $transaction['resource_type'] === 'transport_fee_details'
+            ? $this->db->select('enroll_id')->where('id', (int)$transaction['resource_id'])->get('transport_fee_details')->row()->enroll_id
+            : $this->db->select('student_id')->where('id', (int)explode(':', $transaction['resource_id'])[0])->get('fee_allocation')->row()->student_id;
+
+        $enrollment = $this->db->select('enroll.*,CONCAT_WS(" ",student.first_name,student.last_name) as student_name')
+            ->from('enroll')->join('student', 'student.id = enroll.student_id', 'inner')
+            ->where('enroll.id', $enrollId)->get()->row_array();
         return $this->buildSummary($membership, $enrollment);
     }
 
@@ -393,10 +417,11 @@ class Fees extends Api_Controller
         return null;
     }
 
+    /** @return array{0: bool, 1: bool, 2: ?string} [verified, terminal, message] */
     private function verifyWithGateway(array $transaction, $config)
     {
         if ($transaction['gateway'] === 'paystack') {
-            if (empty($config['paystack_secret_key'])) return array(false, 'Gateway not configured');
+            if (empty($config['paystack_secret_key'])) return array(false, true, 'Gateway not configured');
             $ch = curl_init('https://api.paystack.co/transaction/verify/' . rawurlencode($transaction['gateway_reference']));
             curl_setopt_array($ch, array(
                 CURLOPT_RETURNTRANSFER => true, CURLOPT_HTTPHEADER => array('Authorization: Bearer ' . $config['paystack_secret_key']),
@@ -410,11 +435,16 @@ class Fees extends Api_Controller
                 && hash_equals((string)$transaction['gateway_reference'], (string)$data['reference'])
                 && (int)round(((float)$transaction['amount']) * 100) === (int)$data['amount']
             ) {
-                return array(true, null);
+                return array(true, true, null);
             }
-            return array(false, $data['gateway_response'] ?? 'Verification failed');
+            // Paystack statuses that will never turn into "success" for this
+            // reference; everything else (pending/processing/queued/ongoing,
+            // "abandoned" before its own timeout, or no response at all) is
+            // still in flight and must stay re-checkable.
+            $terminal = $data && in_array($data['status'] ?? '', array('failed', 'reversed'), true);
+            return array(false, $terminal, $data['gateway_response'] ?? 'The transaction has not been completed yet.');
         }
-        return array(false, 'Unsupported gateway');
+        return array(false, true, 'Unsupported gateway');
     }
 
     private function recordFeePayment(array $membership, array $transaction)
