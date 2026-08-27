@@ -144,6 +144,11 @@ $route['api/v1/mobile/messages/(:num)']['get'] = 'api/v1/messages/show/$1';
 $route['api/v1/mobile/messages']['post'] = 'api/v1/messages/compose';
 $route['api/v1/mobile/messages/(:num)/reply']['post'] = 'api/v1/messages/reply/$1';
 
+$route['api/v1/mobile/timetable']['get'] = 'api/v1/timetable/index';
+
+$route['api/v1/mobile/resources']['get'] = 'api/v1/resources/index';
+$route['api/v1/mobile/resources/(:num)/download']['get'] = 'api/v1/resources/download/$1';
+
 $route['dashboard'] = 'dashboard/index';
 $route['branch'] = 'branch/index';
 $route['attachments'] = 'attachments/index';
