@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "272973115744",
+    "project_id": "schooledgeapp",
+    "storage_bucket": "schooledgeapp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:272973115744:android:905185c8d226873feb2e05",
+        "android_client_info": {
+          "package_name": "com.company.schooledgeapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8m-_GOxS90uNcLCTE6piBy1ZKDWgilQ4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
