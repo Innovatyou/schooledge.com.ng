@@ -101,6 +101,7 @@ $route['api/v1/mobile/auth/logout']['post'] = 'api/v1/mobile/logout';
 $route['api/v1/mobile/me']['get'] = 'api/v1/mobile/me';
 $route['api/v1/mobile/schools']['get'] = 'api/v1/mobile/schools';
 $route['api/v1/mobile/memberships']['get'] = 'api/v1/mobile/memberships';
+$route['api/v1/mobile/auth/switch-membership']['post'] = 'api/v1/mobile/switch_membership';
 $route['api/v1/mobile/reports']['get'] = 'api/v1/reports/index';
 $route['api/v1/mobile/reports/(:num)/download']['get'] = 'api/v1/reports/download/$1';
 
@@ -148,6 +149,19 @@ $route['api/v1/mobile/timetable']['get'] = 'api/v1/timetable/index';
 
 $route['api/v1/mobile/resources']['get'] = 'api/v1/resources/index';
 $route['api/v1/mobile/resources/(:num)/download']['get'] = 'api/v1/resources/download/$1';
+
+$route['api/v1/mobile/profile']['get'] = 'api/v1/profile/show';
+$route['api/v1/mobile/profile']['patch'] = 'api/v1/profile/update';
+$route['api/v1/mobile/profile/change-password']['post'] = 'api/v1/profile/change_password';
+$route['api/v1/mobile/profile/sessions']['get'] = 'api/v1/profile/sessions';
+$route['api/v1/mobile/profile/sessions/(:num)/revoke']['post'] = 'api/v1/profile/revoke_session/$1';
+
+$route['api/v1/mobile/notifications']['get'] = 'api/v1/notifications/index';
+$route['api/v1/mobile/notifications/unread-count']['get'] = 'api/v1/notifications/unread_count';
+$route['api/v1/mobile/notifications/(:num)/read']['post'] = 'api/v1/notifications/mark_read/$1';
+$route['api/v1/mobile/notifications/read-all']['post'] = 'api/v1/notifications/mark_all_read';
+$route['api/v1/mobile/notifications/preferences']['get'] = 'api/v1/notifications/preferences';
+$route['api/v1/mobile/notifications/preferences']['put'] = 'api/v1/notifications/update_preference';
 
 $route['dashboard'] = 'dashboard/index';
 $route['branch'] = 'branch/index';

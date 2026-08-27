@@ -42,10 +42,11 @@ class Api_Controller extends CI_Controller
         return $membership;
     }
 
-    protected function issueAccessToken(array $membership)
+    protected function issueAccessToken(array $membership, $installationId = null)
     {
         $now = time();
         $claims = array('sub'=>(int)$membership['login_credential_id'], 'mid'=>(int)$membership['id'], 'uid'=>(int)$membership['user_id'], 'bid'=>(int)$membership['branch_id'], 'rid'=>(int)$membership['role_id'], 'iat'=>$now, 'exp'=>$now + 900);
+        if ($installationId) $claims['iid'] = $installationId;
         $payload = $this->b64(json_encode($claims));
         return $payload . '.' . $this->b64(hash_hmac('sha256', $payload, $this->tokenKey(), true));
     }
@@ -158,5 +159,32 @@ class Api_Controller extends CI_Controller
             'ip_address' => $this->input->ip_address(), 'user_agent' => substr((string)$this->input->user_agent(), 0, 255),
             'created_at' => date('Y-m-d H:i:s'),
         ));
+    }
+
+    /**
+     * Drop a row in the recipient's notification inbox, if they have an active
+     * mobile membership and haven't disabled this category. There is no push
+     * delivery yet (no Firebase project configured for this install) - this is
+     * the in-app inbox half only, kept independent so it works regardless.
+     */
+    protected function notifyMembership($membershipId, $branchId, $category, $title, $body, $data = null)
+    {
+        $pref = $this->db->where(array('membership_id' => $membershipId, 'category' => $category))->get('mobile_notification_preferences')->row_array();
+        if ($pref && !$pref['inbox_enabled']) return;
+        $this->db->insert('mobile_notification_inbox', array(
+            'membership_id' => $membershipId, 'branch_id' => $branchId, 'category' => $category,
+            'title' => $title, 'body' => $body, 'data_json' => $data !== null ? json_encode($data) : null,
+            'created_at' => date('Y-m-d H:i:s'),
+        ));
+    }
+
+    /** Same as notifyMembership(), but resolves the recipient from a "{role_id}-{user_id}" identity (e.g. a message's `reciever` column) instead of a membership id directly. */
+    protected function notifyIdentity($branchId, $identity, $category, $title, $body, $data = null)
+    {
+        $parts = explode('-', (string)$identity, 2);
+        if (count($parts) !== 2) return;
+        $membership = $this->db->where(array('branch_id' => $branchId, 'role_id' => (int)$parts[0], 'user_id' => (int)$parts[1], 'status' => 'active'))->get('mobile_memberships')->row_array();
+        if (!$membership) return; // this person has no active mobile membership to notify
+        $this->notifyMembership($membership['id'], $branchId, $category, $title, $body, $data);
     }
 }

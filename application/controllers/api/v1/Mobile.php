@@ -24,7 +24,7 @@ class Mobile extends Api_Controller
             $challenge = $this->beginTwoFactorChallenge($credential, $selected, $input['installation_id'] ?? null);
             $this->ok(array('requires_otp'=>true, 'challenge'=>$challenge), array(), 202);
         }
-        $tokens = $this->newTokenPair($selected, null, $input['installation_id'] ?? null);
+        $tokens = $this->newTokenPair($selected, null, $input['installation_id'] ?? null, $input['platform'] ?? null, $input['app_version'] ?? null);
         $this->audit('auth.login', $selected);
         $this->ok(array('tokens'=>$tokens, 'membership'=>$this->membershipPayload($selected), 'memberships'=>array_map(array($this, 'membershipPayload'), $memberships)));
     }
@@ -45,7 +45,7 @@ class Mobile extends Api_Controller
         $this->db->where('id', $challenge['id'])->update('mobile_auth_challenges', array('consumed_at'=>date('Y-m-d H:i:s')));
         $membership = $this->db->where(array('id'=>$challenge['membership_id'], 'status'=>'active'))->get('mobile_memberships')->row_array();
         if (!$membership) $this->fail('membership_inactive', 'The selected membership is no longer active.', 403);
-        $tokens = $this->newTokenPair($membership, null, $challenge['installation_id']);
+        $tokens = $this->newTokenPair($membership, null, $challenge['installation_id'], $input['platform'] ?? null, $input['app_version'] ?? null);
         $rows = $this->db->where(array('login_credential_id'=>$challenge['login_credential_id'], 'status'=>'active'))->get('mobile_memberships')->result_array();
         $this->audit('auth.otp_verified', $membership);
         $this->ok(array('tokens'=>$tokens, 'membership'=>$this->membershipPayload($membership), 'memberships'=>array_map(array($this, 'membershipPayload'), $rows)));
@@ -72,7 +72,10 @@ class Mobile extends Api_Controller
         if (!$token || $token['revoked_at'] || strtotime($token['expires_at']) <= time()) $this->fail('invalid_refresh_token', 'The refresh token is invalid or expired.', 401);
         $membership = $this->db->where(array('id'=>$token['membership_id'], 'status'=>'active'))->get('mobile_memberships')->row_array();
         if (!$membership) $this->fail('membership_inactive', 'The selected membership is no longer active.', 403);
-        $tokens = $this->newTokenPair($membership, $token['family_id'], null);
+        // Carry the installation_id forward from the token being rotated, so refreshing
+        // keeps updating the SAME device row (last_seen_at) instead of losing the link.
+        $installationId = $token['device_id'] ? $this->db->select('installation_id')->where('id', $token['device_id'])->get('mobile_devices')->row()->installation_id ?? null : null;
+        $tokens = $this->newTokenPair($membership, $token['family_id'], $installationId);
         $replacement = $this->db->where('token_hash', hash('sha256', $tokens['refresh_token']))->get('mobile_refresh_tokens')->row_array();
         $this->db->where('id', $token['id'])->update('mobile_refresh_tokens', array('revoked_at'=>date('Y-m-d H:i:s'), 'last_used_at'=>date('Y-m-d H:i:s'), 'replaced_by_id'=>$replacement['id']));
         $this->ok(array('tokens'=>$tokens, 'membership'=>$this->membershipPayload($membership)));
@@ -126,6 +129,20 @@ class Mobile extends Api_Controller
         $current = $this->requireAuth();
         $rows = $this->db->where(array('login_credential_id'=>$current['login_credential_id'], 'status'=>'active'))->get('mobile_memberships')->result_array();
         $this->ok(array_map(array($this, 'membershipPayload'), $rows));
+    }
+
+    /** Issues a fresh token pair for a DIFFERENT membership already owned by the same login - no password re-entry, since the credential was already verified for the current token. */
+    public function switch_membership()
+    {
+        $current = $this->requireAuth();
+        $input = $this->body();
+        $targetId = (int)($input['membership_id'] ?? 0);
+        if (!$targetId) $this->fail('validation_error', 'membership_id is required.', 422);
+        $target = $this->db->where(array('id'=>$targetId, 'login_credential_id'=>$current['login_credential_id'], 'status'=>'active'))->get('mobile_memberships')->row_array();
+        if (!$target) $this->fail('membership_not_found', 'That membership is not available for this account.', 404);
+        $tokens = $this->newTokenPair($target, null, $this->apiClaims['iid'] ?? null);
+        $this->audit('auth.switch_membership', $target);
+        $this->ok(array('tokens'=>$tokens, 'membership'=>$this->membershipPayload($target)));
     }
 
     private function requiresTwoFactor($credential, $membership)
@@ -183,26 +200,29 @@ class Mobile extends Api_Controller
         return array($row);
     }
 
-    private function newTokenPair(array $membership, $familyId = null, $installationId = null)
+    private function newTokenPair(array $membership, $familyId = null, $installationId = null, $platform = null, $appVersion = null)
     {
         $plain = rtrim(strtr(base64_encode(random_bytes(48)), '+/', '-_'), '=');
         $familyId = $familyId ?: sprintf('%s-%s-%s-%s-%s', bin2hex(random_bytes(4)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(2)), bin2hex(random_bytes(6)));
         $deviceId = null;
         if ($installationId) {
             $device = $this->db->where(array('membership_id'=>$membership['id'], 'installation_id'=>$installationId))->get('mobile_devices')->row_array();
-            if ($device) $deviceId = $device['id'];
-            else {
-                $this->db->insert('mobile_devices', array('membership_id'=>$membership['id'], 'installation_id'=>$installationId, 'platform'=>'unknown', 'push_enabled'=>0, 'created_at'=>date('Y-m-d H:i:s')));
+            $now = date('Y-m-d H:i:s');
+            if ($device) {
+                $deviceId = $device['id'];
+                $this->db->where('id', $deviceId)->update('mobile_devices', array_filter(array('platform'=>$platform, 'app_version'=>$appVersion, 'last_seen_at'=>$now), function ($v) { return $v !== null; }));
+            } else {
+                $this->db->insert('mobile_devices', array('membership_id'=>$membership['id'], 'installation_id'=>$installationId, 'platform'=>$platform ?: 'unknown', 'app_version'=>$appVersion, 'push_enabled'=>0, 'last_seen_at'=>$now, 'created_at'=>$now));
                 $deviceId = $this->db->insert_id();
             }
         }
         $this->db->insert('mobile_refresh_tokens', array('membership_id'=>$membership['id'], 'token_hash'=>hash('sha256', $plain), 'family_id'=>$familyId, 'device_id'=>$deviceId, 'expires_at'=>date('Y-m-d H:i:s', time() + 2592000), 'created_at'=>date('Y-m-d H:i:s'), 'created_ip'=>$this->input->ip_address()));
-        return array('access_token'=>$this->issueAccessToken($membership), 'refresh_token'=>$plain, 'token_type'=>'Bearer', 'expires_in'=>900);
+        return array('access_token'=>$this->issueAccessToken($membership, $installationId), 'refresh_token'=>$plain, 'token_type'=>'Bearer', 'expires_in'=>900);
     }
 
     public function membershipPayload($membership)
     {
-        $branch = $this->db->select('id,school_name,address')->where('id', $membership['branch_id'])->get('branch')->row_array();
+        $branch = $this->db->select('id,school_name,address,email,mobileno')->where('id', $membership['branch_id'])->get('branch')->row_array();
         $role = $this->db->select('id,name')->where('id', $membership['role_id'])->get('roles')->row_array();
         return array('id'=>(int)$membership['id'], 'status'=>$membership['status'], 'is_default'=>(bool)$membership['is_default'], 'school'=>$branch, 'role'=>$role);
     }

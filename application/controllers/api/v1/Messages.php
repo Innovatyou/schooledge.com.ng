@@ -87,6 +87,7 @@ class Messages extends Api_Controller
         // which would otherwise overwrite it before this response reads it back
         $messageId = $this->db->insert_id();
         $this->logAudit('message.send', $membership, 'message', $messageId);
+        $this->notifyIdentity($membership['branch_id'], $data['reciever'], 'message', 'New message: ' . $subject, $body, array('message_id' => $messageId));
         $this->ok(array('id' => $messageId));
     }
 
@@ -107,6 +108,8 @@ class Messages extends Api_Controller
         $this->attachIfPresent($data);
         $this->db->insert('message_reply', $data);
         $this->logAudit('message.reply', $membership, 'message', $message['id']);
+        $otherParty = $isSender ? $message['reciever'] : $message['sender'];
+        $this->notifyIdentity($membership['branch_id'], $otherParty, 'message', 'New reply: ' . $message['subject'], $body, array('message_id' => $message['id']));
         $this->ok(array('replied' => true));
     }
 

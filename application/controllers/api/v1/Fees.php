@@ -231,6 +231,7 @@ class Fees extends Api_Controller
         if ($this->db->affected_rows() === 1) {
             $this->recordFeePayment($membership, $transaction);
             $this->audit('payment.success', $membership, $transaction['id']);
+            $this->notifyMembership($membership['id'], $membership['branch_id'], 'payment', 'Payment received', 'Your payment of ' . $transaction['currency'] . ' ' . number_format((float)$transaction['amount'], 2) . ' was received.', array('transaction_id' => $transaction['id']));
         }
         $this->ok(array('status' => 'success', 'summary' => $this->summaryForTransaction($membership, $transaction)));
     }
