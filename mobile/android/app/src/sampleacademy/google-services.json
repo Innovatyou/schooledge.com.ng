@@ -1,0 +1,20 @@
+{
+  "_comment": "PLACEHOLDER - replace with the real file from this school's Firebase project before shipping push notifications or any other Firebase feature. This only exists so the app builds before that project is set up.",
+  "project_info": {
+    "project_number": "000000000000",
+    "project_id": "REPLACE-ME-see-docs-firebase-setup",
+    "storage_bucket": "replace-me.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:000000000000:android:0000000000000000000000",
+        "android_client_info": { "package_name": "ng.com.sampleacademy.app" }
+      },
+      "oauth_client": [],
+      "api_key": [ { "current_key": "REPLACE-ME" } ],
+      "services": { "appinvite_service": { "other_platform_oauth_client": [] } }
+    }
+  ],
+  "configuration_version": "1"
+}

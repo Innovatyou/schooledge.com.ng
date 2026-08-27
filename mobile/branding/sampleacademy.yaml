@@ -1,0 +1,11 @@
+# Branding source of truth for this school's app. Build-time values here must
+# match android/app/build.gradle.kts and ios/Flutter/Sampleacademy.xcconfig -
+# this file does not drive those automatically, it documents what was set.
+flavor_id: sampleacademy
+display_name: "Sample Academy"
+android_application_id: ng.com.sampleacademy.app
+ios_bundle_id: ng.com.sampleacademy.app
+primary_color: "#6C4EE3"
+
+# Runtime config (school_mobile_config / branded_app_config in the database)
+# is separate from this build-time file - see docs/branded-school-onboarding.md.
