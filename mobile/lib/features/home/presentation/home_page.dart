@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/session/current_user_provider.dart';
 import '../../../core/widgets/depth_card.dart';
+import '../../admin/presentation/admin_dashboard_page.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../attendance/presentation/attendance_page.dart';
 import '../../fees/presentation/fees_page.dart';
@@ -321,6 +322,12 @@ class _ModuleGrid extends StatelessWidget {
         label: 'Online Class',
         color: const Color(0xffe76f51),
       ),
+      if (role.toLowerCase().contains('admin'))
+        (
+          icon: Icons.admin_panel_settings_rounded,
+          label: 'Admin',
+          color: const Color(0xff163a70),
+        ),
     ];
     return GridView.builder(
       shrinkWrap: true,
@@ -344,6 +351,7 @@ class _ModuleGrid extends StatelessWidget {
               'Fees' => const FeesPage(),
               'Library' => const LibraryPage(),
               'Online Class' => const LiveClassesPage(),
+              'Admin' => const AdminDashboardPage(),
               _ => const MessagesPage(),
             };
             Navigator.of(
