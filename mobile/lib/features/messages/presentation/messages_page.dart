@@ -1,206 +1,110 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/module_ui.dart';
+import '../data/messages_repository.dart';
+import 'compose_page.dart';
+import 'thread_page.dart';
 
-class MessagesPage extends StatelessWidget {
+class MessagesPage extends ConsumerWidget {
   const MessagesPage({super.key, this.embedded = false});
   final bool embedded;
+
   @override
-  Widget build(BuildContext context) {
-    final content = [
-      TextField(
-        decoration: InputDecoration(
-          hintText: 'Search conversations',
-          prefixIcon: const Icon(Icons.search_rounded),
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(18),
-            borderSide: BorderSide.none,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final content = ref
+        .watch(inboxProvider)
+        .when(
+          loading: () => const Padding(
+            padding: EdgeInsets.symmetric(vertical: 60),
+            child: Center(child: CircularProgressIndicator()),
           ),
-        ),
+          error: (error, _) => InfoRow(
+            icon: Icons.refresh_rounded,
+            title: 'Could not load messages',
+            subtitle: 'Tap to try again',
+            color: const Color(0xffff6b6b),
+            onTap: () => ref.invalidate(inboxProvider),
+          ),
+          data: (messages) {
+            if (messages.isEmpty) {
+              return const InfoRow(
+                icon: Icons.forum_rounded,
+                title: 'No messages yet',
+                subtitle: 'Start a conversation with your school.',
+                color: Color(0xff829ab1),
+                trailing: SizedBox.shrink(),
+              );
+            }
+            return Column(
+              children: messages.map((message) {
+                final read = message['read'] == true;
+                return InfoRow(
+                  icon: message['direction'] == 'sent' ? Icons.outbox_rounded : Icons.inbox_rounded,
+                  title: message['with']?.toString() ?? '',
+                  subtitle: '${message['subject']} — ${message['snippet']}',
+                  color: read ? const Color(0xff829ab1) : const Color(0xff725cff),
+                  trailing: read ? null : const _UnreadBadge(),
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => ThreadPage(messageId: message['id'] as int),
+                    ),
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        );
+
+    final composeButton = FloatingActionButton(
+      onPressed: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => const ComposePage()),
       ),
-      const SizedBox(height: 18),
-      const SectionTitle('Conversations'),
-      InfoRow(
-        icon: Icons.person_rounded,
-        title: 'Mrs. Adeyemi',
-        subtitle: 'Your mathematics assignment was received.',
-        color: const Color(0xff725cff),
-        trailing: const _UnreadBadge('2'),
-        onTap: () => _openChat(context, 'Mrs. Adeyemi'),
-      ),
-      InfoRow(
-        icon: Icons.groups_rounded,
-        title: 'JSS 1 Announcements',
-        subtitle: 'Inter-house sports registration closes Friday.',
-        color: const Color(0xffff8a5b),
-        onTap: () => _openChat(context, 'JSS 1 Announcements'),
-      ),
-      InfoRow(
-        icon: Icons.support_agent_rounded,
-        title: 'School Administration',
-        subtitle: 'Fee payment reminder for third term.',
-        color: const Color(0xff168aad),
-        onTap: () => _openChat(context, 'School Administration'),
-      ),
-    ];
+      child: const Icon(Icons.edit_rounded),
+    );
+
     if (embedded) {
-      return ListView(
-        padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-        children: [
-          const Text(
-            'Messages',
-            style: TextStyle(
-              fontSize: 30,
-              fontWeight: FontWeight.w900,
-              color: Color(0xff102a43),
+      return Scaffold(
+        floatingActionButton: composeButton,
+        body: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
+          children: [
+            Text(
+              'Messages',
+              style: TextStyle(
+                fontSize: 30,
+                fontWeight: FontWeight.w900,
+                color: Theme.of(context).colorScheme.onSurface,
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          const Text(
-            'Stay connected with your school.',
-            style: TextStyle(color: Color(0xff627d98)),
-          ),
-          const SizedBox(height: 20),
-          ...content,
-        ],
+            const SizedBox(height: 6),
+            const Text(
+              'Stay connected with your school.',
+              style: TextStyle(color: Color(0xff627d98)),
+            ),
+            const SizedBox(height: 20),
+            content,
+          ],
+        ),
       );
     }
-    return ModulePage(
-      title: 'Messages',
-      subtitle: 'Private conversations and school announcements.',
-      icon: Icons.forum_rounded,
-      colors: const [Color(0xffb83b96), Color(0xffe66bb2)],
-      children: content,
+    return Scaffold(
+      floatingActionButton: composeButton,
+      body: ModulePage(
+        title: 'Messages',
+        subtitle: 'Private conversations with your school.',
+        icon: Icons.forum_rounded,
+        colors: const [Color(0xffb83b96), Color(0xffe66bb2)],
+        children: [content],
+      ),
     );
   }
-
-  void _openChat(BuildContext context, String name) => Navigator.of(
-    context,
-  ).push(MaterialPageRoute(builder: (_) => _ChatPage(name: name)));
 }
 
 class _UnreadBadge extends StatelessWidget {
-  const _UnreadBadge(this.count);
-  final String count;
+  const _UnreadBadge();
   @override
-  Widget build(BuildContext context) => CircleAvatar(
-    radius: 13,
-    backgroundColor: const Color(0xffd65db1),
-    child: Text(
-      count,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 11,
-        fontWeight: FontWeight.w900,
-      ),
-    ),
-  );
-}
-
-class _ChatPage extends StatefulWidget {
-  const _ChatPage({required this.name});
-  final String name;
-  @override
-  State<_ChatPage> createState() => _ChatPageState();
-}
-
-class _ChatPageState extends State<_ChatPage> {
-  final controller = TextEditingController();
-  final messages = <String>[];
-  @override
-  void dispose() {
-    controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(
-      title: Text(widget.name),
-      actions: [
-        IconButton(
-          onPressed: () => showModuleMessage(context, 'Conversation details'),
-          icon: const Icon(Icons.info_outline_rounded),
-        ),
-      ],
-    ),
-    body: Column(
-      children: [
-        Expanded(
-          child: ListView(
-            padding: const EdgeInsets.all(20),
-            children: [
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: _Bubble(
-                  'Hello! Your latest school update is available.',
-                  false,
-                ),
-              ),
-              const Align(
-                alignment: Alignment.centerRight,
-                child: _Bubble('Thank you, I have seen it.', true),
-              ),
-              ...messages.map(
-                (text) => Align(
-                  alignment: Alignment.centerRight,
-                  child: _Bubble(text, true),
-                ),
-              ),
-            ],
-          ),
-        ),
-        SafeArea(
-          top: false,
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: controller,
-                    decoration: const InputDecoration(
-                      hintText: 'Write a message…',
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                IconButton.filled(
-                  onPressed: () {
-                    if (controller.text.trim().isEmpty) return;
-                    setState(() {
-                      messages.add(controller.text.trim());
-                      controller.clear();
-                    });
-                  },
-                  icon: const Icon(Icons.send_rounded),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-class _Bubble extends StatelessWidget {
-  const _Bubble(this.text, this.mine);
-  final String text;
-  final bool mine;
-  @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.only(bottom: 12),
-    padding: const EdgeInsets.all(14),
-    constraints: const BoxConstraints(maxWidth: 280),
-    decoration: BoxDecoration(
-      color: mine ? const Color(0xff163a70) : Colors.white,
-      borderRadius: BorderRadius.circular(18),
-    ),
-    child: Text(
-      text,
-      style: TextStyle(color: mine ? Colors.white : const Color(0xff102a43)),
-    ),
+  Widget build(BuildContext context) => const CircleAvatar(
+    radius: 6,
+    backgroundColor: Color(0xffd65db1),
   );
 }

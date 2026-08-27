@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/module_ui.dart';
+import '../data/homework_repository.dart';
+import 'homework_detail_page.dart';
 
-class HomeworkPage extends StatelessWidget {
+class HomeworkPage extends ConsumerWidget {
   const HomeworkPage({super.key, required this.role});
   final String role;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final teacher = role.toLowerCase().contains('teacher');
     return ModulePage(
       title: 'Homework',
@@ -15,79 +19,63 @@ class HomeworkPage extends StatelessWidget {
       icon: Icons.assignment_rounded,
       colors: const [Color(0xffff5f6d), Color(0xffff8a5b)],
       children: [
-        Row(
-          children: [
-            StatTile(
-              value: teacher ? '12' : '3',
-              label: teacher ? 'To review' : 'Active',
-              icon: Icons.pending_actions_rounded,
-              color: const Color(0xffff6b6b),
+        ref
+            .watch(homeworkListProvider)
+            .when(
+              loading: () => const Padding(
+                padding: EdgeInsets.symmetric(vertical: 60),
+                child: Center(child: CircularProgressIndicator()),
+              ),
+              error: (error, _) => InfoRow(
+                icon: Icons.refresh_rounded,
+                title: 'Could not load homework',
+                subtitle: 'Tap to try again',
+                color: const Color(0xffff6b6b),
+                onTap: () => ref.invalidate(homeworkListProvider),
+              ),
+              data: (items) {
+                if (items.isEmpty) {
+                  return const InfoRow(
+                    icon: Icons.assignment_turned_in_rounded,
+                    title: 'No homework yet',
+                    subtitle: 'Assignments will appear here once posted.',
+                    color: Color(0xff829ab1),
+                    trailing: SizedBox.shrink(),
+                  );
+                }
+                return Column(
+                  children: items.map((item) {
+                    final submitted = item['submitted'] == true;
+                    return InfoRow(
+                      icon: Icons.menu_book_rounded,
+                      title: item['subject']?.toString() ?? 'Homework',
+                      subtitle: teacher
+                          ? '${item['class_name'] ?? ''} ${item['section_name'] ?? ''} · Due ${item['due_date']}'
+                          : 'Due ${item['due_date']}${submitted ? ' · Submitted' : ''}',
+                      color: teacher
+                          ? const Color(0xff725cff)
+                          : (submitted ? const Color(0xff00a896) : const Color(0xffff6b6b)),
+                      trailing: teacher
+                          ? null
+                          : Icon(
+                              submitted ? Icons.check_circle_rounded : Icons.pending_actions_rounded,
+                              color: submitted ? const Color(0xff00a896) : const Color(0xffff6b6b),
+                            ),
+                      onTap: () => Navigator.of(context).push(
+                        MaterialPageRoute<void>(
+                          builder: (_) => HomeworkDetailPage(
+                            homeworkId: item['id'] as int,
+                            isTeacher: teacher,
+                            initial: item,
+                          ),
+                        ),
+                      ),
+                    );
+                  }).toList(),
+                );
+              },
             ),
-            const SizedBox(width: 12),
-            StatTile(
-              value: teacher ? '28' : '14',
-              label: teacher ? 'Submitted' : 'Completed',
-              icon: Icons.task_alt_rounded,
-              color: const Color(0xff00a896),
-            ),
-          ],
-        ),
-        SectionTitle(teacher ? 'Needs review' : 'Due soon'),
-        InfoRow(
-          icon: Icons.calculate_rounded,
-          title: 'Algebra worksheet',
-          subtitle: teacher
-              ? '12 submissions · Due today'
-              : 'Mathematics · Due today, 6:00 PM',
-          color: const Color(0xff725cff),
-          trailing: const _DueBadge('TODAY'),
-          onTap: () => showModuleMessage(
-            context,
-            teacher
-                ? 'Evaluation workspace opened'
-                : 'Assignment details opened',
-          ),
-        ),
-        InfoRow(
-          icon: Icons.science_rounded,
-          title: 'Forms of energy',
-          subtitle: teacher
-              ? '8 submissions · Due tomorrow'
-              : 'Basic Science · Due tomorrow',
-          color: const Color(0xff00a896),
-          trailing: const _DueBadge('1 DAY'),
-          onTap: () => showModuleMessage(context, 'Homework details opened'),
-        ),
-        const SectionTitle('Recently completed'),
-        const InfoRow(
-          icon: Icons.check_circle_rounded,
-          title: 'Reading comprehension',
-          subtitle: 'English · Submitted · Score 18/20',
-          color: Color(0xff00a896),
-          trailing: Icon(Icons.verified_rounded, color: Color(0xff00a896)),
-        ),
       ],
     );
   }
-}
-
-class _DueBadge extends StatelessWidget {
-  const _DueBadge(this.text);
-  final String text;
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-    decoration: BoxDecoration(
-      color: const Color(0xffffe6e6),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: Text(
-      text,
-      style: const TextStyle(
-        color: Color(0xffd64545),
-        fontSize: 10,
-        fontWeight: FontWeight.w900,
-      ),
-    ),
-  );
 }
