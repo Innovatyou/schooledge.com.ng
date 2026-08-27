@@ -3,6 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/theme_mode_controller.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../../core/widgets/module_ui.dart';
+import 'membership_switcher_page.dart';
+import 'notification_preferences_page.dart';
+import 'personal_info_page.dart';
+import 'security_page.dart';
+import 'support_page.dart';
 
 class ProfilePage extends ConsumerWidget {
   const ProfilePage({super.key, required this.data, required this.onLogout});
@@ -65,23 +70,27 @@ class ProfilePage extends ConsumerWidget {
           title: 'Personal information',
           subtitle: 'Name, contact and school identity',
           color: const Color(0xff725cff),
-          onTap: () =>
-              showModuleMessage(context, 'Personal information opened'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const PersonalInfoPage()),
+          ),
         ),
         InfoRow(
           icon: Icons.switch_account_rounded,
           title: 'School memberships',
           subtitle: 'Switch school or role',
           color: const Color(0xff00a896),
-          onTap: () => showModuleMessage(context, 'Membership switcher opened'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const MembershipSwitcherPage()),
+          ),
         ),
         InfoRow(
           icon: Icons.notifications_rounded,
           title: 'Notifications',
           subtitle: 'Messages, homework and payment alerts',
           color: const Color(0xffffa62b),
-          onTap: () =>
-              showModuleMessage(context, 'Notification preferences opened'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const NotificationPreferencesPage()),
+          ),
         ),
         InfoRow(
           icon: Icons.dark_mode_rounded,
@@ -95,7 +104,9 @@ class ProfilePage extends ConsumerWidget {
           title: 'Security',
           subtitle: 'Password, OTP and signed-in devices',
           color: const Color(0xffff6b6b),
-          onTap: () => showModuleMessage(context, 'Security settings opened'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(builder: (_) => const SecurityPage()),
+          ),
         ),
         const SectionTitle('SchoolEdge'),
         InfoRow(
@@ -103,7 +114,15 @@ class ProfilePage extends ConsumerWidget {
           title: 'Help & support',
           subtitle: 'Get assistance from your school',
           color: const Color(0xff168aad),
-          onTap: () => showModuleMessage(context, 'Support centre opened'),
+          onTap: () => Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => SupportPage(
+                school: Map<String, dynamic>.from(
+                  (data['membership']?['school'] as Map?) ?? {},
+                ),
+              ),
+            ),
+          ),
         ),
         const SizedBox(height: 8),
         OutlinedButton.icon(

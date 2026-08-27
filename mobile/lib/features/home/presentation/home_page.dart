@@ -10,6 +10,8 @@ import '../../learning/presentation/learning_page.dart';
 import '../../library/presentation/library_page.dart';
 import '../../live_classes/presentation/live_classes_page.dart';
 import '../../messages/presentation/messages_page.dart';
+import '../../notifications/data/notifications_repository.dart';
+import '../../notifications/presentation/notifications_page.dart';
 import '../../planner/presentation/planner_page.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../results/presentation/results_page.dart';
@@ -104,12 +106,12 @@ class _HomePageState extends ConsumerState<HomePage> {
       ((data['membership']?['role']?['name']) ?? 'Student').toString();
 }
 
-class _Header extends StatelessWidget {
+class _Header extends ConsumerWidget {
   const _Header({required this.data, required this.onLogout});
   final Map<String, dynamic> data;
   final VoidCallback onLogout;
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final school =
         (data['membership']?['school']?['school_name'] ?? 'My School')
             .toString();
@@ -178,6 +180,20 @@ class _Header extends StatelessWidget {
                   ],
                 ),
               ),
+              IconButton.filledTonal(
+                onPressed: () => Navigator.of(context).push(
+                  MaterialPageRoute<void>(builder: (_) => const NotificationsPage()),
+                ),
+                icon: ref
+                    .watch(unreadCountProvider)
+                    .maybeWhen(
+                      data: (count) => count > 0
+                          ? Badge(label: Text('$count'), child: const Icon(Icons.notifications_rounded))
+                          : const Icon(Icons.notifications_rounded),
+                      orElse: () => const Icon(Icons.notifications_rounded),
+                    ),
+              ),
+              const SizedBox(width: 8),
               IconButton.filledTonal(
                 onPressed: onLogout,
                 icon: const Icon(Icons.logout_rounded),

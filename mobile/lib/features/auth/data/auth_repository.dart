@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/token_storage.dart';
@@ -9,6 +10,19 @@ final authRepositoryProvider = Provider(
       AuthRepository(ref.watch(dioProvider), ref.watch(tokenStorageProvider)),
 );
 
+/// TargetPlatform's own names ("TargetPlatform.android") aren't what a human (or
+/// a "signed-in devices" list) wants to read, so this maps to the same short
+/// platform strings the backend already treats as free-form (any string works,
+/// this just keeps them tidy and consistent).
+String _platformName() => switch (defaultTargetPlatform) {
+  TargetPlatform.android => 'android',
+  TargetPlatform.iOS => 'ios',
+  TargetPlatform.windows => 'windows',
+  TargetPlatform.macOS => 'macos',
+  TargetPlatform.linux => 'linux',
+  _ => 'other',
+};
+
 class AuthRepository {
   AuthRepository(this._dio, this._storage);
   final Dio _dio;
@@ -16,7 +30,12 @@ class AuthRepository {
   Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await _dio.post(
       'auth/login',
-      data: {'username': username, 'password': password},
+      data: {
+        'username': username,
+        'password': password,
+        'installation_id': await _storage.installationId(),
+        'platform': _platformName(),
+      },
     );
     final data = Map<String, dynamic>.from(response.data['data']);
     if (data['requires_otp'] == true) return data;
@@ -27,7 +46,11 @@ class AuthRepository {
   Future<void> verifyOtp(String challengeToken, String code) async {
     final response = await _dio.post(
       'auth/otp/verify',
-      data: {'challenge_token': challengeToken, 'code': code},
+      data: {
+        'challenge_token': challengeToken,
+        'code': code,
+        'platform': _platformName(),
+      },
     );
     await _saveTokens(response.data['data']['tokens']);
   }
