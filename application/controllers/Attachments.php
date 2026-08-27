@@ -235,13 +235,26 @@ class Attachments extends Admin_Controller
     // file downloader
     public function download()
     {
+        if (!is_loggedin() || !get_permission('attachments', 'is_view')) {
+            show_error('Forbidden', 403);
+        }
         $encrypt_name = urldecode($this->input->get('file'));
         if(preg_match('/^[^.][-a-z0-9_.]+[a-z0-9]$/i', $encrypt_name)) {
-            $file_name = $this->db->select('file_name')->where('enc_name', $encrypt_name)->get('attachments')->row()->file_name;
-            if (!empty($file_name)) {
-                force_download($file_name, file_get_contents('uploads/attachments/' . $encrypt_name));
+            $this->db->where('enc_name', $encrypt_name);
+            if (!is_superadmin_loggedin()) $this->db->where('branch_id', get_loggedin_branch_id());
+            $attachment = $this->db->get('attachments')->row_array();
+            if ($attachment && in_array(loggedin_role_id(), array(6, 7))) {
+                $studentId = loggedin_role_id() == 6 ? get_activeChildren_id() : get_loggedin_user_id();
+                $enroll = $this->db->select('class_id')->where(array('student_id'=>$studentId, 'branch_id'=>get_loggedin_branch_id()))->get('enroll')->row_array();
+                if (!$enroll || ($attachment['class_id'] !== 'unfiltered' && (int)$attachment['class_id'] !== (int)$enroll['class_id'])) $attachment = null;
+            }
+            $path = 'uploads/attachments/' . $encrypt_name;
+            if ($attachment && is_file($path)) {
+                force_download($attachment['file_name'], file_get_contents($path));
+                return;
             }
         }
+        show_404();
     }
 
     public function playVideo()

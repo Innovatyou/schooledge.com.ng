@@ -93,6 +93,37 @@ $route['(:any)/gallery_view/(:any)'] = 'home/gallery_view/$2';
 $route['(:any)/event_view/(:num)'] = 'home/event_view/$2';
 $route['(:any)/news_view/(:any)'] = 'home/news_view/$2';
 
+$route['api/v1/mobile/auth/login']['post'] = 'api/v1/mobile/login';
+$route['api/v1/mobile/auth/otp/verify']['post'] = 'api/v1/mobile/verify_otp';
+$route['api/v1/mobile/auth/otp/resend']['post'] = 'api/v1/mobile/resend_otp';
+$route['api/v1/mobile/auth/refresh']['post'] = 'api/v1/mobile/refresh';
+$route['api/v1/mobile/auth/logout']['post'] = 'api/v1/mobile/logout';
+$route['api/v1/mobile/me']['get'] = 'api/v1/mobile/me';
+$route['api/v1/mobile/schools']['get'] = 'api/v1/mobile/schools';
+$route['api/v1/mobile/memberships']['get'] = 'api/v1/mobile/memberships';
+$route['api/v1/mobile/reports']['get'] = 'api/v1/reports/index';
+$route['api/v1/mobile/reports/(:num)/download']['get'] = 'api/v1/reports/download/$1';
+
+$route['api/v1/mobile/fees/summary']['get'] = 'api/v1/fees/summary';
+$route['api/v1/mobile/fees/history']['get'] = 'api/v1/fees/history';
+$route['api/v1/mobile/fees/gateways']['get'] = 'api/v1/fees/gateways';
+$route['api/v1/mobile/fees/invoice/download']['get'] = 'api/v1/fees/invoice_download';
+$route['api/v1/mobile/fees/receipt/(:num)/download']['get'] = 'api/v1/fees/receipt_download/$1';
+$route['api/v1/mobile/fees/checkout']['post'] = 'api/v1/fees/checkout';
+$route['api/v1/mobile/fees/checkout/(:num)/verify']['post'] = 'api/v1/fees/verify/$1';
+$route['api/v1/mobile/fees/checkout/complete']['get'] = 'api/v1/fees/checkout_complete';
+
+$route['api/v1/mobile/library/books']['get'] = 'api/v1/library/books';
+$route['api/v1/mobile/library/categories']['get'] = 'api/v1/library/categories';
+$route['api/v1/mobile/library/books/(:num)']['get'] = 'api/v1/library/show/$1';
+$route['api/v1/mobile/library/books/(:num)/read']['get'] = 'api/v1/library/read/$1';
+
+$route['api/v1/mobile/events']['get'] = 'api/v1/events/index';
+$route['api/v1/mobile/events/(:num)']['get'] = 'api/v1/events/show/$1';
+
+$route['api/v1/mobile/live-classes']['get'] = 'api/v1/liveclasses/index';
+$route['api/v1/mobile/live-classes/(:num)/join']['get'] = 'api/v1/liveclasses/join/$1';
+
 $route['dashboard'] = 'dashboard/index';
 $route['branch'] = 'branch/index';
 $route['attachments'] = 'attachments/index';

@@ -142,6 +142,7 @@ class Communication extends Admin_Controller
     // file downloader
     public function download()
     {
+        if (!is_loggedin()) show_error('Forbidden', 403);
         $encrypt_name = urldecode($this->input->get('file'));
         $type = urldecode($this->input->get('type'));
         if (!preg_match('/^[^.][-a-z0-9_.]+[a-z]$/i', $type)) {
@@ -154,12 +155,21 @@ class Communication extends Admin_Controller
             $table = 'message';
         }
         if(preg_match('/^[^.][-a-z0-9_.]+[a-z]$/i', $encrypt_name)) {
-            $file_name = $this->db->select('file_name')->where('enc_name', $encrypt_name)->get($table)->row()->file_name;
-            if (!empty($file_name)) {
+            if ($table == 'message_reply') {
+                $this->db->select('message_reply.file_name,message.sender,message.reciever')->join('message', 'message.id = message_reply.message_id');
+            } else {
+                $this->db->select('file_name,sender,reciever');
+            }
+            $record = $this->db->where($table . '.enc_name', $encrypt_name)->get($table)->row_array();
+            $activeUser = loggedin_role_id() . '-' . get_loggedin_user_id();
+            $path = 'uploads/attachments/' . $encrypt_name;
+            if ($record && ($record['sender'] === $activeUser || $record['reciever'] === $activeUser) && is_file($path)) {
                 $this->load->helper('download');
-                force_download($file_name, file_get_contents('uploads/attachments/' . $encrypt_name));
+                force_download($record['file_name'], file_get_contents($path));
+                return;
             }
         }
+        show_404();
     }
 
     // upload file form validation

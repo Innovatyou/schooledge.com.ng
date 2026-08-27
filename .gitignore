@@ -37,3 +37,7 @@ uploads/online_ad_documents/*
 .vscode/
 Thumbs.db
 .DS_Store
+
+# Firebase Admin SDK service-account keys (server-only secrets)
+mobile/*-firebase-adminsdk-*.json
+application/config/*-firebase-adminsdk-*.json
