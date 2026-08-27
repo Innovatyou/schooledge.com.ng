@@ -163,6 +163,15 @@ $route['api/v1/mobile/notifications/read-all']['post'] = 'api/v1/notifications/m
 $route['api/v1/mobile/notifications/preferences']['get'] = 'api/v1/notifications/preferences';
 $route['api/v1/mobile/notifications/preferences']['put'] = 'api/v1/notifications/update_preference';
 
+$route['api/v1/mobile/admin/summary']['get'] = 'api/v1/admin/summary';
+$route['api/v1/mobile/admin/approvals']['get'] = 'api/v1/admin/approvals';
+$route['api/v1/mobile/admin/approvals/expense/(:num)/approve']['post'] = 'api/v1/admin/approve_expense/$1';
+$route['api/v1/mobile/admin/approvals/expense/(:num)/reject']['post'] = 'api/v1/admin/reject_expense/$1';
+$route['api/v1/mobile/admin/approvals/fees/(:num)/approve']['post'] = 'api/v1/admin/approve_fees/$1';
+$route['api/v1/mobile/admin/approvals/fees/(:num)/reject']['post'] = 'api/v1/admin/reject_fees/$1';
+$route['api/v1/mobile/admin/broadcast']['post'] = 'api/v1/admin/broadcast';
+$route['api/v1/mobile/admin/lookup']['get'] = 'api/v1/admin/lookup';
+
 $route['dashboard'] = 'dashboard/index';
 $route['branch'] = 'branch/index';
 $route['attachments'] = 'attachments/index';

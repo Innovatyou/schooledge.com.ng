@@ -187,4 +187,23 @@ class Api_Controller extends CI_Controller
         if (!$membership) return; // this person has no active mobile membership to notify
         $this->notifyMembership($membership['id'], $branchId, $category, $title, $body, $data);
     }
+
+    /**
+     * Stateless equivalent of the web app's get_permission() (general_helper.php),
+     * which reads loggedin_role_id off the session - re-derived here against
+     * staff_privileges/permission directly since the mobile API has no session.
+     * $can is one of 'is_view'/'is_add'/'is_edit'/'is_delete' and must only ever be
+     * a literal the caller controls, never client input (it's interpolated as a
+     * column name, not a bound value).
+     */
+    protected function hasPermission($roleId, $prefix, $can)
+    {
+        if ((int)$roleId === 1) return true;
+        $row = $this->db->select('staff_privileges.' . $can . ' as allowed')
+            ->from('staff_privileges')
+            ->join('permission', 'permission.id = staff_privileges.permission_id', 'inner')
+            ->where(array('staff_privileges.role_id' => (int)$roleId, 'permission.prefix' => $prefix))
+            ->get()->row_array();
+        return $row && (int)$row['allowed'] === 1;
+    }
 }
