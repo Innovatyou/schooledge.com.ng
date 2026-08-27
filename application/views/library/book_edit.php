@@ -87,6 +87,20 @@
 						<div class="col-md-6"><input type="file" name="cover_image" class="dropify" data-allowed-file-extensions="jpg png" data-default-file="<?=$this->application_model->get_book_cover_image($book['cover']);?>" /></div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-3 control-label"><?=translate('ebook_file')?></label>
+						<input type="hidden" name="old_ebook_file" value="<?=$book['ebook_file']?>">
+						<div class="col-md-6">
+							<input type="file" name="ebook_file" class="dropify" data-allowed-file-extensions="pdf" />
+							<?php if (!empty($book['ebook_file'])): ?>
+								<span class="help-block"><?=translate('current_file')?>: <?=htmlspecialchars($book['ebook_original_name'] ?: $book['ebook_file'])?>
+									&nbsp; <label><input type="checkbox" name="remove_ebook_file" value="1" /> <?=translate('remove')?></label>
+								</span>
+							<?php else: ?>
+								<span class="help-block"><?=translate('optional_upload_a_pdf_so_students_can_read_this_book_in_the_app')?></span>
+							<?php endif; ?>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-3 control-label"> <?=translate('total_stock')?> <span class="required">*</span></label>
 						<div class="col-md-6  mb-md">
 							<div data-plugin-spinner data-plugin-options='{ "value":0, "min": 0 }'>
