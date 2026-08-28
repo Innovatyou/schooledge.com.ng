@@ -39,14 +39,22 @@ flutter run --flavor development --dart-define=APP_ENV=development --dart-define
   (`AppEnvironment` in `core/config/app_environment.dart`) - keep it matching
   `--flavor` in practice.
 - `--dart-define=API_BASE_URL=...` points at the backend; `10.0.2.2` is the
-  Android emulator's alias for the host machine's `localhost`.
+  Android emulator's alias for the host machine's `localhost`. Optional -
+  `AppConfig.apiBaseUrl` (`core/config/app_environment.dart`) already falls
+  back to a sensible URL per `APP_ENV` when it's omitted (see table below).
+
+For a production build against the real deployed backend:
+
+```sh
+flutter build appbundle --flavor production --dart-define=APP_ENV=production
+```
 
 ## Environment variables (`--dart-define`)
 
 | Name | Default | Purpose |
 |---|---|---|
 | `APP_ENV` | `development` | Selects `AppEnvironment` (`saas`/`development`/`staging`/`production`) |
-| `API_BASE_URL` | `http://10.0.2.2/schooledge.ng/api/v1/mobile` | Base URL every Dio call is relative to |
+| `API_BASE_URL` | per `APP_ENV`: `production`/`saas` → `https://schooledge.com.ng/api/v1/mobile`, `staging`/`development` → `http://10.0.2.2/schooledge.ng/api/v1/mobile` | Base URL every Dio call is relative to - pass explicitly to override (e.g. a physical device can't reach `10.0.2.2`, use the host's real LAN IP instead) |
 
 No secrets are read via `--dart-define` or committed anywhere in `lib/` -
 payment gateway keys, Firebase service-account keys, and signing credentials
