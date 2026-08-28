@@ -1,0 +1,664 @@
+openapi: 3.0.3
+info:
+  title: SchoolEdge Mobile API
+  version: "1.0"
+  description: |
+    Stateless bearer-token REST API backing the SchoolEdge Flutter app (both
+    the shared multi-tenant "SaaS" app and per-school branded builds), bolted
+    onto the existing CodeIgniter 3 session-based web app. Every endpoint here
+    lives under `application/controllers/api/v1/` and is routed in
+    `application/config/routes.php`; all of them extend `Api_Controller`
+    (`application/core/Api_Controller.php`), which is the source of truth for
+    the auth/error/envelope conventions documented below.
+
+    **Multi-tenancy**: a `branch` row is the sole tenant unit. Every
+    authenticated request resolves to one `mobile_memberships` row (a
+    login_credential + branch + role triple), and every endpoint scopes its
+    queries to that membership's `branch_id` - there is no cross-branch access
+    by design (see `TenantIsolationTest` in `tests/Api/`).
+
+    **Read-only demo branches**: a branch with `is_demo=1` allows every GET but
+    rejects every mutating request with `demo_readonly` (403) -
+    `Api_Controller::blockIfDemoReadonly()`.
+  contact:
+    name: SchoolEdge
+servers:
+  - url: https://{host}/api/v1/mobile
+    variables:
+      host:
+        default: schooledge.ng
+        description: Replace with the target install's own host (each school's own domain for a branded app, or the shared SaaS host).
+
+tags:
+  - name: Auth
+  - name: Profile
+  - name: Fees
+  - name: Library
+  - name: Events
+  - name: LiveClasses
+  - name: Attendance
+  - name: Results
+  - name: Homework
+  - name: Messages
+  - name: Timetable
+  - name: Resources
+  - name: Notifications
+  - name: Admin
+  - name: Reports
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT-like
+      description: >
+        A short-lived (15 min) HMAC-signed access token from `auth/login` /
+        `auth/refresh` - not a standard JWT, but the same base64-payload +
+        signature shape. Every endpoint except `auth/*` and `schools` requires
+        `Authorization: Bearer <access_token>`.
+
+  schemas:
+    Envelope:
+      type: object
+      description: Every response (success or failure) uses this shape - see `Api_Controller::ok()`/`fail()`.
+      properties:
+        success:
+          type: boolean
+        data:
+          nullable: true
+        meta:
+          type: object
+        error:
+          type: object
+          nullable: true
+          properties:
+            code:
+              type: string
+              example: validation_error
+            message:
+              type: string
+            details:
+              nullable: true
+
+    Error401:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+      example:
+        success: false
+        error: { code: unauthorized, message: "A bearer token is required.", details: null }
+
+    Error403Demo:
+      allOf:
+        - $ref: '#/components/schemas/Envelope'
+      example:
+        success: false
+        error: { code: demo_readonly, message: "This is a read-only demo school. This action is disabled.", details: null }
+
+    AuthTokens:
+      type: object
+      properties:
+        access_token: { type: string }
+        refresh_token: { type: string }
+        token_type: { type: string, example: Bearer }
+        expires_in: { type: integer, example: 900, description: seconds until the access token expires }
+
+    Membership:
+      type: object
+      properties:
+        id: { type: integer }
+        status: { type: string, example: active }
+        is_default: { type: boolean }
+        school:
+          type: object
+          properties:
+            id: { type: integer }
+            school_name: { type: string }
+            address: { type: string }
+            email: { type: string }
+            mobileno: { type: string }
+        role:
+          type: object
+          properties:
+            id: { type: integer }
+            name: { type: string, example: Parent }
+
+  parameters:
+    StudentId:
+      name: student_id
+      in: query
+      required: false
+      schema: { type: integer }
+      description: >
+        Required for a parent membership (selects which linked child); ignored
+        for a student membership, which always resolves to its own enrollment
+        regardless of what (if anything) is passed
+        (`Api_Controller::resolveOwnedEnrollment()`).
+
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Log in with username/password
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username: { type: string }
+                password: { type: string }
+                membership_id: { type: integer, description: pick a specific membership when the credential has more than one active branch/role }
+                installation_id: { type: string, description: "stable per-device id generated by the client, persisted across logout" }
+                platform: { type: string, example: android }
+                app_version: { type: string }
+      responses:
+        '200':
+          description: Logged in directly, or a 2FA challenge is required
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/Envelope'
+                example:
+                  success: true
+                  data:
+                    tokens: { access_token: "...", refresh_token: "...", token_type: Bearer, expires_in: 900 }
+                    membership: { id: 1, status: active, is_default: true, school: {}, role: {} }
+                    memberships: []
+        '401':
+          description: Invalid credentials
+          content: { application/json: { schema: { $ref: '#/components/schemas/Error401' } } }
+        '403':
+          description: No active membership for this credential
+        '429':
+          description: Rate limited (10 login attempts/minute/IP)
+
+  /auth/otp/verify:
+    post:
+      tags: [Auth]
+      summary: Complete a 2FA challenge from /auth/login
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [challenge_token, code]
+              properties:
+                challenge_token: { type: string }
+                code: { type: string }
+                platform: { type: string }
+      responses:
+        '200': { description: Tokens issued }
+        '401': { description: Invalid/expired challenge }
+        '422': { description: Incorrect code }
+        '429': { description: Too many incorrect attempts }
+
+  /auth/otp/resend:
+    post:
+      tags: [Auth]
+      summary: Resend an email OTP (authenticator-app challenges cannot be resent)
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [challenge_token], properties: { challenge_token: { type: string } } }
+      responses:
+        '200': { description: Resent }
+        '429': { description: Throttled (60s) }
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Rotate a refresh token for a new access/refresh pair
+      security: []
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [refresh_token], properties: { refresh_token: { type: string } } }
+      responses:
+        '200': { description: New token pair issued; the old refresh token is revoked }
+        '401': { description: "invalid_refresh_token - expired, revoked, or already-rotated (replay attempt)" }
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke a refresh token
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { refresh_token: { type: string } } }
+      responses:
+        '200': { description: Logged out }
+
+  /auth/switch-membership:
+    post:
+      tags: [Auth]
+      summary: Issue a fresh token pair for a different membership on the same credential
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, required: [membership_id], properties: { membership_id: { type: integer } } }
+      responses:
+        '200': { description: New token pair for the selected membership }
+
+  /me:
+    get:
+      tags: [Auth]
+      summary: Current identity, active membership, and (for a parent) linked children
+      responses:
+        '200': { description: OK }
+
+  /schools:
+    get:
+      tags: [Auth]
+      summary: Search schools for the shared SaaS app's school picker
+      security: []
+      responses:
+        '200': { description: OK }
+
+  /memberships:
+    get:
+      tags: [Auth]
+      summary: List every active membership for the current credential
+      responses:
+        '200': { description: OK }
+
+  /profile:
+    get:
+      tags: [Profile]
+      summary: Current user's contact info
+      responses: { '200': { description: OK } }
+    patch:
+      tags: [Profile]
+      summary: Update email/mobile number
+      requestBody:
+        content:
+          application/json:
+            schema: { type: object, properties: { email: { type: string }, mobileno: { type: string } } }
+      responses:
+        '200': { description: Updated }
+        '403':
+          description: demo_readonly on a demo branch
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error403Demo' }
+        '422': { description: Invalid email }
+
+  /profile/change-password:
+    post:
+      tags: [Profile]
+      summary: Change the current password
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [current_password, new_password]
+              properties: { current_password: { type: string }, new_password: { type: string, minLength: 8 } }
+      responses:
+        '200': { description: Changed }
+        '422': { description: Wrong current password or new password too short }
+
+  /profile/sessions:
+    get:
+      tags: [Profile]
+      summary: List signed-in devices for this membership
+      responses: { '200': { description: OK } }
+
+  /profile/sessions/{id}/revoke:
+    post:
+      tags: [Profile]
+      summary: Revoke a device's refresh tokens (remote sign-out)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: Revoked } }
+
+  /profile/push-token:
+    patch:
+      tags: [Profile]
+      summary: Register (or clear) this installation's FCM push token
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                push_token: { type: string, description: "empty string clears it" }
+                push_enabled: { type: boolean, default: true }
+      responses:
+        '200': { description: Registered }
+        '422': { description: No installation_id on this session (re-login required) }
+
+  /fees/summary:
+    get:
+      tags: [Fees]
+      summary: Fee breakdown (due/paid/discount/fine) for one student
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  student: { id: 1, name: "Jane Doe", enroll_id: 1 }
+                  total_due: 15000.0
+                  total_paid: 5000.0
+                  items: []
+        '404': { description: "student_not_found - not this membership's child, or no enrollment in this school" }
+
+  /fees/history:
+    get:
+      tags: [Fees]
+      summary: Payment history for one student (optionally one fee allocation)
+      parameters:
+        - { $ref: '#/components/parameters/StudentId' }
+        - { name: allocation_id, in: query, schema: { type: integer } }
+      responses: { '200': { description: OK } }
+
+  /fees/gateways:
+    get:
+      tags: [Fees]
+      summary: Payment gateways enabled for this branch (e.g. Paystack)
+      responses: { '200': { description: OK } }
+
+  /fees/invoice/download:
+    get:
+      tags: [Fees]
+      summary: Download a PDF fee invoice for one student
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: "PDF binary", content: { application/pdf: { schema: { type: string, format: binary } } } } }
+
+  /fees/receipt/{allocationId}/download:
+    get:
+      tags: [Fees]
+      summary: Download a PDF payment receipt
+      parameters: [{ name: allocationId, in: path, required: true, schema: { type: integer } }, { $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: "PDF binary" } }
+
+  /fees/checkout:
+    post:
+      tags: [Fees]
+      summary: Start a payment gateway checkout for one or more fee allocations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [student_id]
+              properties:
+                student_id: { type: integer }
+                allocation_id: { type: integer }
+                gateway: { type: string, example: paystack }
+      responses:
+        '200': { description: "Returns a checkout URL/reference to open in a browser/webview" }
+        '403': { description: demo_readonly on a demo branch }
+
+  /fees/checkout/{transactionId}/verify:
+    post:
+      tags: [Fees]
+      summary: Verify a completed gateway payment and post it to the ledger
+      parameters: [{ name: transactionId, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: "verified: true/false - only a gateway-confirmed terminal failure (e.g. Paystack failed/reversed) is treated as failed; anything else is reported as still-pending rather than a false failure" }
+
+  /fees/checkout/complete:
+    get:
+      tags: [Fees]
+      summary: Browser redirect target after completing a hosted gateway checkout
+      security: []
+      responses: { '200': { description: "HTML landing page" } }
+
+  /library/books:
+    get: { tags: [Library], summary: List library books (optionally by category/search), responses: { '200': { description: OK } } }
+  /library/categories:
+    get: { tags: [Library], summary: List book categories, responses: { '200': { description: OK } } }
+  /library/books/{id}:
+    get:
+      tags: [Library]
+      summary: Book detail
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /library/books/{id}/read:
+    get:
+      tags: [Library]
+      summary: Stream the book's PDF (ebook_file) for in-app reading
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: "PDF binary" }, '404': { description: No ebook uploaded for this book } }
+
+  /events:
+    get: { tags: [Events], summary: Upcoming events/announcements for this membership, responses: { '200': { description: OK } } }
+  /events/{id}:
+    get:
+      tags: [Events]
+      summary: Event detail
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK }, '404': { description: Not visible to this membership } }
+
+  /live-classes:
+    get: { tags: [LiveClasses], summary: Upcoming/ongoing online classes, responses: { '200': { description: OK } } }
+  /live-classes/{id}/join:
+    get:
+      tags: [LiveClasses]
+      summary: Resolve the join URL for a live class
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+
+  /attendance/summary:
+    get:
+      tags: [Attendance]
+      summary: Attendance percentage/history for one student
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: OK } }
+  /attendance/classes:
+    get: { tags: [Attendance], summary: "Teacher only: classes/sections available to capture attendance for", responses: { '200': { description: OK } } }
+  /attendance/roster/{classId}/{sectionId}:
+    get:
+      tags: [Attendance]
+      summary: "Teacher only: student roster for a class/section, for capture"
+      parameters:
+        - { name: classId, in: path, required: true, schema: { type: integer } }
+        - { name: sectionId, in: path, required: true, schema: { type: integer } }
+      responses: { '200': { description: OK } }
+  /attendance/capture:
+    post:
+      tags: [Attendance]
+      summary: "Teacher only: submit attendance (P/L/A) for a class/section"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                class_id: { type: integer }
+                section_id: { type: integer }
+                date: { type: string, format: date }
+                entries:
+                  type: array
+                  items: { type: object, properties: { student_id: { type: integer }, status: { type: string, enum: [P, L, A] } } }
+      responses: { '200': { description: Saved }, '403': { description: demo_readonly on a demo branch } }
+
+  /results/exams:
+    get:
+      tags: [Results]
+      summary: Exams available for one student
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: OK } }
+  /results/exams/{id}:
+    get:
+      tags: [Results]
+      summary: Subject-by-subject result for one exam
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }, { $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: OK } }
+
+  /homework:
+    get:
+      tags: [Homework]
+      summary: Homework list (published only for students/parents; all statuses for a teacher's own assignments)
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: OK } }
+  /homework/{id}/download:
+    get:
+      tags: [Homework]
+      summary: Download the homework's attachment
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: "file binary" } }
+  /homework/{id}/submit:
+    post:
+      tags: [Homework]
+      summary: "Student/parent: submit a homework attachment"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { content: { multipart/form-data: { schema: { type: object, properties: { file: { type: string, format: binary }, student_id: { type: integer } } } } } }
+      responses: { '200': { description: Submitted }, '403': { description: demo_readonly on a demo branch } }
+  /homework/{id}/submissions:
+    get:
+      tags: [Homework]
+      summary: "Teacher only: every student's submission for this homework"
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /homework/{id}/submissions/{submissionId}/download:
+    get:
+      tags: [Homework]
+      summary: "Teacher only: download one student's submitted file"
+      parameters:
+        - { name: id, in: path, required: true, schema: { type: integer } }
+        - { name: submissionId, in: path, required: true, schema: { type: integer } }
+      responses: { '200': { description: "file binary" } }
+
+  /messages:
+    get: { tags: [Messages], summary: Inbox thread list, responses: { '200': { description: OK } } }
+    post:
+      tags: [Messages]
+      summary: Compose a new message thread
+      requestBody: { content: { application/json: { schema: { type: object, properties: { to: { type: string }, subject: { type: string }, body: { type: string } } } } } }
+      responses: { '200': { description: Sent }, '403': { description: demo_readonly on a demo branch } }
+  /messages/contacts:
+    get: { tags: [Messages], summary: Who this membership is allowed to message, responses: { '200': { description: OK } } }
+  /messages/{id}:
+    get:
+      tags: [Messages]
+      summary: One thread's full conversation
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /messages/{id}/reply:
+    post:
+      tags: [Messages]
+      summary: Reply within a thread
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { body: { type: string } } } } } }
+      responses: { '200': { description: Sent }, '403': { description: demo_readonly on a demo branch } }
+
+  /timetable:
+    get:
+      tags: [Timetable]
+      summary: Weekly timetable for one student (or a teacher's own)
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses: { '200': { description: OK } }
+
+  /resources:
+    get: { tags: [Resources], summary: Downloadable class resources/study materials, responses: { '200': { description: OK } } }
+  /resources/{id}/download:
+    get:
+      tags: [Resources]
+      summary: Download a resource file
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: "file binary" } }
+
+  /notifications:
+    get: { tags: [Notifications], summary: In-app notification inbox, responses: { '200': { description: OK } } }
+  /notifications/unread-count:
+    get: { tags: [Notifications], summary: Unread count for the bell badge, responses: { '200': { description: OK } } }
+  /notifications/{id}/read:
+    post:
+      tags: [Notifications]
+      summary: Mark one notification read
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /notifications/read-all:
+    post: { tags: [Notifications], summary: Mark every notification read, responses: { '200': { description: OK } } }
+  /notifications/preferences:
+    get: { tags: [Notifications], summary: Per-category inbox/push/email preferences, responses: { '200': { description: OK } } }
+    put:
+      tags: [Notifications]
+      summary: Update one category's preferences
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: { category: { type: string }, inbox_enabled: { type: boolean }, push_enabled: { type: boolean }, email_enabled: { type: boolean } }
+      responses: { '200': { description: Updated } }
+
+  /admin/summary:
+    get: { tags: [Admin], summary: "School admin dashboard: student/staff/parent counts, today's attendance, pending approval count", responses: { '200': { description: OK }, '403': { description: Not a school administrator role } } }
+  /admin/approvals:
+    get:
+      tags: [Admin]
+      summary: Combined maker-checker queue (expense, fee-collection, online-admission), one list item per pending request
+      responses: { '200': { description: OK } }
+  /admin/approvals/expense/{id}/approve:
+    post: { tags: [Admin], summary: Approve a pending expense request, parameters: [{ name: id, in: path, required: true, schema: { type: integer } }], responses: { '200': { description: Approved }, '403': { description: "self_approval_not_allowed, permission_denied, or demo_readonly" }, '404': { description: request_not_found } } }
+  /admin/approvals/expense/{id}/reject:
+    post: { tags: [Admin], summary: Reject a pending expense request, parameters: [{ name: id, in: path, required: true, schema: { type: integer } }], responses: { '200': { description: Rejected } } }
+  /admin/approvals/fees/{id}/approve:
+    post: { tags: [Admin], summary: Approve a pending fee-collection request, parameters: [{ name: id, in: path, required: true, schema: { type: integer } }], responses: { '200': { description: Approved } } }
+  /admin/approvals/fees/{id}/reject:
+    post: { tags: [Admin], summary: Reject a pending fee-collection request, parameters: [{ name: id, in: path, required: true, schema: { type: integer } }], responses: { '200': { description: Rejected } } }
+  /admin/approvals/admission/{id}:
+    get:
+      tags: [Admin]
+      summary: Staged-admission review detail, with a live uniqueness re-check
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: OK } }
+  /admin/approvals/admission/{id}/approve:
+    post:
+      tags: [Admin]
+      summary: >
+        Approve a staged online admission - creates the real
+        student/parent/enroll/login_credential rows and emails credentials
+        (mirrors the web app's Online_admission::admission_approval_save()).
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { comments: { type: string } } } } } }
+      responses:
+        '200': { description: "{ approved: true, student_id }" }
+        '403': { description: self_approval_not_allowed / permission_denied / demo_readonly }
+        '404': { description: "request_not_found - already actioned, or belongs to another branch" }
+        '422': { description: "validation_error - a uniqueness conflict surfaced since staging (e.g. username taken), or the saas student limit was reached" }
+        '500': { description: server_error - the student record could not be created; nothing was approved }
+  /admin/approvals/admission/{id}/reject:
+    post:
+      tags: [Admin]
+      summary: Reject a staged online admission - creates nothing
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      requestBody: { content: { application/json: { schema: { type: object, properties: { comments: { type: string } } } } } }
+      responses: { '200': { description: "{ rejected: true }" } }
+  /admin/broadcast:
+    post:
+      tags: [Admin]
+      summary: Send a branch-wide announcement (admin/superadmin roles only)
+      requestBody: { content: { application/json: { schema: { type: object, required: [title, body], properties: { title: { type: string }, body: { type: string } } } } } }
+      responses: { '200': { description: Sent }, '403': { description: role_not_supported or demo_readonly } }
+  /admin/lookup:
+    get:
+      tags: [Admin]
+      summary: Search students/staff/parents by name (admin roles only)
+      parameters: [{ name: q, in: query, required: true, schema: { type: string, minLength: 2 } }]
+      responses: { '200': { description: OK }, '422': { description: query too short } }
+
+  /reports:
+    get: { tags: [Reports], summary: List reports available to this membership's role, responses: { '200': { description: OK } } }
+  /reports/{id}/download:
+    get:
+      tags: [Reports]
+      summary: Download a report file
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: "file binary" } }
