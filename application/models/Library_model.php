@@ -36,6 +36,30 @@ class Library_model extends MY_Model
                 $arraybook['cover'] = $this->upload->data('file_name');
             }
         }
+        $oldEbookFile = null;
+        if (isset($_FILES['ebook_file']) && $_FILES['ebook_file']['name'] != "") {
+            $config = array();
+            $config['upload_path'] = 'uploads/book_ebook/';
+            $config['allowed_types'] = 'pdf';
+            $config['overwrite'] = false;
+            $config['file_name'] = 'ebook_' . app_generate_hash();
+            $this->upload->initialize($config);
+            if ($this->upload->do_upload("ebook_file")) {
+                $arraybook['ebook_file'] = $this->upload->data('file_name');
+                $arraybook['ebook_original_name'] = $_FILES['ebook_file']['name'];
+                $arraybook['ebook_uploaded_at'] = date('Y-m-d H:i:s');
+                if (!empty($data['old_ebook_file'])) {
+                    $oldEbookFile = $data['old_ebook_file'];
+                }
+            }
+        } elseif (!empty($data['remove_ebook_file'])) {
+            $arraybook['ebook_file'] = null;
+            $arraybook['ebook_original_name'] = null;
+            $arraybook['ebook_uploaded_at'] = null;
+            if (!empty($data['old_ebook_file'])) {
+                $oldEbookFile = $data['old_ebook_file'];
+            }
+        }
         if (!isset($data['book_id'])) {
             $this->db->insert('book', $arraybook);
         } else {
@@ -49,6 +73,12 @@ class Library_model extends MY_Model
             }
             $this->db->where('id', $data['book_id']);
             $this->db->update('book', $arraybook);
+        }
+        if ($oldEbookFile) {
+            $file = 'uploads/book_ebook/' . $oldEbookFile;
+            if (file_exists($file)) {
+                @unlink($file);
+            }
         }
         if ($this->db->affected_rows() > 0) {
             return true;

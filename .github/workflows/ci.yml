@@ -1,0 +1,102 @@
+name: CI
+
+# What this does NOT do, and why: the PHPUnit suite in tests/Api/ (see
+# tests/README.md) runs against the real dev database's full schema, which
+# this app fetches remotely at install time rather than committing a SQL
+# dump - there is currently no from-scratch schema this workflow could stand
+# up to run it here. Standing that up (a committed minimal schema covering
+# just the tables the suite touches, or restoring a real dump from a secret)
+# is a real next step, not attempted here to avoid a CI schema that quietly
+# drifts from the real one and gives false confidence. Until then, these
+# jobs are the automated gate; the PHPUnit suite stays a local/manual gate
+# (`vendor/bin/phpunit`) run against a real dev database before merging.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  php-lint:
+    name: PHP lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Lint every PHP file in application/
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' file; do
+            php -l "$file" || fail=1
+          done < <(find application -name '*.php' -print0)
+          exit $fail
+
+  php-test-suite-syntax:
+    name: PHP test suite (composer + syntax only)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+      - name: Install dev-only test tooling
+        run: composer install --no-interaction --prefer-dist
+      - name: Lint every test file
+        run: |
+          set -e
+          fail=0
+          while IFS= read -r -d '' file; do
+            php -l "$file" || fail=1
+          done < <(find tests -name '*.php' -print0)
+          exit $fail
+      - name: composer validate
+        run: composer validate --strict
+
+  openapi-lint:
+    name: OpenAPI spec validity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+      - run: pip install openapi-spec-validator
+      - run: python -m openapi_spec_validator docs/mobile-api.openapi.yaml
+
+  flutter:
+    name: Flutter analyze + test
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - run: flutter analyze
+      - run: flutter test
+
+  flutter-build-check:
+    name: Flutter Android build (development flavor, debug)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - run: flutter pub get
+      - name: Build a debug APK for the development flavor
+        run: flutter build apk --flavor development --debug --dart-define=APP_ENV=development

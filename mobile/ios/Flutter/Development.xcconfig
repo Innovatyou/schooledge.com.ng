@@ -1,0 +1,3 @@
+#include 'Generated.xcconfig'
+PRODUCT_BUNDLE_IDENTIFIER=ng.schooledge.mobile.dev
+APP_DISPLAY_NAME=SchoolEdge Dev

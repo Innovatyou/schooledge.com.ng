@@ -432,6 +432,16 @@ class Homework extends Admin_Controller
 
     public function download($id)
     {
+        if (!is_loggedin() || !get_permission('homework', 'is_view')) show_error('Forbidden', 403);
+        $this->db->where('id', (int)$id);
+        if (!is_superadmin_loggedin()) $this->db->where('branch_id', get_loggedin_branch_id());
+        $homework = $this->db->get('homework')->row_array();
+        if (!$homework) show_404();
+        if (in_array(loggedin_role_id(), array(6, 7))) {
+            $studentId = loggedin_role_id() == 6 ? get_activeChildren_id() : get_loggedin_user_id();
+            $enroll = $this->db->select('class_id,section_id')->where(array('student_id'=>$studentId, 'branch_id'=>get_loggedin_branch_id()))->get('enroll')->row_array();
+            if (!$enroll || (int)$homework['class_id'] !== (int)$enroll['class_id'] || (int)$homework['section_id'] !== (int)$enroll['section_id']) show_error('Forbidden', 403);
+        }
         $this->load->helper('download');
         $name     = get_type_name_by_id('homework', $id, 'document');
         $ext      = explode(".", $name);
@@ -442,10 +452,16 @@ class Homework extends Admin_Controller
 
     public function download_submitted()
     {
+        if (!is_loggedin() || !get_permission('homework', 'is_view')) show_error('Forbidden', 403);
         $this->load->helper('download');
         $encrypt_name = urldecode($this->input->get('file'));
         if(preg_match('/^[^.][-a-z0-9_.]+[a-z]$/i', $encrypt_name)) {
-            $file_name = $this->db->select('file_name')->where('enc_name', $encrypt_name)->get('homework_submit')->row()->file_name;
+            $this->db->select('homework_submit.file_name,homework_submit.student_id,homework.branch_id')->join('homework', 'homework.id = homework_submit.homework_id');
+            if (!is_superadmin_loggedin()) $this->db->where('homework.branch_id', get_loggedin_branch_id());
+            if (loggedin_role_id() == 7) $this->db->where('homework_submit.student_id', get_loggedin_user_id());
+            if (loggedin_role_id() == 6) $this->db->where('homework_submit.student_id', get_activeChildren_id());
+            $record = $this->db->where('homework_submit.enc_name', $encrypt_name)->get('homework_submit')->row();
+            $file_name = $record ? $record->file_name : null;
             if (!empty($file_name)) {
                 force_download($file_name, file_get_contents('uploads/attachments/homework_submit/' . $encrypt_name));
             }

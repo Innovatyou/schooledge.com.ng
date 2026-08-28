@@ -303,6 +303,7 @@ class Feespayment extends Admin_Controller
     {
         $sessionId = $this->input->get('session_id');
         $params = $this->session->userdata('params');
+        $this->session->unset_userdata('params');
         if (!empty($sessionId) && !empty($params)) {
             try {
                 $response = $this->stripe_payment->verify($sessionId);
@@ -518,6 +519,13 @@ class Feespayment extends Admin_Controller
     {
         if ($this->input->server('REQUEST_METHOD') == 'POST') {
             $params = $this->session->userdata('params');
+            $this->load->library('payment_callback_verifier');
+            $config = $this->get_payment_config();
+            if (empty($params) || !$this->payment_callback_verifier->payumoney($this->input->post(), $config['payumoney_salt'], $params['txn_id'], $params['amount'] + $params['fine'])) {
+                set_alert('error', translate('invalid_transaction'));
+                redirect(base_url('userrole/invoice'));
+                return;
+            }
             // null session data
             $this->session->set_userdata("params", "");
             if ($this->input->post('status') == "success") {
@@ -704,6 +712,8 @@ class Feespayment extends Admin_Controller
             } else {
                 $integeritySalt = $config['jazzcash_integerity_salt'];
                 $pp_TxnRefNo = 'T' . date('YmdHis');
+                $params['jazzcash_txn_ref'] = $pp_TxnRefNo;
+                $this->session->set_userdata('params', $params);
                 $post_data = array(
                     "pp_Version" => "2.0",
                     "pp_TxnType" => "MPAY",
@@ -772,6 +782,14 @@ class Feespayment extends Admin_Controller
     public function jazzcash_success()
     {
         $params = $this->session->userdata('params');
+        $this->load->library('payment_callback_verifier');
+        $config = $this->get_payment_config();
+        if (empty($params) || !$this->payment_callback_verifier->jazzcash($this->input->post(), $config['jazzcash_integerity_salt'], $params['jazzcash_txn_ref'], $params['amount'] + $params['fine'])) {
+            set_alert('error', translate('invalid_transaction'));
+            redirect(base_url('userrole/invoice'));
+            return;
+        }
+        $this->session->unset_userdata('params');
         if ($_POST['pp_ResponseCode'] == '000') {
             $tran_id = $_POST['pp_TxnRefNo'];
             $arrayFees = array(
@@ -824,7 +842,8 @@ class Feespayment extends Admin_Controller
     public function midtrans_success()
     {
         $params = $this->session->userdata('params');
-        $response = json_decode($_POST['post_data']);
+        $this->load->library('payment_callback_verifier');
+        $response = !empty($params['orderID']) ? $this->payment_callback_verifier->midtrans($params['orderID'], $params['amount'] + $params['fine']) : false;
         if (!empty($params) && !empty($params['orderID']) && !empty($response)) {
             // null session data
             $this->session->set_userdata("params", "");

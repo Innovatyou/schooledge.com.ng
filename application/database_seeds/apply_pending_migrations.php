@@ -1389,4 +1389,78 @@ EOT,
     echo "717: populated 18 default email_templates rows\n";
 }
 
+// ---------------------------------------------------------------------
+// Migrations 721-726: mobile API foundation (memberships, tokens, devices,
+// notification inbox/preferences, per-branch/branded app config, audit log,
+// rate limiting, a real payment state machine, and OTP challenges)
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'mobile_memberships')) {
+    $m->query("CREATE TABLE mobile_memberships (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, login_credential_id INT NOT NULL, user_id INT NOT NULL, branch_id INT NOT NULL, role_id INT NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'active', is_default TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NOT NULL, updated_at DATETIME NULL, UNIQUE KEY uq_mobile_membership (login_credential_id,branch_id,role_id), KEY idx_mobile_membership_user (user_id,status), KEY idx_mobile_membership_branch (branch_id,status)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "721: created mobile_memberships table\n";
+}
+
+if (!tableExists($m, 'mobile_refresh_tokens')) {
+    $m->query("CREATE TABLE mobile_refresh_tokens (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, membership_id BIGINT UNSIGNED NOT NULL, token_hash CHAR(64) NOT NULL, family_id CHAR(36) NOT NULL, device_id BIGINT UNSIGNED NULL, expires_at DATETIME NOT NULL, last_used_at DATETIME NULL, revoked_at DATETIME NULL, replaced_by_id BIGINT UNSIGNED NULL, created_at DATETIME NOT NULL, created_ip VARCHAR(45) NULL, UNIQUE KEY uq_mobile_refresh_hash (token_hash), KEY idx_mobile_refresh_family (family_id), KEY idx_mobile_refresh_expiry (membership_id,expires_at,revoked_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "722: created mobile_refresh_tokens table\n";
+}
+if (!tableExists($m, 'mobile_devices')) {
+    $m->query("CREATE TABLE mobile_devices (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, membership_id BIGINT UNSIGNED NOT NULL, installation_id VARCHAR(100) NOT NULL, platform VARCHAR(20) NOT NULL, push_token VARCHAR(255) NULL, app_version VARCHAR(30) NULL, device_name VARCHAR(100) NULL, locale VARCHAR(15) NULL, push_enabled TINYINT(1) NOT NULL DEFAULT 0, last_seen_at DATETIME NULL, revoked_at DATETIME NULL, created_at DATETIME NOT NULL, updated_at DATETIME NULL, UNIQUE KEY uq_mobile_device_installation (membership_id,installation_id), KEY idx_mobile_device_push (push_token)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "722: created mobile_devices table\n";
+}
+
+if (!tableExists($m, 'mobile_notification_inbox')) {
+    $m->query("CREATE TABLE mobile_notification_inbox (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, membership_id BIGINT UNSIGNED NOT NULL, branch_id INT NOT NULL, category VARCHAR(50) NOT NULL, title VARCHAR(180) NOT NULL, body TEXT NOT NULL, data_json TEXT NULL, read_at DATETIME NULL, created_at DATETIME NOT NULL, expires_at DATETIME NULL, KEY idx_mobile_inbox (membership_id,read_at,created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "723: created mobile_notification_inbox table\n";
+}
+if (!tableExists($m, 'mobile_notification_preferences')) {
+    $m->query("CREATE TABLE mobile_notification_preferences (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, membership_id BIGINT UNSIGNED NOT NULL, category VARCHAR(50) NOT NULL, push_enabled TINYINT(1) NOT NULL DEFAULT 1, inbox_enabled TINYINT(1) NOT NULL DEFAULT 1, email_enabled TINYINT(1) NOT NULL DEFAULT 0, updated_at DATETIME NOT NULL, UNIQUE KEY uq_mobile_notification_pref (membership_id,category)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "723: created mobile_notification_preferences table\n";
+}
+
+if (!tableExists($m, 'school_mobile_config')) {
+    $m->query("CREATE TABLE school_mobile_config (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, enabled TINYINT(1) NOT NULL DEFAULT 1, app_name VARCHAR(100) NULL, primary_color VARCHAR(10) NULL, logo_url VARCHAR(255) NULL, config_json TEXT NULL, created_at DATETIME NOT NULL, updated_at DATETIME NULL, UNIQUE KEY uq_school_mobile_branch (branch_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "724: created school_mobile_config table\n";
+}
+if (!tableExists($m, 'branded_app_config')) {
+    $m->query("CREATE TABLE branded_app_config (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, enabled TINYINT(1) NOT NULL DEFAULT 1, app_name VARCHAR(100) NULL, primary_color VARCHAR(10) NULL, logo_url VARCHAR(255) NULL, android_package VARCHAR(150) NULL, ios_bundle_id VARCHAR(150) NULL, status VARCHAR(20) NOT NULL DEFAULT 'draft', config_json TEXT NULL, created_at DATETIME NOT NULL, updated_at DATETIME NULL, UNIQUE KEY uq_branded_app_branch (branch_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "724: created branded_app_config table\n";
+}
+if (!tableExists($m, 'mobile_audit_log')) {
+    $m->query("CREATE TABLE mobile_audit_log (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, membership_id BIGINT UNSIGNED NULL, branch_id INT NULL, action VARCHAR(80) NOT NULL, resource_type VARCHAR(80) NULL, resource_id VARCHAR(80) NULL, metadata_json TEXT NULL, ip_address VARCHAR(45) NULL, user_agent VARCHAR(255) NULL, created_at DATETIME NOT NULL, KEY idx_mobile_audit (branch_id,membership_id,created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "724: created mobile_audit_log table\n";
+}
+if (!tableExists($m, 'mobile_rate_limits')) {
+    $m->query("CREATE TABLE mobile_rate_limits (rate_key CHAR(64) PRIMARY KEY, window_started_at DATETIME NOT NULL, request_count INT NOT NULL DEFAULT 1, expires_at DATETIME NOT NULL, KEY idx_mobile_rate_expiry (expires_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "724: created mobile_rate_limits table\n";
+}
+
+if (!tableExists($m, 'payment_transactions')) {
+    $m->query("CREATE TABLE payment_transactions (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, membership_id BIGINT UNSIGNED NULL, purpose VARCHAR(40) NOT NULL, resource_type VARCHAR(60) NULL, resource_id VARCHAR(80) NULL, gateway VARCHAR(30) NOT NULL, gateway_reference VARCHAR(150) NULL, idempotency_key VARCHAR(100) NOT NULL, amount DECIMAL(18,2) NOT NULL, currency CHAR(3) NOT NULL, status VARCHAR(20) NOT NULL DEFAULT 'created', failure_code VARCHAR(80) NULL, failure_message VARCHAR(255) NULL, gateway_payload LONGTEXT NULL, authorized_at DATETIME NULL, paid_at DATETIME NULL, failed_at DATETIME NULL, cancelled_at DATETIME NULL, refunded_at DATETIME NULL, created_at DATETIME NOT NULL, updated_at DATETIME NULL, UNIQUE KEY uq_payment_idempotency (branch_id,idempotency_key), UNIQUE KEY uq_payment_gateway_reference (gateway,gateway_reference), KEY idx_payment_state (branch_id,status,created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "725: created payment_transactions table\n";
+}
+
+if (!tableExists($m, 'mobile_auth_challenges')) {
+    $m->query("CREATE TABLE mobile_auth_challenges (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, challenge_hash CHAR(64) NOT NULL, login_credential_id INT NOT NULL, membership_id BIGINT UNSIGNED NOT NULL, challenge_type VARCHAR(20) NOT NULL, installation_id VARCHAR(100) NULL, attempts TINYINT UNSIGNED NOT NULL DEFAULT 0, max_attempts TINYINT UNSIGNED NOT NULL DEFAULT 5, expires_at DATETIME NOT NULL, last_sent_at DATETIME NULL, consumed_at DATETIME NULL, created_ip VARCHAR(45) NULL, created_at DATETIME NOT NULL, UNIQUE KEY uq_mobile_auth_challenge (challenge_hash), KEY idx_mobile_auth_challenge_expiry (login_credential_id,expires_at,consumed_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "726: created mobile_auth_challenges table\n";
+}
+
+// ---------------------------------------------------------------------
+// Migration 727: digital library - ebook file on `book`, so a student can read a
+// PDF copy independent of physical stock/issue status
+// ---------------------------------------------------------------------
+if (tableExists($m, 'book')) {
+    if (!columnExists($m, 'book', 'ebook_file')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `ebook_file` VARCHAR(255) NULL AFTER `cover`");
+        echo "727: added book.ebook_file\n";
+    }
+    if (!columnExists($m, 'book', 'ebook_original_name')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `ebook_original_name` VARCHAR(255) NULL AFTER `ebook_file`");
+        echo "727: added book.ebook_original_name\n";
+    }
+    if (!columnExists($m, 'book', 'ebook_uploaded_at')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `ebook_uploaded_at` DATETIME NULL AFTER `ebook_original_name`");
+        echo "727: added book.ebook_uploaded_at\n";
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

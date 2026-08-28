@@ -93,6 +93,89 @@ $route['(:any)/gallery_view/(:any)'] = 'home/gallery_view/$2';
 $route['(:any)/event_view/(:num)'] = 'home/event_view/$2';
 $route['(:any)/news_view/(:any)'] = 'home/news_view/$2';
 
+$route['api/v1/mobile/auth/login']['post'] = 'api/v1/mobile/login';
+$route['api/v1/mobile/auth/otp/verify']['post'] = 'api/v1/mobile/verify_otp';
+$route['api/v1/mobile/auth/otp/resend']['post'] = 'api/v1/mobile/resend_otp';
+$route['api/v1/mobile/auth/refresh']['post'] = 'api/v1/mobile/refresh';
+$route['api/v1/mobile/auth/logout']['post'] = 'api/v1/mobile/logout';
+$route['api/v1/mobile/me']['get'] = 'api/v1/mobile/me';
+$route['api/v1/mobile/schools']['get'] = 'api/v1/mobile/schools';
+$route['api/v1/mobile/memberships']['get'] = 'api/v1/mobile/memberships';
+$route['api/v1/mobile/auth/switch-membership']['post'] = 'api/v1/mobile/switch_membership';
+$route['api/v1/mobile/reports']['get'] = 'api/v1/reports/index';
+$route['api/v1/mobile/reports/(:num)/download']['get'] = 'api/v1/reports/download/$1';
+
+$route['api/v1/mobile/fees/summary']['get'] = 'api/v1/fees/summary';
+$route['api/v1/mobile/fees/history']['get'] = 'api/v1/fees/history';
+$route['api/v1/mobile/fees/gateways']['get'] = 'api/v1/fees/gateways';
+$route['api/v1/mobile/fees/invoice/download']['get'] = 'api/v1/fees/invoice_download';
+$route['api/v1/mobile/fees/receipt/(:num)/download']['get'] = 'api/v1/fees/receipt_download/$1';
+$route['api/v1/mobile/fees/checkout']['post'] = 'api/v1/fees/checkout';
+$route['api/v1/mobile/fees/checkout/(:num)/verify']['post'] = 'api/v1/fees/verify/$1';
+$route['api/v1/mobile/fees/checkout/complete']['get'] = 'api/v1/fees/checkout_complete';
+
+$route['api/v1/mobile/library/books']['get'] = 'api/v1/library/books';
+$route['api/v1/mobile/library/categories']['get'] = 'api/v1/library/categories';
+$route['api/v1/mobile/library/books/(:num)']['get'] = 'api/v1/library/show/$1';
+$route['api/v1/mobile/library/books/(:num)/read']['get'] = 'api/v1/library/read/$1';
+
+$route['api/v1/mobile/events']['get'] = 'api/v1/events/index';
+$route['api/v1/mobile/events/(:num)']['get'] = 'api/v1/events/show/$1';
+
+$route['api/v1/mobile/live-classes']['get'] = 'api/v1/liveclasses/index';
+$route['api/v1/mobile/live-classes/(:num)/join']['get'] = 'api/v1/liveclasses/join/$1';
+
+$route['api/v1/mobile/attendance/summary']['get'] = 'api/v1/attendance/summary';
+$route['api/v1/mobile/attendance/classes']['get'] = 'api/v1/attendance/classes';
+$route['api/v1/mobile/attendance/roster/(:num)/(:num)']['get'] = 'api/v1/attendance/roster/$1/$2';
+$route['api/v1/mobile/attendance/capture']['post'] = 'api/v1/attendance/capture';
+
+$route['api/v1/mobile/results/exams']['get'] = 'api/v1/results/exams';
+$route['api/v1/mobile/results/exams/(:num)']['get'] = 'api/v1/results/show/$1';
+
+$route['api/v1/mobile/homework']['get'] = 'api/v1/homework/index';
+$route['api/v1/mobile/homework/(:num)/download']['get'] = 'api/v1/homework/download/$1';
+$route['api/v1/mobile/homework/(:num)/submit']['post'] = 'api/v1/homework/submit/$1';
+$route['api/v1/mobile/homework/(:num)/submissions']['get'] = 'api/v1/homework/submissions/$1';
+$route['api/v1/mobile/homework/(:num)/submissions/(:num)/download']['get'] = 'api/v1/homework/download_submission/$1/$2';
+
+$route['api/v1/mobile/messages']['get'] = 'api/v1/messages/index';
+$route['api/v1/mobile/messages/contacts']['get'] = 'api/v1/messages/contacts';
+$route['api/v1/mobile/messages/(:num)']['get'] = 'api/v1/messages/show/$1';
+$route['api/v1/mobile/messages']['post'] = 'api/v1/messages/compose';
+$route['api/v1/mobile/messages/(:num)/reply']['post'] = 'api/v1/messages/reply/$1';
+
+$route['api/v1/mobile/timetable']['get'] = 'api/v1/timetable/index';
+
+$route['api/v1/mobile/resources']['get'] = 'api/v1/resources/index';
+$route['api/v1/mobile/resources/(:num)/download']['get'] = 'api/v1/resources/download/$1';
+
+$route['api/v1/mobile/profile']['get'] = 'api/v1/profile/show';
+$route['api/v1/mobile/profile']['patch'] = 'api/v1/profile/update';
+$route['api/v1/mobile/profile/change-password']['post'] = 'api/v1/profile/change_password';
+$route['api/v1/mobile/profile/sessions']['get'] = 'api/v1/profile/sessions';
+$route['api/v1/mobile/profile/sessions/(:num)/revoke']['post'] = 'api/v1/profile/revoke_session/$1';
+$route['api/v1/mobile/profile/push-token']['patch'] = 'api/v1/profile/register_push_token';
+
+$route['api/v1/mobile/notifications']['get'] = 'api/v1/notifications/index';
+$route['api/v1/mobile/notifications/unread-count']['get'] = 'api/v1/notifications/unread_count';
+$route['api/v1/mobile/notifications/(:num)/read']['post'] = 'api/v1/notifications/mark_read/$1';
+$route['api/v1/mobile/notifications/read-all']['post'] = 'api/v1/notifications/mark_all_read';
+$route['api/v1/mobile/notifications/preferences']['get'] = 'api/v1/notifications/preferences';
+$route['api/v1/mobile/notifications/preferences']['put'] = 'api/v1/notifications/update_preference';
+
+$route['api/v1/mobile/admin/summary']['get'] = 'api/v1/admin/summary';
+$route['api/v1/mobile/admin/approvals']['get'] = 'api/v1/admin/approvals';
+$route['api/v1/mobile/admin/approvals/expense/(:num)/approve']['post'] = 'api/v1/admin/approve_expense/$1';
+$route['api/v1/mobile/admin/approvals/expense/(:num)/reject']['post'] = 'api/v1/admin/reject_expense/$1';
+$route['api/v1/mobile/admin/approvals/fees/(:num)/approve']['post'] = 'api/v1/admin/approve_fees/$1';
+$route['api/v1/mobile/admin/approvals/fees/(:num)/reject']['post'] = 'api/v1/admin/reject_fees/$1';
+$route['api/v1/mobile/admin/approvals/admission/(:num)']['get'] = 'api/v1/admin/admission_detail/$1';
+$route['api/v1/mobile/admin/approvals/admission/(:num)/approve']['post'] = 'api/v1/admin/approve_admission/$1';
+$route['api/v1/mobile/admin/approvals/admission/(:num)/reject']['post'] = 'api/v1/admin/reject_admission/$1';
+$route['api/v1/mobile/admin/broadcast']['post'] = 'api/v1/admin/broadcast';
+$route['api/v1/mobile/admin/lookup']['get'] = 'api/v1/admin/lookup';
+
 $route['dashboard'] = 'dashboard/index';
 $route['branch'] = 'branch/index';
 $route['attachments'] = 'attachments/index';

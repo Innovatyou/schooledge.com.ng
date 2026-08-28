@@ -1,0 +1,18 @@
+{
+    "name": "schooledge/mobile-api-tests",
+    "description": "Dev-only tooling for the mobile API's automated test suite. Never installed in production - the CodeIgniter app itself has no Composer dependencies and none of its runtime code autoloads through this.",
+    "type": "project",
+    "require-dev": {
+        "phpunit/phpunit": "^11.0"
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "platform": {
+            "php": "8.3"
+        }
+    }
+}
