@@ -105,7 +105,9 @@ installed the branded app yet.
 - [ ] `flutter build apk --flavor <id> --release` succeeds with real signing
 - [ ] Icon and splash show correctly on a device/emulator
 - [ ] Login works against the real API and shows this school's branding
-- [ ] Push notifications work with the real Firebase project (once Phase 2 of
-      the push rollout - the actual FCM sending code - is in place; the mobile
-      API only has the in-app notification inbox so far, see
-      `application/controllers/api/v1/Notifications.php`)
+- [ ] Push notifications work with this flavor's real Firebase project - FCM
+      sending (`application/libraries/Fcm_push.php`) and device-token
+      registration (`mobile/lib/core/push/push_service.dart`) are both built
+      and verified against the shared `schooledgeapp` project (see
+      `firebase-setup.md`); a *branded* flavor still needs its own real
+      `google-services.json` in place of the placeholder before this checks out

@@ -95,4 +95,29 @@ class Profile extends Api_Controller
         $this->logAudit('profile.session_revoked', $membership, 'device', $device['id']);
         $this->ok(array('revoked' => true));
     }
+
+    /**
+     * Stores this installation's FCM token so Api_Controller::notifyMembership()
+     * can push to it. Identifies the device row by installation_id (the 'iid'
+     * claim embedded in the access token at login, see Mobile::newTokenPair()) -
+     * the same row Mobile.php already created/updated for this session, never a
+     * new one, since one installation should only ever have one push token.
+     */
+    public function register_push_token()
+    {
+        $membership = $this->requireAuth();
+        $installationId = $this->apiClaims['iid'] ?? null;
+        if (!$installationId) $this->fail('installation_id_required', 'This session has no device installation to register. Sign in again.', 422);
+        $input = $this->body();
+        $token = trim((string)($input['push_token'] ?? ''));
+        $enabled = !isset($input['push_enabled']) || !!$input['push_enabled'];
+        $device = $this->db->where(array('membership_id' => $membership['id'], 'installation_id' => $installationId))->get('mobile_devices')->row_array();
+        if (!$device) $this->fail('device_not_found', 'No device session found for this installation.', 404);
+        $this->db->where('id', $device['id'])->update('mobile_devices', array(
+            'push_token' => $token !== '' ? $token : null,
+            'push_enabled' => ($token !== '' && $enabled) ? 1 : 0,
+            'updated_at' => date('Y-m-d H:i:s'),
+        ));
+        $this->ok(array('registered' => true));
+    }
 }

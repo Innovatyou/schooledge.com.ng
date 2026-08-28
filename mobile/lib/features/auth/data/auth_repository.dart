@@ -1,13 +1,19 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/push/push_service.dart';
 import '../../../core/storage/token_storage.dart';
 import '../domain/auth_tokens.dart';
 
 final authRepositoryProvider = Provider(
-  (ref) =>
-      AuthRepository(ref.watch(dioProvider), ref.watch(tokenStorageProvider)),
+  (ref) => AuthRepository(
+    ref.watch(dioProvider),
+    ref.watch(tokenStorageProvider),
+    ref.watch(pushServiceProvider),
+  ),
 );
 
 /// TargetPlatform's own names ("TargetPlatform.android") aren't what a human (or
@@ -24,9 +30,10 @@ String _platformName() => switch (defaultTargetPlatform) {
 };
 
 class AuthRepository {
-  AuthRepository(this._dio, this._storage);
+  AuthRepository(this._dio, this._storage, this._push);
   final Dio _dio;
   final TokenStorage _storage;
+  final PushService _push;
   Future<Map<String, dynamic>> login(String username, String password) async {
     final response = await _dio.post(
       'auth/login',
@@ -70,5 +77,6 @@ class AuthRepository {
   Future<void> _saveTokens(dynamic value) async {
     final tokens = AuthTokens.fromJson(Map<String, dynamic>.from(value));
     await _storage.save(tokens.accessToken, tokens.refreshToken);
+    unawaited(_push.registerForCurrentSession());
   }
 }

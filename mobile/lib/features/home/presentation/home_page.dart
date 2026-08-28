@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/push/push_service.dart';
 import '../../../core/session/current_user_provider.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../admin/presentation/admin_dashboard_page.dart';
@@ -25,6 +26,16 @@ class HomePage extends ConsumerStatefulWidget {
 
 class _HomePageState extends ConsumerState<HomePage> {
   int tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    // Covers an already-signed-in cold start (login/OTP-verify already
+    // registered the token for a fresh sign-in) - fire-and-forget, never
+    // blocks rendering the home screen.
+    ref.read(pushServiceProvider).registerForCurrentSession();
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);

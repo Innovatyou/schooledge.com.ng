@@ -96,5 +96,5 @@ flutter build ipa --flavor <id> --release          # iOS - needs a Mac, see docs
 Release signing is not configured yet for either platform - see
 [docs/android-signing-guide.md](docs/android-signing-guide.md) and
 [docs/ios-signing-guide.md](docs/ios-signing-guide.md). Push notifications are
-similarly not wired to a real Firebase project - see
-[docs/firebase-setup.md](docs/firebase-setup.md).
+wired to a real Firebase project (sending from the backend and device-token
+registration from the app) - see [docs/firebase-setup.md](docs/firebase-setup.md).

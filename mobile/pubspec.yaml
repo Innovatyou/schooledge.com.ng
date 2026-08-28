@@ -46,6 +46,8 @@ dependencies:
   open_filex: ^4.7.0
   pdfx: ^2.11.0
   file_picker: ^12.1.1
+  firebase_core: ^4.14.0
+  firebase_messaging: ^16.6.0
 
 dev_dependencies:
   flutter_test:

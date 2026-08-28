@@ -163,9 +163,11 @@ class Api_Controller extends CI_Controller
 
     /**
      * Drop a row in the recipient's notification inbox, if they have an active
-     * mobile membership and haven't disabled this category. There is no push
-     * delivery yet (no Firebase project configured for this install) - this is
-     * the in-app inbox half only, kept independent so it works regardless.
+     * mobile membership and haven't disabled this category, then best-effort push
+     * it to every device that has opted in. Push delivery is fully optional - with
+     * no Firebase service account file present (the default until one is dropped
+     * in per mobile/docs/firebase-setup.md), Fcm_push::send() no-ops and only the
+     * in-app inbox row is written, so this is always safe to call.
      */
     protected function notifyMembership($membershipId, $branchId, $category, $title, $body, $data = null)
     {
@@ -176,6 +178,17 @@ class Api_Controller extends CI_Controller
             'title' => $title, 'body' => $body, 'data_json' => $data !== null ? json_encode($data) : null,
             'created_at' => date('Y-m-d H:i:s'),
         ));
+
+        if ($pref && !$pref['push_enabled']) return;
+        $this->load->library('fcm_push');
+        if (!$this->fcm_push->isConfigured()) return;
+        $devices = $this->db->select('push_token')
+            ->where(array('membership_id' => $membershipId, 'push_enabled' => 1, 'revoked_at' => null))
+            ->where('push_token IS NOT NULL')
+            ->get('mobile_devices')->result_array();
+        foreach ($devices as $device) {
+            $this->fcm_push->send($device['push_token'], $title, $body, array_merge(array('category' => $category), (array)$data));
+        }
     }
 
     /** Same as notifyMembership(), but resolves the recipient from a "{role_id}-{user_id}" identity (e.g. a message's `reciever` column) instead of a membership id directly. */
