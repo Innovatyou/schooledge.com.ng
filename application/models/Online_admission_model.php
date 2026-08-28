@@ -214,7 +214,7 @@ class Online_admission_model extends MY_Model
             'category_id' => (isset($data['category_id']) ? $data['category_id'] : 0),
             'email' => isset($data['email']) ? $data['email'] : '',
             'parent_id' => "",
-            'route_id' => isset($data['route_id']) ? $data['route_id'] : null,
+            'route_id' => isset($data['route_id']) && $data['route_id'] !== '' ? $data['route_id'] : 0,
             'vehicle_id' => isset($data['vehicle_id']) ? $data['vehicle_id'] : null,
             'hostel_id' => $hostelID,
             'room_id' => $roomID,

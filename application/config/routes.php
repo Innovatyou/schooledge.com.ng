@@ -155,6 +155,7 @@ $route['api/v1/mobile/profile']['patch'] = 'api/v1/profile/update';
 $route['api/v1/mobile/profile/change-password']['post'] = 'api/v1/profile/change_password';
 $route['api/v1/mobile/profile/sessions']['get'] = 'api/v1/profile/sessions';
 $route['api/v1/mobile/profile/sessions/(:num)/revoke']['post'] = 'api/v1/profile/revoke_session/$1';
+$route['api/v1/mobile/profile/push-token']['patch'] = 'api/v1/profile/register_push_token';
 
 $route['api/v1/mobile/notifications']['get'] = 'api/v1/notifications/index';
 $route['api/v1/mobile/notifications/unread-count']['get'] = 'api/v1/notifications/unread_count';
@@ -169,6 +170,9 @@ $route['api/v1/mobile/admin/approvals/expense/(:num)/approve']['post'] = 'api/v1
 $route['api/v1/mobile/admin/approvals/expense/(:num)/reject']['post'] = 'api/v1/admin/reject_expense/$1';
 $route['api/v1/mobile/admin/approvals/fees/(:num)/approve']['post'] = 'api/v1/admin/approve_fees/$1';
 $route['api/v1/mobile/admin/approvals/fees/(:num)/reject']['post'] = 'api/v1/admin/reject_fees/$1';
+$route['api/v1/mobile/admin/approvals/admission/(:num)']['get'] = 'api/v1/admin/admission_detail/$1';
+$route['api/v1/mobile/admin/approvals/admission/(:num)/approve']['post'] = 'api/v1/admin/approve_admission/$1';
+$route['api/v1/mobile/admin/approvals/admission/(:num)/reject']['post'] = 'api/v1/admin/reject_admission/$1';
 $route['api/v1/mobile/admin/broadcast']['post'] = 'api/v1/admin/broadcast';
 $route['api/v1/mobile/admin/lookup']['get'] = 'api/v1/admin/lookup';
 

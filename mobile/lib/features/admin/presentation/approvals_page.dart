@@ -82,7 +82,9 @@ class _ApprovalsPageState extends ConsumerState<ApprovalsPage> {
                       Text(item['subtitle']?.toString() ?? ''),
                       const SizedBox(height: 4),
                       Text(
-                        '₦${(item['amount'] as num).toStringAsFixed(2)} · ${item['date']}',
+                        item['amount'] != null
+                            ? '₦${(item['amount'] as num).toStringAsFixed(2)} · ${item['date']}'
+                            : '${item['date']}',
                         style: const TextStyle(color: Color(0xff627d98)),
                       ),
                       const SizedBox(height: 12),
