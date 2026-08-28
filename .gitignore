@@ -38,6 +38,16 @@ uploads/online_ad_documents/*
 Thumbs.db
 .DS_Store
 
+# Dev-only test tooling (PHPUnit) - the app itself has no Composer dependencies;
+# composer.json/composer.lock exist solely to install phpunit/phpunit for tests/
+vendor/
+.phpunit.cache/
+
 # Firebase Admin SDK service-account keys (server-only secrets)
 mobile/*-firebase-adminsdk-*.json
 application/config/*-firebase-adminsdk-*.json
+
+# Android release signing (keystore + credentials - see mobile/docs/android-signing-guide.md)
+mobile/android/key.properties
+mobile/android/*.jks
+mobile/android/*.keystore

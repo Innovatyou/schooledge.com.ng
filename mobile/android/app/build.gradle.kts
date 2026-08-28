@@ -1,8 +1,23 @@
+import java.io.FileInputStream
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
     id("com.google.gms.google-services")
+}
+
+// Real release signing, only when a keystore has actually been provisioned -
+// see docs/android-signing-guide.md. `android/key.properties` is gitignored
+// and does not exist in this repo; every flavor's release build falls back to
+// the debug keystore (as before) until it's created, so this is safe to build
+// against right now with no keystore present.
+val keystorePropertiesFile = rootProject.file("key.properties")
+val keystoreProperties = Properties()
+val hasReleaseKeystore = keystorePropertiesFile.exists()
+if (hasReleaseKeystore) {
+    keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 }
 
 android {
@@ -39,11 +54,25 @@ android {
         create("sampleacademy") { dimension = "environment"; applicationId = "ng.com.sampleacademy.app"; resValue("string", "app_name", "Sample Academy") }
     }
 
+    signingConfigs {
+        if (hasReleaseKeystore) {
+            create("release") {
+                keyAlias = keystoreProperties["keyAlias"] as String?
+                keyPassword = keystoreProperties["keyPassword"] as String?
+                storeFile = (keystoreProperties["storeFile"] as String?)?.let { file(it) }
+                storePassword = keystoreProperties["storePassword"] as String?
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            // Real signing once android/key.properties exists (see
+            // docs/android-signing-guide.md); falls back to the debug keystore
+            // so `flutter build apk/appbundle --release` keeps working with no
+            // keystore provisioned - fine for local/testing builds, but never
+            // for a real Play Store upload.
+            signingConfig = if (hasReleaseKeystore) signingConfigs.getByName("release") else signingConfigs.getByName("debug")
         }
     }
 }

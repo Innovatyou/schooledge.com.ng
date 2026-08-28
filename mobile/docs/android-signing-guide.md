@@ -2,12 +2,16 @@
 
 ## Current state
 
-`android/app/build.gradle.kts` signs the `release` build type with the **debug**
-keystore for every flavor (`signingConfig = signingConfigs.getByName("debug")`),
-explicitly called out as a TODO in that file. This is fine for local
-`flutter build apk --release` testing but **must not** be used to publish to the
-Play Store - Google will reject an app signed with the well-known public debug
-key, and it provides no update integrity guarantee to users anyway.
+`android/app/build.gradle.kts` reads `android/key.properties` (gitignored, not
+committed - see `.gitignore`) if it exists, and uses it to sign the `release`
+build type for every flavor; if the file is absent - the case today, no
+keystore has been generated yet - it falls back to the **debug** keystore
+exactly as before, so `flutter build apk/appbundle --release` keeps working
+with no setup. Both paths (present/absent `key.properties`) have been verified
+directly in this environment. A debug-signed release build is fine for local
+testing but **must not** be used to publish to the Play Store - Google will
+reject an app signed with the well-known public debug key, and it provides no
+update integrity guarantee to users anyway.
 
 ## Setting up real signing, per flavor
 
@@ -20,12 +24,10 @@ keytool -genkey -v -keystore <id>-upload-key.jks -keyalg RSA -keysize 2048 -vali
 
 Keep the resulting `.jks` file and its passwords **out of the repository
 entirely** - store them in your CI secret manager or a password manager, never
-committed (there is no keystore in this repo today, and none should ever be
-added to git history).
+committed (`android/*.jks`/`android/*.keystore` are gitignored as a backstop,
+but treat the real files as living outside the repo entirely).
 
-Reference it from a `key.properties` file (also gitignored - add
-`key.properties` to `.gitignore` if it isn't already covered) that
-`build.gradle.kts` reads at build time:
+Create `android/key.properties` (also gitignored) pointing at it:
 
 ```properties
 storeFile=/absolute/path/to/<id>-upload-key.jks
@@ -34,11 +36,13 @@ keyAlias=upload
 keyPassword=...
 ```
 
-Then add a real `signingConfigs { create("release") { ... } }` block reading
-those properties, and point each flavor's release build type at it instead of
-the shared debug config - ideally one signing config per flavor once branded
-schools exist, since they're separate Play Store listings with separate
-keystores.
+`build.gradle.kts` picks this up automatically on the next build - no code
+change needed. Today this is **one shared signing config for every flavor**
+(matching how `saas`/`development`/`staging`/`production` already share one
+`applicationId`); once a branded school flavor needs its own separate Play
+Store listing and keystore, extend the `signingConfigs`/`buildTypes.release`
+block in `build.gradle.kts` to select per-flavor properties (e.g. a
+`key-<flavor>.properties` file per branded id) instead of the single shared one.
 
 ## Building a release artifact
 
@@ -57,5 +61,6 @@ flutter build apk --flavor <id> --debug
 
 succeeds today for every flavor including a freshly-generated branded one (see
 `docs/branded-school-onboarding.md`) - that's been verified directly in this
-environment. The `--release` + real-signing path above has not been, since no
-release keystore exists yet.
+environment, both with and without `android/key.properties` present. The
+`--release` flag with a *real* keystore's `key.properties` in place has not
+been exercised (no real upload keystore has been generated for any flavor yet).
