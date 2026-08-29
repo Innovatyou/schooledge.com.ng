@@ -7,6 +7,9 @@
 		<div class="visible-xs toggle-sidebar-left" data-toggle-class="sidebar-left-opened" data-target="html" data-fire-event="sidebar-left-opened">
 			<i class="fa fa-bars" aria-label="Toggle sidebar"></i>
 		</div>
+		<div class="visible-xs toggle-mobile-search" data-toggle-class="mobile-search-open" data-target="#mobileSearchBar">
+			<i class="fa fa-search" aria-label="<?php echo translate('search');?>"></i>
+		</div>
 	</div>
 
 	<div class="header-left hidden-xs">
@@ -309,3 +312,17 @@ foreach($languages as $lang) :
 		</div>
 	</div>
 </header>
+<!-- Mobile search bar: the desktop search box above lives inside .header-left,
+     which is hidden below the xs breakpoint, so phones need their own way in -
+     toggled by the .toggle-mobile-search icon via the same generic
+     data-toggle-class mechanism used for the sidebar toggle. -->
+<div id="mobileSearchBar" class="mobile-search-bar">
+	<?php echo form_open('search', array('class' => 'search nav-form'));?>
+		<div class="input-group input-search">
+			<input type="text" class="form-control" name="search_text" placeholder="<?php echo is_superadmin_loggedin() ? translate('search_schools_or_pages') : translate('search');?>">
+			<span class="input-group-btn">
+				<button class="btn btn-default" type="submit"><i class="fa fa-search"></i></button>
+			</span>
+		</div>
+	</form>
+</div>
