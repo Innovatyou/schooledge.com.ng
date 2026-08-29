@@ -17,7 +17,9 @@ final currentUserProvider = FutureProvider<Map<String, dynamic>>((ref) async {
 final studentContextProvider = Provider<int?>((ref) {
   final user = ref.watch(currentUserProvider).valueOrNull;
   if (user == null) return null;
-  final roleId = int.tryParse(user['membership']?['role']?['id']?.toString() ?? '');
+  final roleId = int.tryParse(
+    user['membership']?['role']?['id']?.toString() ?? '',
+  );
   if (roleId == 7) return user['id'] as int?;
   final children = (user['children'] as List?)?.cast<Map<String, dynamic>>();
   if (children == null || children.isEmpty) return null;

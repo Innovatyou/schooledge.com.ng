@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../../core/widgets/module_ui.dart';
 import '../data/attendance_repository.dart';
+import 'attendance_qr_pass.dart';
 import 'teacher_attendance_page.dart';
 
 class AttendancePage extends ConsumerWidget {
@@ -21,6 +22,8 @@ class AttendancePage extends ConsumerWidget {
       icon: Icons.fact_check_rounded,
       colors: const [Color(0xff00897b), Color(0xff16b39a)],
       children: [
+        const AttendanceQrPass(),
+        const SectionTitle('Attendance record'),
         summary.when(
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: 60),
@@ -111,7 +114,8 @@ class AttendancePage extends ConsumerWidget {
           const InfoRow(
             icon: Icons.event_busy_rounded,
             title: 'No attendance recorded yet',
-            subtitle: 'Records will appear here once your school takes attendance.',
+            subtitle:
+                'Records will appear here once your school takes attendance.',
             color: Color(0xff829ab1),
             trailing: SizedBox.shrink(),
           )
@@ -120,7 +124,9 @@ class AttendancePage extends ConsumerWidget {
             (day) => InfoRow(
               icon: _iconFor(day['status'] as String),
               title: day['date'] as String,
-              subtitle: (day['remark'] as String?) ?? _labelFor(day['status'] as String),
+              subtitle:
+                  (day['remark'] as String?) ??
+                  _labelFor(day['status'] as String),
               color: _colorFor(day['status'] as String),
               trailing: Text(
                 _labelFor(day['status'] as String).toUpperCase(),

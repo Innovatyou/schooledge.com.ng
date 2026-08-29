@@ -60,6 +60,30 @@ class Library_model extends MY_Model
                 $oldEbookFile = $data['old_ebook_file'];
             }
         }
+        $oldAudiobookFile = null;
+        if (isset($_FILES['audiobook_file']) && $_FILES['audiobook_file']['name'] != "") {
+            $config = array();
+            $config['upload_path'] = 'uploads/book_audio/';
+            $config['allowed_types'] = 'mp3|m4a|aac';
+            $config['overwrite'] = false;
+            $config['file_name'] = 'audio_' . app_generate_hash();
+            $this->upload->initialize($config);
+            if ($this->upload->do_upload("audiobook_file")) {
+                $arraybook['audiobook_file'] = $this->upload->data('file_name');
+                $arraybook['audiobook_original_name'] = $_FILES['audiobook_file']['name'];
+                $arraybook['audiobook_uploaded_at'] = date('Y-m-d H:i:s');
+                if (!empty($data['old_audiobook_file'])) {
+                    $oldAudiobookFile = $data['old_audiobook_file'];
+                }
+            }
+        } elseif (!empty($data['remove_audiobook_file'])) {
+            $arraybook['audiobook_file'] = null;
+            $arraybook['audiobook_original_name'] = null;
+            $arraybook['audiobook_uploaded_at'] = null;
+            if (!empty($data['old_audiobook_file'])) {
+                $oldAudiobookFile = $data['old_audiobook_file'];
+            }
+        }
         if (!isset($data['book_id'])) {
             $this->db->insert('book', $arraybook);
         } else {
@@ -76,6 +100,12 @@ class Library_model extends MY_Model
         }
         if ($oldEbookFile) {
             $file = 'uploads/book_ebook/' . $oldEbookFile;
+            if (file_exists($file)) {
+                @unlink($file);
+            }
+        }
+        if ($oldAudiobookFile) {
+            $file = 'uploads/book_audio/' . $oldAudiobookFile;
             if (file_exists($file)) {
                 @unlink($file);
             }

@@ -37,7 +37,8 @@ class _ThreadPageState extends ConsumerState<ThreadPage> {
       if (mounted) {
         final data = error.response?.data;
         final message = data is Map && data['error'] is Map
-            ? ((data['error'] as Map)['message'] ?? 'Could not send reply.').toString()
+            ? ((data['error'] as Map)['message'] ?? 'Could not send reply.')
+                  .toString()
             : 'Could not send reply.';
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -66,7 +67,8 @@ class _ThreadPageState extends ConsumerState<ThreadPage> {
         ),
         data: (data) {
           final direction = data['direction'] as String;
-          final replies = (data['replies'] as List).cast<Map<String, dynamic>>();
+          final replies = (data['replies'] as List)
+              .cast<Map<String, dynamic>>();
           return Column(
             children: [
               Expanded(
@@ -75,21 +77,30 @@ class _ThreadPageState extends ConsumerState<ThreadPage> {
                   children: [
                     Text(
                       data['subject']?.toString() ?? '',
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                      ),
                     ),
                     const SizedBox(height: 12),
                     Align(
                       alignment: direction == 'sent'
                           ? Alignment.centerRight
                           : Alignment.centerLeft,
-                      child: _Bubble(text: data['body']?.toString() ?? '', mine: direction == 'sent'),
+                      child: _Bubble(
+                        text: data['body']?.toString() ?? '',
+                        mine: direction == 'sent',
+                      ),
                     ),
                     for (final reply in replies)
                       Align(
                         alignment: (reply['mine'] as bool)
                             ? Alignment.centerRight
                             : Alignment.centerLeft,
-                        child: _Bubble(text: reply['body']?.toString() ?? '', mine: reply['mine'] as bool),
+                        child: _Bubble(
+                          text: reply['body']?.toString() ?? '',
+                          mine: reply['mine'] as bool,
+                        ),
                       ),
                   ],
                 ),
@@ -103,14 +114,21 @@ class _ThreadPageState extends ConsumerState<ThreadPage> {
                       Expanded(
                         child: TextField(
                           controller: _controller,
-                          decoration: const InputDecoration(hintText: 'Write a reply…'),
+                          decoration: const InputDecoration(
+                            hintText: 'Write a reply…',
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
                       IconButton.filled(
                         onPressed: _sending ? null : _reply,
                         icon: _sending
-                            ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                            ? const SizedBox.square(
+                                dimension: 18,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : const Icon(Icons.send_rounded),
                       ),
                     ],
@@ -136,7 +154,9 @@ class _Bubble extends StatelessWidget {
     padding: const EdgeInsets.all(14),
     constraints: const BoxConstraints(maxWidth: 280),
     decoration: BoxDecoration(
-      color: mine ? const Color(0xff163a70) : Theme.of(context).colorScheme.surfaceContainerHigh,
+      color: mine
+          ? const Color(0xff163a70)
+          : Theme.of(context).colorScheme.surfaceContainerHigh,
       borderRadius: BorderRadius.circular(18),
     ),
     child: Text(

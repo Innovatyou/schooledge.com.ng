@@ -95,7 +95,9 @@ class Mobile extends Api_Controller
         $user = $this->authentication_model->getUserNameByRoleID($membership['role_id'], $membership['user_id']);
         $this->ok(array(
             'id' => (int)$membership['user_id'], 'username' => $credential->username, 'name' => $user['name'] ?? null,
-            'email' => $user['email'] ?? null, 'photo' => $user['photo'] ?? null, 'membership' => $this->membershipPayload($membership),
+            'email' => $user['email'] ?? null, 'photo' => $user['photo'] ?? null,
+            'photo_url' => get_image_url((int)$membership['role_id'] === 7 ? 'student' : ((int)$membership['role_id'] === 6 ? 'parent' : 'staff'), $user['photo'] ?? null),
+            'membership' => $this->membershipPayload($membership),
             'children' => (int)$membership['role_id'] === 6 ? $this->linkedChildren($membership) : null,
         ));
     }

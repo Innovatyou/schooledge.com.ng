@@ -185,6 +185,7 @@ class Addons extends MY_Controller
                                                 'purchase_code' => $purchaseCode,
                                                 'items_code' => $json->items_code,
                                                 'created_at' => date('Y-m-d H:i:s'),
+                                                'last_update' => $json->last_update,
                                             );
                                             $this->db->insert('addon', $arrayAddon);
 
@@ -379,6 +380,14 @@ class Addons extends MY_Controller
             echo json_encode(['status' => 0, 'message' => 'Failed to open downloaded zip file']);
             exit();
         }
+        // Record what was actually applied - previously this method never
+        // touched the `addon` row after a successful update, so `version`
+        // stayed stuck at the originally-installed value forever and there
+        // was no way to know an addon had ever been upgraded at all.
+        $this->db->where('prefix', $items)->update('addon', array(
+            'version' => $latest_version,
+            'last_update' => date('Y-m-d H:i:s'),
+        ));
         fclose($zipResource);
         $this->cleanTmpFiles();
         $message = '<div>

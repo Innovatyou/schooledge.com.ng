@@ -12,15 +12,23 @@ class NotificationPreferencesPage extends ConsumerWidget {
     String key,
     bool value,
   ) async {
-    await ref.read(dioProvider).put(
-      'notifications/preferences',
-      data: {
-        'category': preference['category'],
-        'inbox_enabled': key == 'inbox_enabled' ? value : preference['inbox_enabled'],
-        'push_enabled': key == 'push_enabled' ? value : preference['push_enabled'],
-        'email_enabled': key == 'email_enabled' ? value : preference['email_enabled'],
-      },
-    );
+    await ref
+        .read(dioProvider)
+        .put(
+          'notifications/preferences',
+          data: {
+            'category': preference['category'],
+            'inbox_enabled': key == 'inbox_enabled'
+                ? value
+                : preference['inbox_enabled'],
+            'push_enabled': key == 'push_enabled'
+                ? value
+                : preference['push_enabled'],
+            'email_enabled': key == 'email_enabled'
+                ? value
+                : preference['email_enabled'],
+          },
+        );
     ref.invalidate(notificationPreferencesProvider);
   }
 
@@ -51,25 +59,31 @@ class NotificationPreferencesPage extends ConsumerWidget {
                   children: [
                     Text(
                       categoryLabels[category] ?? category,
-                      style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15),
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 15,
+                      ),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Notification inbox'),
                       value: preference['inbox_enabled'] as bool,
-                      onChanged: (value) => _update(ref, preference, 'inbox_enabled', value),
+                      onChanged: (value) =>
+                          _update(ref, preference, 'inbox_enabled', value),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Push notifications'),
                       value: preference['push_enabled'] as bool,
-                      onChanged: (value) => _update(ref, preference, 'push_enabled', value),
+                      onChanged: (value) =>
+                          _update(ref, preference, 'push_enabled', value),
                     ),
                     SwitchListTile(
                       contentPadding: EdgeInsets.zero,
                       title: const Text('Email'),
                       value: preference['email_enabled'] as bool,
-                      onChanged: (value) => _update(ref, preference, 'email_enabled', value),
+                      onChanged: (value) =>
+                          _update(ref, preference, 'email_enabled', value),
                     ),
                   ],
                 ),

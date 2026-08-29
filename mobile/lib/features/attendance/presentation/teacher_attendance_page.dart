@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/widgets/module_ui.dart';
+import 'package:mobile_scanner/mobile_scanner.dart';
 import '../data/attendance_repository.dart';
+import '../../../core/navigation/page_transitions.dart';
 
 class TeacherAttendancePage extends ConsumerWidget {
   const TeacherAttendancePage({super.key});
@@ -16,6 +18,16 @@ class TeacherAttendancePage extends ConsumerWidget {
     icon: Icons.fact_check_rounded,
     colors: const [Color(0xff00897b), Color(0xff16b39a)],
     children: [
+      InfoRow(
+        icon: Icons.qr_code_scanner_rounded,
+        title: 'Scan attendance QR',
+        subtitle: 'Scan a student’s rotating SchoolEdge pass',
+        color: const Color(0xff6c5ce7),
+        onTap: () => Navigator.of(
+          context,
+        ).push(moduleRoute<void>(const AttendanceScannerPage())),
+      ),
+      const SectionTitle('Your classes'),
       ref
           .watch(teacherClassesProvider)
           .when(
@@ -48,8 +60,8 @@ class TeacherAttendancePage extends ConsumerWidget {
                     subtitle: 'Tap to take attendance',
                     color: const Color(0xff00a896),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => RosterPage(
+                      moduleRoute<void>(
+                        RosterPage(
                           classId: c['class_id'] as int,
                           sectionId: c['section_id'] as int,
                           title: '${c['class_name']} ${c['section_name']}',
@@ -62,6 +74,198 @@ class TeacherAttendancePage extends ConsumerWidget {
             },
           ),
     ],
+  );
+}
+
+class AttendanceScannerPage extends ConsumerStatefulWidget {
+  const AttendanceScannerPage({super.key});
+  @override
+  ConsumerState<AttendanceScannerPage> createState() =>
+      _AttendanceScannerPageState();
+}
+
+class _AttendanceScannerPageState extends ConsumerState<AttendanceScannerPage> {
+  final MobileScannerController _controller = MobileScannerController(
+    formats: const [BarcodeFormat.qrCode],
+  );
+  final TextEditingController _manualController = TextEditingController();
+  final FocusNode _manualFocusNode = FocusNode();
+  bool _submitting = false;
+
+  Future<void> _scan(BarcodeCapture capture) async {
+    if (_submitting) return;
+    final token = capture.barcodes.firstOrNull?.rawValue;
+    if (token == null || token.isEmpty) return;
+    await _controller.stop();
+    await _submitToken(token);
+    if (mounted) await _controller.start();
+  }
+
+  Future<void> _submitManualToken() async {
+    if (_submitting) return;
+    final token = _manualController.text.trim();
+    _manualController.clear();
+    if (token.isEmpty) return;
+    await _submitToken(token);
+    if (mounted) _manualFocusNode.requestFocus();
+  }
+
+  // Shared by the camera detector and the hardware-scanner input field below —
+  // a paired HID scanner just types the decoded QR text into a focused field.
+  Future<void> _submitToken(String token) async {
+    setState(() => _submitting = true);
+    try {
+      final response = await ref
+          .read(dioProvider)
+          .post('attendance/scan', data: {'token': token});
+      final data = Map<String, dynamic>.from(response.data['data']);
+      final student = Map<String, dynamic>.from(data['student']);
+      if (!mounted) return;
+      await showDialog<void>(
+        context: context,
+        builder: (context) => AlertDialog(
+          icon: Icon(
+            data['already_marked'] == true
+                ? Icons.info_rounded
+                : Icons.check_circle_rounded,
+            color: const Color(0xff00a896),
+            size: 44,
+          ),
+          title: Text(
+            data['already_marked'] == true
+                ? 'Already marked'
+                : 'Attendance recorded',
+          ),
+          content: Text('${student['name']} is present for ${data['date']}.'),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Scan another'),
+            ),
+          ],
+        ),
+      );
+    } on DioException catch (error) {
+      final body = error.response?.data;
+      final message = body is Map && body['error'] is Map
+          ? ((body['error'] as Map)['message'] ??
+                    'This QR code could not be accepted.')
+                .toString()
+          : 'This QR code could not be accepted.';
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(message), backgroundColor: Colors.red),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _manualController.dispose();
+    _manualFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: const Color(0xff071a33),
+    appBar: AppBar(
+      title: const Text('Scan attendance'),
+      backgroundColor: const Color(0xff071a33),
+      foregroundColor: Colors.white,
+    ),
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        MobileScanner(
+          controller: _controller,
+          onDetect: _scan,
+          errorBuilder: (context, error) => Center(
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Text(
+                'Camera unavailable: ${error.errorDetails?.message ?? error.errorCode}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ),
+          ),
+        ),
+        Center(
+          child: Container(
+            width: 260,
+            height: 260,
+            decoration: BoxDecoration(
+              border: Border.all(color: const Color(0xffffc857), width: 4),
+              borderRadius: BorderRadius.circular(32),
+            ),
+          ),
+        ),
+        Positioned(
+          left: 24,
+          right: 24,
+          bottom: 44,
+          child: Column(
+            children: [
+              if (_submitting)
+                const CircularProgressIndicator(color: Color(0xffffc857)),
+              const SizedBox(height: 12),
+              const Text(
+                'Place the student’s rotating QR pass inside the frame',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14),
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: .08),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.keyboard_rounded,
+                      color: Colors.white54,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: TextField(
+                        controller: _manualController,
+                        focusNode: _manualFocusNode,
+                        autofocus: true,
+                        // Suppresses the on-screen keyboard while still accepting
+                        // keystrokes from a paired hardware (Bluetooth HID) scanner.
+                        keyboardType: TextInputType.none,
+                        style: const TextStyle(color: Colors.white),
+                        cursorColor: Colors.white,
+                        textInputAction: TextInputAction.done,
+                        decoration: const InputDecoration(
+                          isDense: true,
+                          border: InputBorder.none,
+                          hintText: 'Hardware scanner input',
+                          hintStyle: TextStyle(color: Colors.white38),
+                        ),
+                        onSubmitted: (_) => _submitManualToken(),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
   );
 }
 
@@ -111,7 +315,8 @@ class _RosterPageState extends ConsumerState<RosterPage> {
       final students = (data['students'] as List).cast<Map<String, dynamic>>();
       _status.clear();
       for (final student in students) {
-        _status[student['enroll_id'] as int] = (student['status'] as String?) ?? 'P';
+        _status[student['enroll_id'] as int] =
+            (student['status'] as String?) ?? 'P';
       }
       if (mounted) setState(() => _students = students);
     } on DioException {
@@ -154,14 +359,13 @@ class _RosterPageState extends ConsumerState<RosterPage> {
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(
-            const SnackBar(content: Text('Attendance saved.')),
-          );
+          ..showSnackBar(const SnackBar(content: Text('Attendance saved.')));
       }
     } on DioException catch (error) {
       final data = error.response?.data;
       final message = data is Map && data['error'] is Map
-          ? ((data['error'] as Map)['message'] ?? 'Could not save attendance.').toString()
+          ? ((data['error'] as Map)['message'] ?? 'Could not save attendance.')
+                .toString()
           : 'Could not save attendance.';
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -216,7 +420,8 @@ class _RosterPageState extends ConsumerState<RosterPage> {
                       ],
                       selected: {_status[student['enroll_id'] as int] ?? 'P'},
                       onSelectionChanged: (selection) => setState(
-                        () => _status[student['enroll_id'] as int] = selection.first,
+                        () => _status[student['enroll_id'] as int] =
+                            selection.first,
                       ),
                     ),
                   ),
@@ -230,7 +435,10 @@ class _RosterPageState extends ConsumerState<RosterPage> {
             icon: _saving
                 ? const SizedBox.square(
                     dimension: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Icon(Icons.save_rounded),
             label: const Text('Save attendance'),

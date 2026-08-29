@@ -175,26 +175,29 @@ class _BrandHero extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Column(
     children: [
-      Container(
-        width: 86,
-        height: 86,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [Color(0xffffd166), Color(0xffff8a5b)],
-          ),
-          borderRadius: BorderRadius.circular(28),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xffffb15b).withValues(alpha: .45),
-              blurRadius: 28,
-              offset: const Offset(0, 14),
+      Hero(
+        tag: 'security',
+        child: Container(
+          width: 86,
+          height: 86,
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xffffd166), Color(0xffff8a5b)],
             ),
-          ],
-        ),
-        child: const Icon(
-          Icons.school_rounded,
-          size: 48,
-          color: Color(0xff17324d),
+            borderRadius: BorderRadius.circular(28),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xffffb15b).withValues(alpha: .45),
+                blurRadius: 28,
+                offset: const Offset(0, 14),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.school_rounded,
+            size: 48,
+            color: Color(0xff17324d),
+          ),
         ),
       ),
       const SizedBox(height: 18),

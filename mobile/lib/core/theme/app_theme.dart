@@ -1,22 +1,43 @@
 import 'package:flutter/material.dart';
+import 'app_colors.dart';
+import 'module_colors.dart';
 
 class AppTheme {
-  static ThemeData light() => ThemeData(
-    colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xff0c4f00)),
-    useMaterial3: true,
-    inputDecorationTheme: const InputDecorationTheme(
-      border: OutlineInputBorder(),
-    ),
-  );
+  static ThemeData light() {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: AppColors.navy,
+      brightness: Brightness.light,
+      primary: AppColors.navy,
+      secondary: AppColors.teal,
+      tertiary: AppColors.gold,
+    );
+    return ThemeData(
+      colorScheme: scheme,
+      useMaterial3: true,
+      scaffoldBackgroundColor: scheme.surface,
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+      ),
+      extensions: const [ModuleColors.light],
+    );
+  }
 
-  static ThemeData dark() => ThemeData(
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: const Color(0xff0c4f00),
+  static ThemeData dark() {
+    final scheme = ColorScheme.fromSeed(
+      seedColor: AppColors.navy,
       brightness: Brightness.dark,
-    ),
-    useMaterial3: true,
-    inputDecorationTheme: const InputDecorationTheme(
-      border: OutlineInputBorder(),
-    ),
-  );
+      primary: AppColors.gold,
+      secondary: AppColors.teal,
+      tertiary: AppColors.gold,
+    );
+    return ThemeData(
+      colorScheme: scheme,
+      useMaterial3: true,
+      scaffoldBackgroundColor: scheme.surface,
+      inputDecorationTheme: const InputDecorationTheme(
+        border: OutlineInputBorder(),
+      ),
+      extensions: const [ModuleColors.dark],
+    );
+  }
 }

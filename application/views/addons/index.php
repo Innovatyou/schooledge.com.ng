@@ -32,8 +32,8 @@
 								<td><?php echo $row->name;?></td>
 								<td><?php echo wordwrap($row->version, 1, '.', true);?></td>
 								<td><?php echo empty($row->created_at) ? '-' : _d($row->created_at);?></td>
-								<td><?php echo empty($row->created_at) ? '-' : _d($row->created_at);?></td>
-								<td><a href="<?=base_url('addons/update/'.$row->prefix)?>" class="btn btn-default btn-circle"><i class="fas fa-undo"></i> Update Check</a> </td>
+								<td><?php echo empty($row->last_update) ? '-' : _d($row->last_update);?></td>
+								<td><a href="<?=base_url('addons/update/'.$row->prefix)?>" class="btn btn-default btn-circle"><i class="fas fa-undo"></i> <?=translate('update_check')?></a> </td>
 							</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -50,14 +50,14 @@
 					<div class="form-group mt-md">
 						<label class="col-md-3 control-label"><?=translate('addon_purchase_code')?> <span class="required">*</span></label>
 						<div class="col-md-6">
-							<input type="text" class="form-control" name="purchase_code" autocomplete="off" value="<?=set_value('purchase_code')?>" autocomplete="off" />
+							<input type="text" class="form-control" name="purchase_code" autocomplete="off" value="<?=set_value('purchase_code')?>" />
 							<span class="error"><?=form_error('purchase_code') ?></span>
 						</div>
 					</div>
 					<div class="form-group">
 						<label class="col-md-3 control-label">Zip File <span class="required">*</span></label>
 						<div class="col-md-6 mb-md">
-							<input type="file" name="zip_file" class="dropify" data-height="80" data-allowed-file-extensions="*" data-default-file="" />
+							<input type="file" name="zip_file" class="dropify" data-height="80" data-allowed-file-extensions="zip" data-default-file="" />
 							<span class="error"><?=form_error('zip_file') ?></span>
 						</div>
 					</div>
@@ -92,7 +92,6 @@
                 btn.button('loading');
             },
             success: function (data) {
-                console.log(data.error);
                 $('.error').html("");
                 if (data.status == "fail") {
                     $.each(data.error, function (index, value) {

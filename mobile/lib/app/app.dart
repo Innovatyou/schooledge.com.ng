@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,8 @@ import '../features/auth/presentation/login_page.dart';
 import '../features/auth/presentation/otp_page.dart';
 import '../features/home/presentation/home_page.dart';
 import '../l10n/app_strings.dart';
+import '../features/onboarding/presentation/welcome_page.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final auth = ref.watch(authControllerProvider);
@@ -23,12 +27,17 @@ final routerProvider = Provider<GoRouter>((ref) {
       if (auth.stage == AuthStage.signedIn) {
         return state.matchedLocation == '/' ? null : '/';
       }
+      if (state.matchedLocation == '/splash' ||
+          state.matchedLocation == '/welcome') {
+        return null;
+      }
       return state.matchedLocation == '/login' ? null : '/login';
     },
     routes: [
       GoRoute(path: '/login', builder: (_, _) => const LoginPage()),
       GoRoute(path: '/otp', builder: (_, _) => const OtpPage()),
       GoRoute(path: '/splash', builder: (_, _) => const _SplashPage()),
+      GoRoute(path: '/welcome', builder: (_, _) => const WelcomePage()),
       GoRoute(path: '/', builder: (_, _) => const HomePage()),
     ],
   );
@@ -47,29 +56,82 @@ class SchoolEdgeApp extends ConsumerWidget {
   );
 }
 
-class _SplashPage extends StatelessWidget {
+class _SplashPage extends StatefulWidget {
   const _SplashPage();
   @override
-  Widget build(BuildContext context) => const Scaffold(
+  State<_SplashPage> createState() => _SplashPageState();
+}
+
+class _SplashPageState extends State<_SplashPage> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer(const Duration(milliseconds: 1400), _continue);
+  }
+
+  Future<void> _continue() async {
+    final preferences = await SharedPreferences.getInstance();
+    if (mounted) {
+      context.go(
+        preferences.getBool('welcome_completed') == true
+            ? '/login'
+            : '/welcome',
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Scaffold(
     backgroundColor: Color(0xff071b3d),
-    body: Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.school_rounded, color: Color(0xffffd166), size: 72),
-          SizedBox(height: 20),
-          Text(
-            'SchoolEdge',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 32,
-              fontWeight: FontWeight.w900,
+    body: Stack(
+      fit: StackFit.expand,
+      children: [
+        Image.asset('assets/branding/splash_art.png', fit: BoxFit.cover),
+        const DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Colors.transparent, Color(0xcc071b3d)],
             ),
           ),
-          SizedBox(height: 24),
-          CircularProgressIndicator(color: Color(0xff54e1c1)),
-        ],
-      ),
+        ),
+        const SafeArea(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              Text(
+                'SchoolEdge',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 38,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+              SizedBox(height: 6),
+              Text(
+                'LEARN  •  CONNECT  •  GROW',
+                style: TextStyle(
+                  color: Color(0xff54e1c1),
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 2,
+                ),
+              ),
+              SizedBox(height: 38),
+              CircularProgressIndicator(color: Color(0xffffd166)),
+              SizedBox(height: 42),
+            ],
+          ),
+        ),
+      ],
     ),
   );
 }

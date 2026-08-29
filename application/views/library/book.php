@@ -24,6 +24,7 @@
 							<th><?=translate('edition')?></th>
 							<th><?=translate('isbn_no')?></th>
 							<th><?=translate('category')?></th>
+							<th class="no-sort"><?=translate('digital')?></th>
 							<th><?=translate('description')?></th>
 							<th><?=translate('purchase_date')?></th>
 							<th><?=translate('price')?></th>
@@ -44,6 +45,11 @@
 							<td><?php echo $row['edition']; ?></td>
 							<td><?php echo $row['isbn_no']; ?></td>
 							<td><?php echo get_type_name_by_id('book_category', $row['category_id']);?></td>
+							<td>
+								<?php if (!empty($row['ebook_file'])): ?><span class="label label-success"><i class="fas fa-book"></i> <?=translate('ebook')?></span><?php endif; ?>
+								<?php if (!empty($row['audiobook_file'])): ?><span class="label label-info"><i class="fas fa-headphones"></i> <?=translate('audiobook')?></span><?php endif; ?>
+								<?php if (empty($row['ebook_file']) && empty($row['audiobook_file'])): ?><span class="label label-default"><?=translate('physical_only')?></span><?php endif; ?>
+							</td>
 							<td><?php echo $row['description']; ?></td>
 							<td><?php echo _d($row['purchase_date']);?></td>
 							<td><?php echo currencyFormat($row['price']); ?></td>
@@ -152,6 +158,13 @@
 						<div class="col-md-6">
 							<input type="file" name="ebook_file" class="dropify" data-allowed-file-extensions="pdf" />
 							<span class="help-block"><?=translate('optional_upload_a_pdf_so_students_can_read_this_book_in_the_app')?></span>
+						</div>
+					</div>
+					<div class="form-group">
+						<label class="col-md-3 control-label"><?=translate('audiobook_file')?></label>
+						<div class="col-md-6">
+							<input type="file" name="audiobook_file" class="dropify" data-allowed-file-extensions="mp3 m4a aac" />
+							<span class="help-block"><?=translate('optional_upload_an_audio_file_so_students_can_listen_to_this_book_in_the_app')?></span>
 						</div>
 					</div>
 					<div class="form-group">

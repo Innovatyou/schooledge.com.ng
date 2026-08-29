@@ -142,6 +142,14 @@ class Library extends Admin_Controller
             if (file_exists($file)) {
                 @unlink($file);
             }
+            $ebookFile = get_type_name_by_id('book', $id, 'ebook_file');
+            if ($ebookFile && file_exists('uploads/book_ebook/' . $ebookFile)) {
+                @unlink('uploads/book_ebook/' . $ebookFile);
+            }
+            $audiobookFile = get_type_name_by_id('book', $id, 'audiobook_file');
+            if ($audiobookFile && file_exists('uploads/book_audio/' . $audiobookFile)) {
+                @unlink('uploads/book_audio/' . $audiobookFile);
+            }
             if (!is_superadmin_loggedin()) {
                 $this->db->where('branch_id', get_loggedin_branch_id());
             }

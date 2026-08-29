@@ -33,7 +33,8 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
   @override
   void initState() {
     super.initState();
-    _messageController.text = (widget.initial['submission_message'] as String?) ?? '';
+    _messageController.text =
+        (widget.initial['submission_message'] as String?) ?? '';
   }
 
   @override
@@ -44,7 +45,9 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    appBar: AppBar(title: Text(widget.initial['subject']?.toString() ?? 'Homework')),
+    appBar: AppBar(
+      title: Text(widget.initial['subject']?.toString() ?? 'Homework'),
+    ),
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
@@ -53,18 +56,27 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
           style: const TextStyle(fontSize: 15, height: 1.5),
         ),
         const SizedBox(height: 12),
-        Text('Due ${widget.initial['due_date']}', style: const TextStyle(fontWeight: FontWeight.w700)),
+        Text(
+          'Due ${widget.initial['due_date']}',
+          style: const TextStyle(fontWeight: FontWeight.w700),
+        ),
         const SizedBox(height: 20),
         if (widget.initial['has_attachment'] == true)
           FilledButton.tonalIcon(
             onPressed: _downloadingAttachment ? null : _downloadAttachment,
             icon: _downloadingAttachment
-                ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                ? const SizedBox.square(
+                    dimension: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 : const Icon(Icons.attachment_rounded),
             label: const Text('Download assignment'),
           ),
         const SizedBox(height: 20),
-        if (widget.isTeacher) _buildSubmissionsList() else _buildSubmissionForm(),
+        if (widget.isTeacher)
+          _buildSubmissionsList()
+        else
+          _buildSubmissionForm(),
       ],
     ),
   );
@@ -89,7 +101,9 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
       TextField(
         controller: _messageController,
         maxLines: 4,
-        decoration: const InputDecoration(hintText: 'Write a note about your submission…'),
+        decoration: const InputDecoration(
+          hintText: 'Write a note about your submission…',
+        ),
       ),
       const SizedBox(height: 12),
       OutlinedButton.icon(
@@ -103,7 +117,10 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
         child: FilledButton(
           onPressed: _submitting ? null : _submit,
           child: _submitting
-              ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Text('Submit'),
         ),
       ),
@@ -120,7 +137,8 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
             title: 'Could not load submissions',
             subtitle: 'Tap to try again',
             color: const Color(0xffff6b6b),
-            onTap: () => ref.invalidate(homeworkSubmissionsProvider(widget.homeworkId)),
+            onTap: () =>
+                ref.invalidate(homeworkSubmissionsProvider(widget.homeworkId)),
           ),
           data: (submissions) {
             if (submissions.isEmpty) {
@@ -146,7 +164,12 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
                               ? null
                               : () => _downloadSubmission(studentId),
                           icon: _downloadingSubmission == studentId
-                              ? const SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                              ? const SizedBox.square(
+                                  dimension: 16,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
+                                )
                               : const Icon(Icons.download_rounded),
                         )
                       : null,
@@ -170,9 +193,14 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
       final formData = FormData.fromMap({
         'message': _messageController.text.trim(),
         if (_pickedFile?.path != null)
-          'file': await MultipartFile.fromFile(_pickedFile!.path!, filename: _pickedFile!.name),
+          'file': await MultipartFile.fromFile(
+            _pickedFile!.path!,
+            filename: _pickedFile!.name,
+          ),
       });
-      await ref.read(dioProvider).post('homework/${widget.homeworkId}/submit', data: formData);
+      await ref
+          .read(dioProvider)
+          .post('homework/${widget.homeworkId}/submit', data: formData);
       ref.invalidate(homeworkListProvider);
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -231,7 +259,8 @@ class _HomeworkDetailPageState extends ConsumerState<HomeworkDetailPage> {
   void _showError(DioException error) {
     final data = error.response?.data;
     final message = data is Map && data['error'] is Map
-        ? ((data['error'] as Map)['message'] ?? 'Something went wrong.').toString()
+        ? ((data['error'] as Map)['message'] ?? 'Something went wrong.')
+              .toString()
         : 'Something went wrong.';
     ScaffoldMessenger.of(context)
       ..hideCurrentSnackBar()

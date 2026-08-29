@@ -101,6 +101,20 @@
 						</div>
 					</div>
 					<div class="form-group">
+						<label class="col-md-3 control-label"><?=translate('audiobook_file')?></label>
+						<input type="hidden" name="old_audiobook_file" value="<?=$book['audiobook_file']?>">
+						<div class="col-md-6">
+							<input type="file" name="audiobook_file" class="dropify" data-allowed-file-extensions="mp3 m4a aac" />
+							<?php if (!empty($book['audiobook_file'])): ?>
+								<span class="help-block"><?=translate('current_file')?>: <?=htmlspecialchars($book['audiobook_original_name'] ?: $book['audiobook_file'])?>
+									&nbsp; <label><input type="checkbox" name="remove_audiobook_file" value="1" /> <?=translate('remove')?></label>
+								</span>
+							<?php else: ?>
+								<span class="help-block"><?=translate('optional_upload_an_audio_file_so_students_can_listen_to_this_book_in_the_app')?></span>
+							<?php endif; ?>
+						</div>
+					</div>
+					<div class="form-group">
 						<label class="col-md-3 control-label"> <?=translate('total_stock')?> <span class="required">*</span></label>
 						<div class="col-md-6  mb-md">
 							<div data-plugin-spinner data-plugin-options='{ "value":0, "min": 0 }'>

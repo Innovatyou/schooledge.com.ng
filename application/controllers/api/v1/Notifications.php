@@ -51,7 +51,7 @@ class Notifications extends Api_Controller
         $rows = $this->db->where('membership_id', $membership['id'])->get('mobile_notification_preferences')->result_array();
         $saved = array();
         foreach ($rows as $row) $saved[$row['category']] = $row;
-        $categories = array('message', 'homework', 'payment', 'announcement', 'live_class');
+        $categories = array('message', 'homework', 'payment', 'announcement', 'live_class', 'safety');
         $this->ok(array_map(function ($category) use ($saved) {
             $row = $saved[$category] ?? null;
             return array(

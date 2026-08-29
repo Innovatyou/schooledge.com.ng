@@ -26,6 +26,7 @@ uploads/images/staff/*
 uploads/images/parent/*
 !uploads/images/parent/index.html
 uploads/attachments/*/*
+!uploads/attachments/chat_voice/index.html
 uploads/online_ad_documents/*
 !uploads/online_ad_documents/index.html
 

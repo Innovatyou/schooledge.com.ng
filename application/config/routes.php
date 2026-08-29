@@ -116,8 +116,10 @@ $route['api/v1/mobile/fees/checkout/complete']['get'] = 'api/v1/fees/checkout_co
 
 $route['api/v1/mobile/library/books']['get'] = 'api/v1/library/books';
 $route['api/v1/mobile/library/categories']['get'] = 'api/v1/library/categories';
+$route['api/v1/mobile/library/issues']['get'] = 'api/v1/library/issues';
 $route['api/v1/mobile/library/books/(:num)']['get'] = 'api/v1/library/show/$1';
 $route['api/v1/mobile/library/books/(:num)/read']['get'] = 'api/v1/library/read/$1';
+$route['api/v1/mobile/library/books/(:num)/listen']['get'] = 'api/v1/library/readAudio/$1';
 
 $route['api/v1/mobile/events']['get'] = 'api/v1/events/index';
 $route['api/v1/mobile/events/(:num)']['get'] = 'api/v1/events/show/$1';
@@ -129,6 +131,8 @@ $route['api/v1/mobile/attendance/summary']['get'] = 'api/v1/attendance/summary';
 $route['api/v1/mobile/attendance/classes']['get'] = 'api/v1/attendance/classes';
 $route['api/v1/mobile/attendance/roster/(:num)/(:num)']['get'] = 'api/v1/attendance/roster/$1/$2';
 $route['api/v1/mobile/attendance/capture']['post'] = 'api/v1/attendance/capture';
+$route['api/v1/mobile/attendance/qr-token']['get'] = 'api/v1/attendance/qr_token';
+$route['api/v1/mobile/attendance/scan']['post'] = 'api/v1/attendance/scan';
 
 $route['api/v1/mobile/results/exams']['get'] = 'api/v1/results/exams';
 $route['api/v1/mobile/results/exams/(:num)']['get'] = 'api/v1/results/show/$1';
@@ -138,24 +142,43 @@ $route['api/v1/mobile/homework/(:num)/download']['get'] = 'api/v1/homework/downl
 $route['api/v1/mobile/homework/(:num)/submit']['post'] = 'api/v1/homework/submit/$1';
 $route['api/v1/mobile/homework/(:num)/submissions']['get'] = 'api/v1/homework/submissions/$1';
 $route['api/v1/mobile/homework/(:num)/submissions/(:num)/download']['get'] = 'api/v1/homework/download_submission/$1/$2';
+$route['api/v1/mobile/gamification/me']['get'] = 'api/v1/gamification/me';
+$route['api/v1/mobile/gamification/leaderboard']['get'] = 'api/v1/gamification/leaderboard';
+$route['api/v1/mobile/safety/alerts']['get'] = 'api/v1/safety/index';
+$route['api/v1/mobile/safety/alerts']['post'] = 'api/v1/safety/submit';
+$route['api/v1/mobile/safety/alerts/(:num)/acknowledge']['post'] = 'api/v1/safety/acknowledge/$1';
 
 $route['api/v1/mobile/messages']['get'] = 'api/v1/messages/index';
 $route['api/v1/mobile/messages/contacts']['get'] = 'api/v1/messages/contacts';
 $route['api/v1/mobile/messages/(:num)']['get'] = 'api/v1/messages/show/$1';
 $route['api/v1/mobile/messages']['post'] = 'api/v1/messages/compose';
 $route['api/v1/mobile/messages/(:num)/reply']['post'] = 'api/v1/messages/reply/$1';
+$route['api/v1/mobile/messages/broadcast']['post'] = 'api/v1/messages/broadcast';
+
+$route['api/v1/mobile/chat/token']['post'] = 'api/v1/chat/token';
+$route['api/v1/mobile/chat/classmates']['get'] = 'api/v1/chat/classmates';
+$route['api/v1/mobile/chat/voice-notes']['post'] = 'api/v1/chat/submitVoiceNote';
+$route['api/v1/mobile/chat/voice-notes/(:num)']['get'] = 'api/v1/chat/voiceNote/$1';
+$route['api/v1/mobile/chat/block']['post'] = 'api/v1/chat/block';
+$route['api/v1/mobile/chat/unblock']['post'] = 'api/v1/chat/unblock';
+$route['api/v1/mobile/chat/reports']['post'] = 'api/v1/chat/report';
+$route['api/v1/mobile/chat/oversight/classes']['get'] = 'api/v1/chat/oversightClasses';
+$route['api/v1/mobile/chat/oversight/(:any)']['get'] = 'api/v1/chat/oversight/$1';
 
 $route['api/v1/mobile/timetable']['get'] = 'api/v1/timetable/index';
+$route['api/v1/mobile/timetable/exams']['get'] = 'api/v1/timetable/exams';
 
 $route['api/v1/mobile/resources']['get'] = 'api/v1/resources/index';
 $route['api/v1/mobile/resources/(:num)/download']['get'] = 'api/v1/resources/download/$1';
 
 $route['api/v1/mobile/profile']['get'] = 'api/v1/profile/show';
 $route['api/v1/mobile/profile']['patch'] = 'api/v1/profile/update';
+$route['api/v1/mobile/profile/photo']['post'] = 'api/v1/profile/upload_photo';
 $route['api/v1/mobile/profile/change-password']['post'] = 'api/v1/profile/change_password';
 $route['api/v1/mobile/profile/sessions']['get'] = 'api/v1/profile/sessions';
 $route['api/v1/mobile/profile/sessions/(:num)/revoke']['post'] = 'api/v1/profile/revoke_session/$1';
 $route['api/v1/mobile/profile/push-token']['patch'] = 'api/v1/profile/register_push_token';
+$route['api/v1/mobile/profile/id-card']['get'] = 'api/v1/profile/id_card';
 
 $route['api/v1/mobile/notifications']['get'] = 'api/v1/notifications/index';
 $route['api/v1/mobile/notifications/unread-count']['get'] = 'api/v1/notifications/unread_count';

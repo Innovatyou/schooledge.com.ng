@@ -1167,12 +1167,16 @@
                                 </a>
                             </li>
                             <?php } } if(get_permission('employee_attendance', 'is_add')) { ?>
+                            <li class="<?php if ($sub_page == 'schooledge_qr_attendance/index') echo 'nav-active';?>">
+                                <a href="<?=base_url('schooledge_qr_attendance')?>"><span><i class="fas fa-qrcode"></i> SchoolEdge QR Scanner</span></a>
+                            </li>
+                            <?php if(get_permission('employee_attendance', 'is_add')) { ?>
                             <li class="<?php if ($sub_page == 'attendance/employees_entries') echo 'nav-active';?>">
                                 <a href="<?=base_url('attendance/employees_entry')?>">
                                     <span><i class="fas fa-caret-right"></i><?=translate('employee')?></span>
                                 </a>
                             </li>
-                            <?php } if(get_permission('exam_attendance', 'is_add')) { ?>
+                            <?php } } if(get_permission('exam_attendance', 'is_add')) { ?>
                             <li class="<?php if ($sub_page == 'attendance/exam_entries') echo 'nav-active';?>">
                                 <a href="<?=base_url('attendance/exam_entry')?>">
                                     <span><i class="fas fa-caret-right"></i><?=translate('exam')?></span>

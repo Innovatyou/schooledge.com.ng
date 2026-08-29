@@ -1,9 +1,9 @@
-import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:pdfx/pdfx.dart';
-import '../../../core/network/api_client.dart';
+import '../data/library_progress_store.dart';
+import '../data/library_repository.dart';
 
 class BookReaderPage extends ConsumerStatefulWidget {
   const BookReaderPage({super.key, required this.bookId, required this.title});
@@ -27,15 +27,13 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
   Future<void> _load() async {
     setState(() => _error = null);
     try {
-      final response = await ref
-          .read(dioProvider)
-          .get<List<int>>(
-            'library/books/${widget.bookId}/read',
-            options: Options(responseType: ResponseType.bytes),
-          );
-      final bytes = Uint8List.fromList(response.data!);
+      final bytes = await ref
+          .read(libraryRepositoryProvider)
+          .readEbook(widget.bookId);
+      final lastPage = await LibraryProgressStore.lastPage(widget.bookId);
       final controller = PdfControllerPinch(
         document: PdfDocument.openData(bytes),
+        initialPage: lastPage ?? 1,
       );
       if (!mounted) return;
       setState(() => _controller = controller);
@@ -76,6 +74,10 @@ class _BookReaderPageState extends ConsumerState<BookReaderPage> {
           )
         : _controller == null
         ? const Center(child: CircularProgressIndicator())
-        : PdfViewPinch(controller: _controller!),
+        : PdfViewPinch(
+            controller: _controller!,
+            onPageChanged: (page) =>
+                LibraryProgressStore.saveLastPage(widget.bookId, page),
+          ),
   );
 }

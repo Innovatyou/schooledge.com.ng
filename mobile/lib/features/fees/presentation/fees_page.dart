@@ -46,7 +46,10 @@ class _FeesPageState extends ConsumerState<FeesPage> {
           data: (data) => _buildSummary(context, data),
         ),
         const SectionTitle('Recent payments'),
-        _buildHistory(context, summary.valueOrNull?['currency'] as Map<String, dynamic>?),
+        _buildHistory(
+          context,
+          summary.valueOrNull?['currency'] as Map<String, dynamic>?,
+        ),
       ],
     );
   }
@@ -75,7 +78,9 @@ class _FeesPageState extends ConsumerState<FeesPage> {
               const SizedBox(height: 5),
               Text(
                 'Outstanding balance',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               Text(
                 formatMoney(balance, currency),
@@ -88,7 +93,9 @@ class _FeesPageState extends ConsumerState<FeesPage> {
               const SizedBox(height: 8),
               Text(
                 'Invoice #${data['invoice_no']}',
-                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
               ),
               const SizedBox(height: 16),
               Row(
@@ -97,14 +104,21 @@ class _FeesPageState extends ConsumerState<FeesPage> {
                     child: FilledButton.icon(
                       onPressed: _processing || balance <= 0
                           ? null
-                          : () => _pickItemToPay(context, currency, items, transport),
+                          : () => _pickItemToPay(
+                              context,
+                              currency,
+                              items,
+                              transport,
+                            ),
                       icon: const Icon(Icons.lock_rounded),
                       label: Text(balance <= 0 ? 'Fully paid' : 'Pay securely'),
                     ),
                   ),
                   const SizedBox(width: 10),
                   IconButton.filledTonal(
-                    onPressed: _downloadingInvoice ? null : () => _downloadInvoice(context),
+                    onPressed: _downloadingInvoice
+                        ? null
+                        : () => _downloadInvoice(context),
                     icon: _downloadingInvoice
                         ? const SizedBox.square(
                             dimension: 18,
@@ -123,7 +137,8 @@ class _FeesPageState extends ConsumerState<FeesPage> {
           InfoRow(
             icon: Icons.school_rounded,
             title: item['name']?.toString() ?? 'Fee',
-            subtitle: 'Due ${item['due_date'] ?? '-'}'
+            subtitle:
+                'Due ${item['due_date'] ?? '-'}'
                 '${(item['accruing_fine'] as num? ?? 0) > 0 ? ' · Fine ${formatMoney(item['accruing_fine'] as num, currency)}' : ''}',
             color: (item['balance'] as num) > 0
                 ? const Color(0xffff8a5b)
@@ -137,7 +152,9 @@ class _FeesPageState extends ConsumerState<FeesPage> {
           InfoRow(
             icon: Icons.directions_bus_rounded,
             title: 'Transport',
-            subtitle: (transport['balance'] as num) > 0 ? 'Balance due' : 'Fully paid',
+            subtitle: (transport['balance'] as num) > 0
+                ? 'Balance due'
+                : 'Fully paid',
             color: (transport['balance'] as num) > 0
                 ? const Color(0xffff8a5b)
                 : const Color(0xff00a896),
@@ -150,61 +167,64 @@ class _FeesPageState extends ConsumerState<FeesPage> {
     );
   }
 
-  Widget _buildHistory(BuildContext context, Map<String, dynamic>? currency) =>
-      Consumer(
-        builder: (context, ref, _) => ref
-            .watch(feeHistoryProvider)
-            .when(
-              loading: () => const Padding(
-                padding: EdgeInsets.all(24),
-                child: Center(child: CircularProgressIndicator()),
-              ),
-              error: (error, _) => InfoRow(
-                icon: Icons.refresh_rounded,
-                title: 'Could not load payment history',
-                subtitle: _errorMessage(error),
-                color: const Color(0xffff6b6b),
-                onTap: () => ref.invalidate(feeHistoryProvider),
-              ),
-              data: (payments) {
-                if (payments.isEmpty) {
-                  return const InfoRow(
-                    icon: Icons.receipt_long_rounded,
-                    title: 'No payments yet',
-                    subtitle: 'Payments will appear here once made.',
-                    color: Color(0xff829ab1),
-                    trailing: SizedBox.shrink(),
-                  );
-                }
-                return Column(
-                  children: payments.map((payment) {
-                    final id = payment['id'] as int;
-                    return InfoRow(
-                      icon: Icons.receipt_long_rounded,
-                      title: payment['fee_type']?.toString() ?? 'Payment',
-                      subtitle: 'Paid ${payment['date']} · ${payment['pay_via'] ?? ''}',
-                      color: const Color(0xff00a896),
-                      trailing: _downloadingReceiptId == id
-                          ? const SizedBox.square(
-                              dimension: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : Text(
-                              formatMoney(payment['amount'] as num, currency),
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                color: Color(0xff00897b),
-                              ),
-                            ),
-                      onTap: _downloadingReceiptId == null
-                          ? () => _downloadReceipt(context, id)
-                          : null,
-                    );
-                  }).toList(),
+  Widget _buildHistory(
+    BuildContext context,
+    Map<String, dynamic>? currency,
+  ) => Consumer(
+    builder: (context, ref, _) => ref
+        .watch(feeHistoryProvider)
+        .when(
+          loading: () => const Padding(
+            padding: EdgeInsets.all(24),
+            child: Center(child: CircularProgressIndicator()),
+          ),
+          error: (error, _) => InfoRow(
+            icon: Icons.refresh_rounded,
+            title: 'Could not load payment history',
+            subtitle: _errorMessage(error),
+            color: const Color(0xffff6b6b),
+            onTap: () => ref.invalidate(feeHistoryProvider),
+          ),
+          data: (payments) {
+            if (payments.isEmpty) {
+              return const InfoRow(
+                icon: Icons.receipt_long_rounded,
+                title: 'No payments yet',
+                subtitle: 'Payments will appear here once made.',
+                color: Color(0xff829ab1),
+                trailing: SizedBox.shrink(),
+              );
+            }
+            return Column(
+              children: payments.map((payment) {
+                final id = payment['id'] as int;
+                return InfoRow(
+                  icon: Icons.receipt_long_rounded,
+                  title: payment['fee_type']?.toString() ?? 'Payment',
+                  subtitle:
+                      'Paid ${payment['date']} · ${payment['pay_via'] ?? ''}',
+                  color: const Color(0xff00a896),
+                  trailing: _downloadingReceiptId == id
+                      ? const SizedBox.square(
+                          dimension: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : Text(
+                          formatMoney(payment['amount'] as num, currency),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: Color(0xff00897b),
+                          ),
+                        ),
+                  onTap: _downloadingReceiptId == null
+                      ? () => _downloadReceipt(context, id)
+                      : null,
                 );
-              },
-            ),
-      );
+              }).toList(),
+            );
+          },
+        ),
+  );
 
   Future<void> _pickItemToPay(
     BuildContext context,
@@ -241,11 +261,14 @@ class _FeesPageState extends ConsumerState<FeesPage> {
               ListTile(
                 leading: const Icon(Icons.directions_bus_rounded),
                 title: const Text('Transport'),
-                trailing: Text(formatMoney(transport['balance'] as num, currency)),
+                trailing: Text(
+                  formatMoney(transport['balance'] as num, currency),
+                ),
                 onTap: () => Navigator.of(sheetContext).pop({
                   ...transport,
                   'name': 'Transport',
-                  'transport_fee_details_id': transport['transport_fee_details_id'],
+                  'transport_fee_details_id':
+                      transport['transport_fee_details_id'],
                 }),
               ),
             const SizedBox(height: 8),
@@ -300,7 +323,8 @@ class _FeesPageState extends ConsumerState<FeesPage> {
               for (final option in gateways)
                 ListTile(
                   title: Text(option['name']?.toString() ?? ''),
-                  onTap: () => Navigator.of(sheetContext).pop(option['code'] as String),
+                  onTap: () =>
+                      Navigator.of(sheetContext).pop(option['code'] as String),
                 ),
             ],
           ),
@@ -333,7 +357,10 @@ class _FeesPageState extends ConsumerState<FeesPage> {
       final transactionId = result['transaction_id'] as int;
       final checkoutUrl = result['checkout_url'] as String?;
       if (checkoutUrl != null) {
-        await launchUrl(Uri.parse(checkoutUrl), mode: LaunchMode.externalApplication);
+        await launchUrl(
+          Uri.parse(checkoutUrl),
+          mode: LaunchMode.externalApplication,
+        );
       }
       if (!context.mounted) return;
       final confirmed = await showDialog<bool>(
@@ -376,15 +403,12 @@ class _FeesPageState extends ConsumerState<FeesPage> {
       ref.invalidate(feeSummaryProvider);
       ref.invalidate(feeHistoryProvider);
       if (!context.mounted) return;
-      showModuleMessage(
-        context,
-        switch (status) {
-          'success' => 'Payment confirmed. Thank you!',
-          'failed' =>
-            'The payment could not be verified. If you were charged, please contact your school.',
-          _ => 'Payment is still pending. Try confirming again shortly.',
-        },
-      );
+      showModuleMessage(context, switch (status) {
+        'success' => 'Payment confirmed. Thank you!',
+        'failed' =>
+          'The payment could not be verified. If you were charged, please contact your school.',
+        _ => 'Payment is still pending. Try confirming again shortly.',
+      });
     } on DioException catch (error) {
       if (context.mounted) showModuleMessage(context, _dioErrorMessage(error));
     } finally {
@@ -442,7 +466,8 @@ class _FeesPageState extends ConsumerState<FeesPage> {
   String _dioErrorMessage(DioException error) {
     final data = error.response?.data;
     if (data is Map && data['error'] is Map) {
-      return ((data['error'] as Map)['message'] ?? 'Something went wrong. Please try again.')
+      return ((data['error'] as Map)['message'] ??
+              'Something went wrong. Please try again.')
           .toString();
     }
     return 'Something went wrong. Please try again.';

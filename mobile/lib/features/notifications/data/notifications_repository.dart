@@ -10,13 +10,17 @@ final notificationsProvider =
     });
 
 final unreadCountProvider = FutureProvider.autoDispose<int>((ref) async {
-  final response = await ref.watch(dioProvider).get('notifications/unread-count');
+  final response = await ref
+      .watch(dioProvider)
+      .get('notifications/unread-count');
   return response.data['data']['count'] as int;
 });
 
 final notificationPreferencesProvider =
     FutureProvider.autoDispose<List<Map<String, dynamic>>>((ref) async {
-      final response = await ref.watch(dioProvider).get('notifications/preferences');
+      final response = await ref
+          .watch(dioProvider)
+          .get('notifications/preferences');
       return (response.data['data'] as List)
           .map((item) => Map<String, dynamic>.from(item))
           .toList();

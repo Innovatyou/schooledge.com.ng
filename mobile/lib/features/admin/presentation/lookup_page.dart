@@ -38,7 +38,9 @@ class _LookupPageState extends ConsumerState<LookupPage> {
       final response = await ref
           .read(dioProvider)
           .get('admin/lookup', queryParameters: {'q': query.trim()});
-      final results = (response.data['data'] as List).map((item) => Map<String, dynamic>.from(item)).toList();
+      final results = (response.data['data'] as List)
+          .map((item) => Map<String, dynamic>.from(item))
+          .toList();
       if (mounted) setState(() => _results = results);
     } on DioException {
       if (mounted) setState(() => _error = 'Could not search right now.');
@@ -64,7 +66,8 @@ class _LookupPageState extends ConsumerState<LookupPage> {
           ),
         ),
         if (_loading) const Center(child: CircularProgressIndicator()),
-        if (_error != null) Padding(padding: const EdgeInsets.all(20), child: Text(_error!)),
+        if (_error != null)
+          Padding(padding: const EdgeInsets.all(20), child: Text(_error!)),
         if (_results != null)
           Expanded(
             child: _results!.isEmpty
@@ -75,7 +78,8 @@ class _LookupPageState extends ConsumerState<LookupPage> {
                       return InfoRow(
                         icon: _iconFor(result['type'] as String),
                         title: result['name']?.toString() ?? '',
-                        subtitle: '${_labelFor(result['type'] as String)}${result['detail'] != null ? ' · ${result['detail']}' : ''}',
+                        subtitle:
+                            '${_labelFor(result['type'] as String)}${result['detail'] != null ? ' · ${result['detail']}' : ''}',
                         color: _colorFor(result['type'] as String),
                         trailing: const SizedBox.shrink(),
                       );

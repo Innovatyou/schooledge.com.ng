@@ -28,15 +28,20 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
     final current = _currentController.text;
     final updated = _newController.text;
     if (current.isEmpty || updated.length < 8) {
-      showModuleMessage(context, 'Enter your current password and a new password of at least 8 characters.');
+      showModuleMessage(
+        context,
+        'Enter your current password and a new password of at least 8 characters.',
+      );
       return;
     }
     setState(() => _changingPassword = true);
     try {
-      await ref.read(dioProvider).post(
-        'profile/change-password',
-        data: {'current_password': current, 'new_password': updated},
-      );
+      await ref
+          .read(dioProvider)
+          .post(
+            'profile/change-password',
+            data: {'current_password': current, 'new_password': updated},
+          );
       _currentController.clear();
       _newController.clear();
       if (mounted) showModuleMessage(context, 'Password changed.');
@@ -62,7 +67,8 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
   void _showError(DioException error) {
     final data = error.response?.data;
     final message = data is Map && data['error'] is Map
-        ? ((data['error'] as Map)['message'] ?? 'Something went wrong.').toString()
+        ? ((data['error'] as Map)['message'] ?? 'Something went wrong.')
+              .toString()
         : 'Something went wrong.';
     showModuleMessage(context, message);
   }
@@ -73,7 +79,10 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
     body: ListView(
       padding: const EdgeInsets.all(20),
       children: [
-        const Text('Change password', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+        const Text(
+          'Change password',
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+        ),
         const SizedBox(height: 12),
         TextField(
           controller: _currentController,
@@ -90,7 +99,10 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
         FilledButton(
           onPressed: _changingPassword ? null : _changePassword,
           child: _changingPassword
-              ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Text('Change password'),
         ),
         const SizedBox(height: 28),
@@ -122,13 +134,20 @@ class _SecurityPageState extends ConsumerState<SecurityPage> {
                     final isCurrent = session['is_current'] == true;
                     return InfoRow(
                       icon: Icons.smartphone_rounded,
-                      title: '${session['platform'] ?? 'Device'}${isCurrent ? ' (this device)' : ''}',
-                      subtitle: 'Last active ${session['last_seen_at'] ?? session['created_at']}',
-                      color: isCurrent ? const Color(0xff00a896) : const Color(0xff829ab1),
+                      title:
+                          '${session['platform'] ?? 'Device'}${isCurrent ? ' (this device)' : ''}',
+                      subtitle:
+                          'Last active ${session['last_seen_at'] ?? session['created_at']}',
+                      color: isCurrent
+                          ? const Color(0xff00a896)
+                          : const Color(0xff829ab1),
                       trailing: isCurrent
                           ? null
                           : _revokingId == id
-                          ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : IconButton(
                               onPressed: () => _revoke(id),
                               icon: const Icon(Icons.logout_rounded),

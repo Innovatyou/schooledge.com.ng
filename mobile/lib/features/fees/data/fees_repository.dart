@@ -8,10 +8,7 @@ final feeSummaryProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   final studentId = ref.watch(studentContextProvider);
   final response = await ref
       .watch(dioProvider)
-      .get(
-        'fees/summary',
-        queryParameters: {'student_id': ?studentId},
-      );
+      .get('fees/summary', queryParameters: {'student_id': ?studentId});
   return Map<String, dynamic>.from(response.data['data']);
 });
 
@@ -20,10 +17,7 @@ final feeHistoryProvider =
       final studentId = ref.watch(studentContextProvider);
       final response = await ref
           .watch(dioProvider)
-          .get(
-            'fees/history',
-            queryParameters: {'student_id': ?studentId},
-          );
+          .get('fees/history', queryParameters: {'student_id': ?studentId});
       return (response.data['data'] as List)
           .map((item) => Map<String, dynamic>.from(item))
           .toList();
@@ -41,7 +35,8 @@ final feeGatewaysProvider =
 /// thousand separators, e.g. "₦85,000.00".
 String formatMoney(num amount, Map<String, dynamic>? currency) {
   final symbol = (currency?['symbol'] ?? '').toString();
-  final position = int.tryParse(currency?['symbol_position']?.toString() ?? '1') ?? 1;
+  final position =
+      int.tryParse(currency?['symbol_position']?.toString() ?? '1') ?? 1;
   final parts = amount.toStringAsFixed(2).split('.');
   final whole = parts[0].replaceAllMapped(
     RegExp(r'\B(?=(\d{3})+(?!\d))'),

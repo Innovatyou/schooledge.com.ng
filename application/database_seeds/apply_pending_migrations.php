@@ -1463,4 +1463,121 @@ if (tableExists($m, 'book')) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 730: gamification - points ledger + badges catalog/awards.
+// Automatic points/badges for attendance streaks and on-time homework
+// submission (Attendance.php/Homework.php) - distinct from the manual,
+// one-off Award.php/award table, the two never overlap.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'schooledge_points_ledger')) {
+    $m->query("CREATE TABLE schooledge_points_ledger (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,branch_id INT NOT NULL,enroll_id INT NOT NULL,points INT NOT NULL,reason_code VARCHAR(40) NOT NULL,reason_label VARCHAR(150) NOT NULL,related_type VARCHAR(40) NOT NULL,related_id INT NOT NULL,created_at DATETIME NOT NULL,UNIQUE KEY uniq_award(enroll_id,reason_code,related_type,related_id),KEY idx_branch_enroll(branch_id,enroll_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "730: created schooledge_points_ledger table\n";
+}
+if (!tableExists($m, 'schooledge_badges')) {
+    $m->query("CREATE TABLE schooledge_badges (id INT AUTO_INCREMENT PRIMARY KEY,branch_id INT NULL,code VARCHAR(60) NOT NULL,name VARCHAR(120) NOT NULL,description VARCHAR(255) NOT NULL DEFAULT '',icon VARCHAR(60) NOT NULL DEFAULT '',UNIQUE KEY uniq_code(code)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    $m->query("INSERT INTO schooledge_badges (branch_id,code,name,description,icon) VALUES
+        (NULL,'streak_5','5-Day Streak','Present for 5 attendance records in a row.','local_fire_department'),
+        (NULL,'streak_10','10-Day Streak','Present for 10 attendance records in a row.','whatshot'),
+        (NULL,'streak_20','20-Day Streak','Present for 20 attendance records in a row.','military_tech'),
+        (NULL,'homework_ontime','On Time','Submitted a homework on or before its due date.','check_circle')");
+    echo "730: created schooledge_badges table and seeded 4 badges\n";
+}
+if (!tableExists($m, 'schooledge_student_badges')) {
+    $m->query("CREATE TABLE schooledge_student_badges (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,branch_id INT NOT NULL,enroll_id INT NOT NULL,badge_id INT NOT NULL,awarded_at DATETIME NOT NULL,UNIQUE KEY uniq_student_badge(enroll_id,badge_id),KEY idx_branch_enroll(branch_id,enroll_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "730: created schooledge_student_badges table\n";
+}
+
+// ---------------------------------------------------------------------
+// Migration 731: safety_alerts table - on-demand location share + SOS
+// panic button (Safety.php). Deliberately NOT continuous background
+// tracking - one GPS fix per share/SOS action.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'schooledge_safety_alerts')) {
+    $m->query("CREATE TABLE schooledge_safety_alerts (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,branch_id INT NOT NULL,sender_membership_id BIGINT UNSIGNED NOT NULL,sender_role_id TINYINT NOT NULL,sender_user_id INT NOT NULL,alert_type VARCHAR(10) NOT NULL,latitude DECIMAL(10,7) NOT NULL,longitude DECIMAL(10,7) NOT NULL,accuracy_meters FLOAT NULL,note VARCHAR(255) NULL,status VARCHAR(20) NOT NULL DEFAULT 'open',acknowledged_by_membership_id BIGINT UNSIGNED NULL,acknowledged_at DATETIME NULL,created_at DATETIME NOT NULL,KEY idx_branch_created(branch_id,created_at),KEY idx_sender(sender_role_id,sender_user_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "731: created schooledge_safety_alerts table\n";
+}
+
+// ---------------------------------------------------------------------
+// Migration 732: safety_alerts permission (module 606, standalone) +
+// admin view grant. Teacher/parent visibility in Safety::list() is via
+// class-assignment / linked-child instead of this permission.
+// ---------------------------------------------------------------------
+$safetyAlertsPermissionId = seedPermission($m, 606, 'Safety Alerts', 'safety_alerts', 1, 0, 0, 0);
+$safetyAlertsGrants = array(2 => [1, 0, 0, 0], 3 => [0, 0, 0, 0], 4 => [0, 0, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($safetyAlertsGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $safetyAlertsPermissionId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "732: seeded safety_alerts permission\n";
+
+// ---------------------------------------------------------------------
+// Migration 733: broadcast_group_id on `message` - ties together the N
+// per-student rows Messages::broadcast() inserts when a teacher messages
+// their whole class in one action, so the sender's "sent" view can show it
+// as one item. NULL for every ordinary 1:1 message.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'message') && !columnExists($m, 'message', 'broadcast_group_id')) {
+    $m->query("ALTER TABLE `message` ADD COLUMN `broadcast_group_id` VARCHAR(40) NULL AFTER `reciever`");
+    echo "733: added message.broadcast_group_id\n";
+}
+
+// ---------------------------------------------------------------------
+// Migration 734: audiobook support on `book`, mirroring migration 727's
+// ebook columns exactly - an optional media file per book, independent of
+// physical stock/issue status.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'book')) {
+    if (!columnExists($m, 'book', 'audiobook_file')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `audiobook_file` VARCHAR(255) NULL AFTER `ebook_uploaded_at`");
+        echo "734: added book.audiobook_file\n";
+    }
+    if (!columnExists($m, 'book', 'audiobook_original_name')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `audiobook_original_name` VARCHAR(255) NULL AFTER `audiobook_file`");
+        echo "734: added book.audiobook_original_name\n";
+    }
+    if (!columnExists($m, 'book', 'audiobook_uploaded_at')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `audiobook_uploaded_at` DATETIME NULL AFTER `audiobook_original_name`");
+        echo "734: added book.audiobook_uploaded_at\n";
+    }
+    if (!columnExists($m, 'book', 'audiobook_duration_seconds')) {
+        $m->query("ALTER TABLE `book` ADD COLUMN `audiobook_duration_seconds` INT NULL AFTER `audiobook_uploaded_at`");
+        echo "734: added book.audiobook_duration_seconds\n";
+    }
+}
+
+// ---------------------------------------------------------------------
+// Migration 735: classmate chat (Chat.php) - message content/typing/presence
+// live in Firestore, not here. These tables are the server-authoritative
+// pieces that must never be client-writable (blocks, reports, voice-note
+// file ownership), plus the chat_oversight permission gating who can view a
+// classroom's chat via the on-demand Firestore oversight read path.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'schooledge_chat_blocks')) {
+    $m->query("CREATE TABLE schooledge_chat_blocks (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,branch_id INT NOT NULL,blocker_membership_id BIGINT UNSIGNED NOT NULL,blocked_membership_id BIGINT UNSIGNED NOT NULL,created_at DATETIME NOT NULL,UNIQUE KEY uniq_block_pair(blocker_membership_id,blocked_membership_id),KEY idx_branch(branch_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "735: created schooledge_chat_blocks table\n";
+}
+if (!tableExists($m, 'schooledge_chat_reports')) {
+    $m->query("CREATE TABLE schooledge_chat_reports (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,branch_id INT NOT NULL,reporter_membership_id BIGINT UNSIGNED NOT NULL,reported_membership_id BIGINT UNSIGNED NOT NULL,conversation_id VARCHAR(60) NOT NULL,message_excerpt VARCHAR(500) NULL,status VARCHAR(20) NOT NULL DEFAULT 'open',created_at DATETIME NOT NULL,KEY idx_branch_created(branch_id,created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "735: created schooledge_chat_reports table\n";
+}
+if (!tableExists($m, 'schooledge_chat_voice_notes')) {
+    $m->query("CREATE TABLE schooledge_chat_voice_notes (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,branch_id INT NOT NULL,membership_id BIGINT UNSIGNED NOT NULL,conversation_id VARCHAR(60) NOT NULL,stored_file VARCHAR(255) NOT NULL,original_name VARCHAR(255) NULL,duration_ms INT NULL,created_at DATETIME NOT NULL,KEY idx_conversation(conversation_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "735: created schooledge_chat_voice_notes table\n";
+}
+$chatOversightPermissionId = seedPermission($m, 607, 'Chat Oversight', 'chat_oversight', 1, 0, 0, 0);
+$chatOversightGrants = array(2 => [1, 0, 0, 0], 3 => [0, 0, 0, 0], 4 => [0, 0, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($chatOversightGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $chatOversightPermissionId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "735: seeded chat_oversight permission\n";
+
+// ---------------------------------------------------------------------
+// Migration 736: classroom_key on schooledge_chat_voice_notes - lets
+// Chat::voiceNote() authorize an oversight-viewing teacher/admin without a
+// Firestore call, captured at upload time.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'schooledge_chat_voice_notes') && !columnExists($m, 'schooledge_chat_voice_notes', 'classroom_key')) {
+    $m->query("ALTER TABLE `schooledge_chat_voice_notes` ADD COLUMN `classroom_key` VARCHAR(40) NULL AFTER `conversation_id`");
+    echo "736: added schooledge_chat_voice_notes.classroom_key\n";
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

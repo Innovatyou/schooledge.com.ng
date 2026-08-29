@@ -26,13 +26,15 @@ class _PersonalInfoPageState extends ConsumerState<PersonalInfoPage> {
   Future<void> _save() async {
     setState(() => _saving = true);
     try {
-      await ref.read(dioProvider).patch(
-        'profile',
-        data: {
-          'email': _emailController.text.trim(),
-          'mobileno': _mobileController.text.trim(),
-        },
-      );
+      await ref
+          .read(dioProvider)
+          .patch(
+            'profile',
+            data: {
+              'email': _emailController.text.trim(),
+              'mobileno': _mobileController.text.trim(),
+            },
+          );
       ref.invalidate(profileProvider);
       if (mounted) {
         ScaffoldMessenger.of(context)
@@ -43,7 +45,8 @@ class _PersonalInfoPageState extends ConsumerState<PersonalInfoPage> {
       if (mounted) {
         final data = error.response?.data;
         final message = data is Map && data['error'] is Map
-            ? ((data['error'] as Map)['message'] ?? 'Could not update profile.').toString()
+            ? ((data['error'] as Map)['message'] ?? 'Could not update profile.')
+                  .toString()
             : 'Could not update profile.';
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -79,13 +82,17 @@ class _PersonalInfoPageState extends ConsumerState<PersonalInfoPage> {
             children: [
               TextField(
                 enabled: false,
-                controller: TextEditingController(text: data['name']?.toString() ?? ''),
+                controller: TextEditingController(
+                  text: data['name']?.toString() ?? '',
+                ),
                 decoration: const InputDecoration(labelText: 'Name'),
               ),
               const SizedBox(height: 16),
               TextField(
                 enabled: false,
-                controller: TextEditingController(text: data['username']?.toString() ?? ''),
+                controller: TextEditingController(
+                  text: data['username']?.toString() ?? '',
+                ),
                 decoration: const InputDecoration(labelText: 'Username'),
               ),
               const SizedBox(height: 16),
@@ -104,7 +111,10 @@ class _PersonalInfoPageState extends ConsumerState<PersonalInfoPage> {
               FilledButton(
                 onPressed: _saving ? null : _save,
                 child: _saving
-                    ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox.square(
+                        dimension: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
                     : const Text('Save changes'),
               ),
             ],

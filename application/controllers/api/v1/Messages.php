@@ -119,6 +119,44 @@ class Messages extends Api_Controller
         $this->ok($this->allowedContacts($membership));
     }
 
+    /**
+     * A teacher messaging every student in one of their own classes at once,
+     * instead of composing the same message N times by hand. Inserts one
+     * `message` row per student (this schema has no multi-recipient
+     * concept), tagged with a shared broadcast_group_id so the teacher's own
+     * sent view can recognise them as one action. Each student receives it
+     * exactly like any other message from that teacher - no reply-all, a
+     * reply only goes back to the teacher.
+     */
+    public function broadcast()
+    {
+        $membership = $this->requireAuth();
+        if ((int)$membership['role_id'] !== 3) $this->fail('role_not_supported', 'Only teachers can message a whole class.', 403);
+        $this->blockIfDemoReadonly($membership['branch_id']);
+
+        $classId = (int)$this->input->post('class_id');
+        $sectionId = (int)$this->input->post('section_id');
+        $subject = trim((string)$this->input->post('subject'));
+        $body = trim((string)$this->input->post('message'));
+        if (!$classId || !$sectionId || $subject === '' || $body === '') $this->fail('validation_error', 'class_id, section_id, subject and message are required.', 422);
+        $this->assertTeacherOwnsClass($membership, $classId, $sectionId);
+
+        $students = $this->classmatesOf($membership['branch_id'], $classId, $sectionId);
+        if (!$students) $this->fail('no_recipients', 'There are no students enrolled in this class.', 422);
+
+        $shared = array('sender' => $this->identityFor($membership), 'subject' => $subject, 'body' => $body, 'broadcast_group_id' => bin2hex(random_bytes(16)), 'created_at' => date('Y-m-d H:i:s'));
+        $this->attachIfPresent($shared);
+        foreach ($students as $student) {
+            $data = $shared;
+            $data['reciever'] = '7-' . $student['student_id'];
+            $this->db->insert('message', $data);
+            $messageId = $this->db->insert_id();
+            $this->notifyIdentity($membership['branch_id'], $data['reciever'], 'message', 'New class message: ' . $subject, $body, array('message_id' => $messageId));
+        }
+        $this->logAudit('message.broadcast', $membership, 'class', $classId, array('section_id' => $sectionId, 'recipient_count' => count($students)));
+        $this->ok(array('group_id' => $shared['broadcast_group_id'], 'recipient_count' => count($students)));
+    }
+
     /** Everyone can message school staff; a teacher can also message the students in their own classes. */
     private function allowedContacts(array $membership)
     {

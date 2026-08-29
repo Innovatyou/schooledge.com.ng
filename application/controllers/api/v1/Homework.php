@@ -11,6 +11,12 @@ require_once APPPATH . 'core/Api_Controller.php';
  */
 class Homework extends Api_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('gamification_model');
+    }
+
     public function index()
     {
         $membership = $this->requireAuth();
@@ -82,6 +88,11 @@ class Homework extends Api_Controller
             $this->db->where('id', $existing['id'])->update('homework_submit', $data);
         } else {
             $this->db->insert('homework_submit', $data);
+            // Points/badge only on the FIRST submission - a later resubmit-edit
+            // (e.g. fixing an attachment) must not re-check or re-award.
+            $submitId = (int)$this->db->insert_id();
+            $onTime = strtotime(date('Y-m-d')) <= strtotime($homework['date_of_submission']);
+            $this->gamification_model->onHomeworkSubmitted($membership['branch_id'], $enrollment['id'], $submitId, $onTime);
         }
         $this->logAudit('homework.submit', $membership, 'homework', $homework['id']);
         $this->ok(array('submitted' => true));

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/navigation/page_transitions.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/widgets/module_ui.dart';
+import '../../fees/presentation/fees_page.dart';
+import '../../messages/presentation/thread_page.dart';
 import '../data/notifications_repository.dart';
 
 class NotificationsPage extends ConsumerWidget {
@@ -53,9 +56,16 @@ class NotificationsPage extends ConsumerWidget {
                 color: read ? const Color(0xff829ab1) : const Color(0xff725cff),
                 onTap: () async {
                   if (!read) {
-                    await ref.read(dioProvider).post('notifications/${item['id']}/read');
+                    await ref
+                        .read(dioProvider)
+                        .post('notifications/${item['id']}/read');
                     ref.invalidate(notificationsProvider);
                     ref.invalidate(unreadCountProvider);
+                  }
+                  if (!context.mounted) return;
+                  final target = _targetFor(item);
+                  if (target != null) {
+                    Navigator.of(context).push(moduleRoute<void>(target));
                   }
                 },
               );
@@ -64,6 +74,20 @@ class NotificationsPage extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  // Only 'message' and 'payment' notifications currently carry a
+  // navigable id in their `data` payload (see Api_Controller::notifyMembership
+  // callers) - other categories mark-as-read only, same as before.
+  Widget? _targetFor(Map<String, dynamic> item) {
+    final data = item['data'] as Map<String, dynamic>?;
+    return switch (item['category']) {
+      'message' when data?['message_id'] != null => ThreadPage(
+        messageId: data!['message_id'] as int,
+      ),
+      'payment' => const FeesPage(),
+      _ => null,
+    };
   }
 
   IconData _iconFor(String? category) => switch (category) {

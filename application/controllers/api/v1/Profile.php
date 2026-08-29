@@ -26,6 +26,7 @@ class Profile extends Api_Controller
         $this->ok(array(
             'name' => $user['name'] ?? null, 'email' => $user['email'] ?? null,
             'mobileno' => $user['mobileno'] ?? null, 'photo' => $user['photo'] ?? null,
+            'photo_url' => get_image_url($this->photoRole($membership['role_id']), $user['photo'] ?? null),
             'username' => $credential->username,
         ));
     }
@@ -67,6 +68,38 @@ class Profile extends Api_Controller
         $this->db->where('id', $membership['login_credential_id'])->update('login_credential', array('password' => password_hash($new, PASSWORD_DEFAULT)));
         $this->logAudit('profile.password_changed', $membership);
         $this->ok(array('changed' => true));
+    }
+
+    public function upload_photo()
+    {
+        $membership = $this->requireAuth();
+        $this->blockIfDemoReadonly($membership['branch_id']);
+        if (empty($_FILES['user_photo']) || $_FILES['user_photo']['error'] !== UPLOAD_ERR_OK) {
+            $this->fail('photo_required', 'Choose a profile picture to upload.', 422);
+        }
+        $file = $_FILES['user_photo'];
+        if ((int)$file['size'] > 2097152) $this->fail('photo_too_large', 'Profile pictures must be 2 MB or smaller.', 422);
+        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($file['tmp_name']);
+        $extensions = array('image/jpeg'=>'jpg', 'image/png'=>'png', 'image/webp'=>'webp');
+        if (!isset($extensions[$mime])) $this->fail('invalid_photo', 'Use a JPG, PNG, or WebP image.', 422);
+
+        $role = $this->photoRole($membership['role_id']);
+        $table = $role === 'student' ? 'student' : ($role === 'parent' ? 'parent' : 'staff');
+        $directory = FCPATH . 'uploads/images/' . $role . '/';
+        if (!is_dir($directory) && !mkdir($directory, 0755, true)) $this->fail('upload_failed', 'Profile picture storage is unavailable.', 500);
+        $name = bin2hex(random_bytes(20)) . '.' . $extensions[$mime];
+        if (!move_uploaded_file($file['tmp_name'], $directory . $name)) $this->fail('upload_failed', 'The profile picture could not be saved.', 500);
+
+        $old = $this->db->select('photo')->where('id', $membership['user_id'])->get($table)->row_array();
+        if (!$this->db->where('id', $membership['user_id'])->update($table, array('photo'=>$name))) {
+            @unlink($directory . $name);
+            $this->fail('upload_failed', 'The profile picture could not be updated.', 500);
+        }
+        if (!empty($old['photo']) && $old['photo'] !== 'defualt.png' && is_file($directory . basename($old['photo']))) {
+            @unlink($directory . basename($old['photo']));
+        }
+        $this->logAudit('profile.photo_updated', $membership, $table, $membership['user_id']);
+        $this->ok(array('photo'=>$name, 'photo_url'=>get_image_url($role, $name)));
     }
 
     public function sessions()
@@ -119,5 +152,53 @@ class Profile extends Api_Controller
             'updated_at' => date('Y-m-d H:i:s'),
         ));
         $this->ok(array('registered' => true));
+    }
+
+    /**
+     * The in-app digital ID card: the same fields the admin's printable ID
+     * card template uses (see Card_manage_model::getStudent()), assembled
+     * here as JSON via resolveOwnedEnrollment() instead of that model's
+     * admin-scoped query, so a student/parent can only ever fetch their own
+     * card. Deliberately carries no QR of its own - the card embeds the
+     * existing rotating attendance pass (GET attendance/qr-token) instead of
+     * a second, static code, since a static ID-card QR would reintroduce the
+     * exact spoofing risk that token was built to prevent (see the docblock
+     * on Attendance::qr_token()).
+     */
+    public function id_card()
+    {
+        $membership = $this->requireAuth();
+        $enrollment = $this->resolveOwnedEnrollment($membership, $this->input->get('student_id'));
+        $row = $this->db->select('student.first_name,student.last_name,student.register_no,student.blood_group,student.photo,student_category.name as category_name,class.name as class_name,section.name as section_name,branch.school_name,branch.address,branch.mobileno')
+            ->from('enroll')
+            ->join('student', 'student.id = enroll.student_id', 'inner')
+            ->join('class', 'class.id = enroll.class_id', 'left')
+            ->join('section', 'section.id = enroll.section_id', 'left')
+            ->join('student_category', 'student_category.id = student.category_id', 'left')
+            ->join('branch', 'branch.id = enroll.branch_id', 'left')
+            ->where('enroll.id', $enrollment['id'])
+            ->get()->row_array();
+
+        $this->ok(array(
+            'enroll_id' => (int)$enrollment['id'],
+            'name' => trim($row['first_name'] . ' ' . $row['last_name']),
+            'photo_url' => get_image_url('student', $row['photo']),
+            'class_name' => $row['class_name'],
+            'section_name' => $row['section_name'],
+            'roll' => $enrollment['roll'],
+            'register_no' => $row['register_no'],
+            'blood_group' => $row['blood_group'],
+            'category' => $row['category_name'],
+            'school' => array(
+                'name' => $row['school_name'],
+                'address' => $row['address'],
+                'mobileno' => $row['mobileno'],
+            ),
+        ));
+    }
+
+    private function photoRole($roleId)
+    {
+        return (int)$roleId === 7 ? 'student' : ((int)$roleId === 6 ? 'parent' : 'staff');
     }
 }

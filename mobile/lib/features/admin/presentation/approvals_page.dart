@@ -25,13 +25,17 @@ class _ApprovalsPageState extends ConsumerState<ApprovalsPage> {
       if (mounted) {
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
-          ..showSnackBar(SnackBar(content: Text(approve ? 'Approved.' : 'Rejected.')));
+          ..showSnackBar(
+            SnackBar(content: Text(approve ? 'Approved.' : 'Rejected.')),
+          );
       }
     } on DioException catch (error) {
       if (mounted) {
         final data = error.response?.data;
         final message = data is Map && data['error'] is Map
-            ? ((data['error'] as Map)['message'] ?? 'Could not complete this action.').toString()
+            ? ((data['error'] as Map)['message'] ??
+                      'Could not complete this action.')
+                  .toString()
             : 'Could not complete this action.';
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -77,7 +81,10 @@ class _ApprovalsPageState extends ConsumerState<ApprovalsPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(item['title']?.toString() ?? '', style: const TextStyle(fontWeight: FontWeight.w900)),
+                      Text(
+                        item['title']?.toString() ?? '',
+                        style: const TextStyle(fontWeight: FontWeight.w900),
+                      ),
                       const SizedBox(height: 4),
                       Text(item['subtitle']?.toString() ?? ''),
                       const SizedBox(height: 4),

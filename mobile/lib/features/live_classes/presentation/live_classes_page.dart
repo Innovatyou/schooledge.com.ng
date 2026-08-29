@@ -78,9 +78,7 @@ class _LiveClassesPageState extends ConsumerState<LiveClassesPage> {
   Future<void> _join(BuildContext context, int id) async {
     setState(() => _joining = id);
     try {
-      final response = await ref
-          .read(dioProvider)
-          .get('live-classes/$id/join');
+      final response = await ref.read(dioProvider).get('live-classes/$id/join');
       final data = Map<String, dynamic>.from(response.data['data']);
       final joinUrl = data['join_url'] as String?;
       if (joinUrl == null) {
@@ -94,7 +92,8 @@ class _LiveClassesPageState extends ConsumerState<LiveClassesPage> {
       if (context.mounted) {
         final data = error.response?.data;
         final message = data is Map && data['error'] is Map
-            ? ((data['error'] as Map)['message'] ?? 'Could not join this class.')
+            ? ((data['error'] as Map)['message'] ??
+                      'Could not join this class.')
                   .toString()
             : 'Could not join this class.';
         showModuleMessage(context, message);

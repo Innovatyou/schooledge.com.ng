@@ -8,11 +8,11 @@ final profileProvider = FutureProvider.autoDispose<Map<String, dynamic>>((
   return Map<String, dynamic>.from(response.data['data']);
 });
 
-final sessionsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
-  ref,
-) async {
-  final response = await ref.watch(dioProvider).get('profile/sessions');
-  return (response.data['data'] as List)
-      .map((item) => Map<String, dynamic>.from(item))
-      .toList();
-});
+final sessionsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
+  (ref) async {
+    final response = await ref.watch(dioProvider).get('profile/sessions');
+    return (response.data['data'] as List)
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  },
+);

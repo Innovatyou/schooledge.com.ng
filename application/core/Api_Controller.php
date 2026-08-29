@@ -151,11 +151,12 @@ class Api_Controller extends CI_Controller
         ));
     }
 
-    protected function logAudit($action, array $membership, $resourceType = null, $resourceId = null)
+    protected function logAudit($action, array $membership, $resourceType = null, $resourceId = null, $metadata = null)
     {
         $this->db->insert('mobile_audit_log', array(
             'membership_id' => $membership['id'], 'branch_id' => $membership['branch_id'], 'action' => $action,
             'resource_type' => $resourceType, 'resource_id' => $resourceId,
+            'metadata_json' => $metadata !== null ? json_encode($metadata) : null,
             'ip_address' => $this->input->ip_address(), 'user_agent' => substr((string)$this->input->user_agent(), 0, 255),
             'created_at' => date('Y-m-d H:i:s'),
         ));
@@ -169,17 +170,17 @@ class Api_Controller extends CI_Controller
      * in per mobile/docs/firebase-setup.md), Fcm_push::send() no-ops and only the
      * in-app inbox row is written, so this is always safe to call.
      */
-    protected function notifyMembership($membershipId, $branchId, $category, $title, $body, $data = null)
+    protected function notifyMembership($membershipId, $branchId, $category, $title, $body, $data = null, $bypassPreference = false)
     {
         $pref = $this->db->where(array('membership_id' => $membershipId, 'category' => $category))->get('mobile_notification_preferences')->row_array();
-        if ($pref && !$pref['inbox_enabled']) return;
+        if (!$bypassPreference && $pref && !$pref['inbox_enabled']) return;
         $this->db->insert('mobile_notification_inbox', array(
             'membership_id' => $membershipId, 'branch_id' => $branchId, 'category' => $category,
             'title' => $title, 'body' => $body, 'data_json' => $data !== null ? json_encode($data) : null,
             'created_at' => date('Y-m-d H:i:s'),
         ));
 
-        if ($pref && !$pref['push_enabled']) return;
+        if (!$bypassPreference && $pref && !$pref['push_enabled']) return;
         $this->load->library('fcm_push');
         if (!$this->fcm_push->isConfigured()) return;
         $devices = $this->db->select('push_token')
@@ -191,14 +192,21 @@ class Api_Controller extends CI_Controller
         }
     }
 
-    /** Same as notifyMembership(), but resolves the recipient from a "{role_id}-{user_id}" identity (e.g. a message's `reciever` column) instead of a membership id directly. */
-    protected function notifyIdentity($branchId, $identity, $category, $title, $body, $data = null)
+    /**
+     * Same as notifyMembership(), but resolves the recipient from a
+     * "{role_id}-{user_id}" identity (e.g. a message's `reciever` column)
+     * instead of a membership id directly. $bypassPreference is for SOS
+     * alerts (Safety::submit()) - a muted-notifications viewer must not
+     * silently miss a panic alert, unlike an ordinary "share my location"
+     * notice which still respects it.
+     */
+    protected function notifyIdentity($branchId, $identity, $category, $title, $body, $data = null, $bypassPreference = false)
     {
         $parts = explode('-', (string)$identity, 2);
         if (count($parts) !== 2) return;
         $membership = $this->db->where(array('branch_id' => $branchId, 'role_id' => (int)$parts[0], 'user_id' => (int)$parts[1], 'status' => 'active'))->get('mobile_memberships')->row_array();
         if (!$membership) return; // this person has no active mobile membership to notify
-        $this->notifyMembership($membership['id'], $branchId, $category, $title, $body, $data);
+        $this->notifyMembership($membership['id'], $branchId, $category, $title, $body, $data, $bypassPreference);
     }
 
     /**
@@ -218,5 +226,65 @@ class Api_Controller extends CI_Controller
             ->where(array('staff_privileges.role_id' => (int)$roleId, 'permission.prefix' => $prefix))
             ->get()->row_array();
         return $row && (int)$row['allowed'] === 1;
+    }
+
+    /**
+     * Every class+section a teacher actually teaches, via homeroom
+     * (teacher_allocation) or any subject (subject_assign) - never an
+     * arbitrary class a client claims. Shared by Attendance (capture/roster/
+     * scan), Timetable (exam schedule), and Safety (alert visibility) so
+     * "teachers only act on their own assigned classes" is enforced the same
+     * way everywhere instead of re-derived per controller.
+     */
+    protected function teacherClasses(array $membership)
+    {
+        $rows = $this->db->select('teacher_allocation.class_id,teacher_allocation.section_id,class.name as class_name,section.name as section_name')
+            ->from('teacher_allocation')
+            ->join('class', 'class.id = teacher_allocation.class_id', 'inner')
+            ->join('section', 'section.id = teacher_allocation.section_id', 'inner')
+            ->where(array('teacher_allocation.teacher_id' => $membership['user_id'], 'teacher_allocation.branch_id' => $membership['branch_id']))
+            ->get()->result_array();
+        $rows = array_merge($rows, $this->db->select('subject_assign.class_id,subject_assign.section_id,class.name as class_name,section.name as section_name')
+            ->from('subject_assign')
+            ->join('class', 'class.id = subject_assign.class_id', 'inner')
+            ->join('section', 'section.id = subject_assign.section_id', 'inner')
+            ->where(array('subject_assign.teacher_id' => $membership['user_id'], 'subject_assign.branch_id' => $membership['branch_id']))
+            ->get()->result_array());
+
+        $seen = array();
+        $unique = array();
+        foreach ($rows as $row) {
+            $key = $row['class_id'] . '-' . $row['section_id'];
+            if (isset($seen[$key])) continue;
+            $seen[$key] = true;
+            $unique[] = array('class_id' => (int)$row['class_id'], 'section_id' => (int)$row['section_id'], 'class_name' => $row['class_name'], 'section_name' => $row['section_name']);
+        }
+        return $unique;
+    }
+
+    protected function assertTeacherOwnsClass(array $membership, $classId, $sectionId)
+    {
+        foreach ($this->teacherClasses($membership) as $row) {
+            if ($row['class_id'] === (int)$classId && $row['section_id'] === (int)$sectionId) return;
+        }
+        $this->fail('class_not_assigned', 'You are not assigned to this class.', 403);
+    }
+
+    /**
+     * Every currently-enrolled student in one class+section, branch-scoped.
+     * The canonical "who's in this class" query, previously duplicated ad
+     * hoc in Messages::allowedContacts(), Attendance::roster(),
+     * Gamification_model::leaderboard() and Safety's teacher-scope lookup -
+     * centralized here so new callers (Messages::broadcast(), the classmate
+     * chat controller) don't re-derive it a fifth time. Pass $excludeStudentId
+     * to omit one student (e.g. the caller themself) from the result.
+     */
+    protected function classmatesOf($branchId, $classId, $sectionId, $excludeStudentId = null)
+    {
+        $this->db->select('student.id as student_id, CONCAT_WS(" ",student.first_name,student.last_name) as name')
+            ->from('enroll')->join('student', 'student.id = enroll.student_id', 'inner')
+            ->where(array('enroll.branch_id' => $branchId, 'enroll.class_id' => (int)$classId, 'enroll.section_id' => (int)$sectionId, 'enroll.is_alumni' => 0));
+        if ($excludeStudentId !== null) $this->db->where('student.id !=', (int)$excludeStudentId);
+        return $this->db->order_by('student.first_name', 'asc')->get()->result_array();
     }
 }

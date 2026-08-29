@@ -12,6 +12,12 @@ require_once APPPATH . 'core/Api_Controller.php';
  */
 class Attendance extends Api_Controller
 {
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('gamification_model');
+    }
+
     public function summary()
     {
         $membership = $this->requireAuth();
@@ -92,48 +98,115 @@ class Attendance extends Api_Controller
             $remark = isset($entry['remark']) ? (string)$entry['remark'] : null;
 
             $existing = $this->db->where(array('enroll_id' => $enrollId, 'date' => $date, 'branch_id' => $membership['branch_id']))->get('student_attendance')->row_array();
+            $wasPresent = $existing && $existing['status'] === 'P';
             if ($existing) {
                 $this->db->where('id', $existing['id'])->update('student_attendance', array('status' => $status, 'remark' => $remark));
+                $attendanceId = (int)$existing['id'];
             } else {
                 $this->db->insert('student_attendance', array('enroll_id' => $enrollId, 'date' => $date, 'status' => $status, 'remark' => $remark, 'branch_id' => $membership['branch_id']));
+                $attendanceId = (int)$this->db->insert_id();
             }
             $saved++;
+            if ($status === 'P' && !$wasPresent) {
+                $this->gamification_model->onAttendancePresent($membership['branch_id'], $enrollId, $attendanceId);
+            }
         }
         $this->logAudit('attendance.capture', $membership, 'class', $classId . '-' . $sectionId . '-' . $date);
         $this->ok(array('saved' => $saved, 'date' => $date));
     }
 
-    private function teacherClasses(array $membership)
+    /**
+     * A student's (or a parent's linked child's) own rotating attendance
+     * pass - a signed, short-lived token binding enroll_id+branch_id, no DB
+     * row involved (nothing to look up or invalidate, it just expires).
+     * Never a bare id in the QR the way the old unfinished ID-card "QR
+     * attendance" addon option would have been (application/models/
+     * Card_manage_model.php's base64("s-{enroll_id}") - unsigned, no
+     * expiry, never actually consumed anywhere) - the whole point of
+     * signing + a ~20s expiry is that a photo of the screen goes stale
+     * almost immediately, so the client re-fetches a fresh token every
+     * ~15s to keep the on-screen code rotating.
+     */
+    public function qr_token()
     {
-        $rows = $this->db->select('teacher_allocation.class_id,teacher_allocation.section_id,class.name as class_name,section.name as section_name')
-            ->from('teacher_allocation')
-            ->join('class', 'class.id = teacher_allocation.class_id', 'inner')
-            ->join('section', 'section.id = teacher_allocation.section_id', 'inner')
-            ->where(array('teacher_allocation.teacher_id' => $membership['user_id'], 'teacher_allocation.branch_id' => $membership['branch_id']))
-            ->get()->result_array();
-        $rows = array_merge($rows, $this->db->select('subject_assign.class_id,subject_assign.section_id,class.name as class_name,section.name as section_name')
-            ->from('subject_assign')
-            ->join('class', 'class.id = subject_assign.class_id', 'inner')
-            ->join('section', 'section.id = subject_assign.section_id', 'inner')
-            ->where(array('subject_assign.teacher_id' => $membership['user_id'], 'subject_assign.branch_id' => $membership['branch_id']))
-            ->get()->result_array());
-
-        $seen = array();
-        $unique = array();
-        foreach ($rows as $row) {
-            $key = $row['class_id'] . '-' . $row['section_id'];
-            if (isset($seen[$key])) continue;
-            $seen[$key] = true;
-            $unique[] = array('class_id' => (int)$row['class_id'], 'section_id' => (int)$row['section_id'], 'class_name' => $row['class_name'], 'section_name' => $row['section_name']);
-        }
-        return $unique;
+        $membership = $this->requireAuth();
+        $enrollment = $this->resolveOwnedEnrollment($membership, $this->input->get('student_id'));
+        $exp = time() + 20;
+        $token = $this->signQrClaims(array('eid' => (int)$enrollment['id'], 'bid' => (int)$membership['branch_id'], 'exp' => $exp));
+        $this->ok(array(
+            'token' => $token, 'expires_at' => date('c', $exp),
+            'student' => array('id' => (int)$enrollment['student_id'], 'name' => $enrollment['student_name']),
+        ));
     }
 
-    private function assertTeacherOwnsClass(array $membership, $classId, $sectionId)
+    /**
+     * Teacher scans a student's rotating QR pass to mark them present for
+     * today, without needing to pick a class/section first - the class is
+     * derived from the scanned enrollment itself, then checked against
+     * assertTeacherOwnsClass() exactly like capture() does, so a teacher
+     * can never mark a student outside their own assigned classes just by
+     * scanning a code (the token proves *which student*, never *permission
+     * to mark them* - that's still re-derived server-side every time).
+     */
+    public function scan()
     {
-        foreach ($this->teacherClasses($membership) as $row) {
-            if ($row['class_id'] === (int)$classId && $row['section_id'] === (int)$sectionId) return;
+        $membership = $this->requireAuth();
+        if ((int)$membership['role_id'] !== 3) $this->fail('role_not_supported', 'Scanning attendance QR codes is available to teachers.', 403);
+        $this->blockIfDemoReadonly($membership['branch_id']);
+        $input = $this->body();
+        $claims = $this->verifyQrToken((string)($input['token'] ?? ''));
+        if (!$claims) $this->fail('invalid_qr', 'This QR code has expired or is invalid. Ask the student to refresh it and try again.', 422);
+        if ((int)$claims['bid'] !== (int)$membership['branch_id']) $this->fail('student_not_found', 'This QR code belongs to a different school.', 404);
+
+        $enrollment = $this->db->select('enroll.id,enroll.class_id,enroll.section_id,student.id as student_id,CONCAT_WS(" ",student.first_name,student.last_name) as name,enroll.roll')
+            ->from('enroll')->join('student', 'student.id = enroll.student_id', 'inner')
+            ->where(array('enroll.id' => (int)$claims['eid'], 'enroll.branch_id' => $membership['branch_id'], 'enroll.is_alumni' => 0))
+            ->get()->row_array();
+        if (!$enrollment) $this->fail('student_not_found', 'This student is no longer enrolled here.', 404);
+        $this->assertTeacherOwnsClass($membership, $enrollment['class_id'], $enrollment['section_id']);
+
+        $date = date('Y-m-d');
+        $existing = $this->db->where(array('enroll_id' => $enrollment['id'], 'date' => $date, 'branch_id' => $membership['branch_id']))->get('student_attendance')->row_array();
+        $alreadyMarked = $existing && $existing['status'] === 'P';
+        if ($existing) {
+            if (!$alreadyMarked) $this->db->where('id', $existing['id'])->update('student_attendance', array('status' => 'P', 'remark' => null));
+            $attendanceId = (int)$existing['id'];
+        } else {
+            $this->db->insert('student_attendance', array('enroll_id' => $enrollment['id'], 'date' => $date, 'status' => 'P', 'remark' => null, 'branch_id' => $membership['branch_id']));
+            $attendanceId = (int)$this->db->insert_id();
         }
-        $this->fail('class_not_assigned', 'You are not assigned to this class.', 403);
+        if (!$alreadyMarked) {
+            $this->gamification_model->onAttendancePresent($membership['branch_id'], $enrollment['id'], $attendanceId);
+        }
+        $this->logAudit('attendance.qr_scan', $membership, 'enroll', $enrollment['id']);
+        $this->ok(array(
+            'marked' => true, 'already_marked' => $alreadyMarked, 'date' => $date,
+            'student' => array('id' => (int)$enrollment['student_id'], 'name' => $enrollment['name'], 'roll' => $enrollment['roll']),
+        ));
     }
+
+    private function signQrClaims(array $claims)
+    {
+        $payload = $this->b64url(json_encode($claims));
+        return $payload . '.' . $this->b64url(hash_hmac('sha256', $payload, $this->qrTokenKey(), true));
+    }
+
+    private function verifyQrToken($token)
+    {
+        $parts = explode('.', (string)$token);
+        if (count($parts) !== 2) return null;
+        if (!hash_equals($this->b64url(hash_hmac('sha256', $parts[0], $this->qrTokenKey(), true)), $parts[1])) return null;
+        $claims = json_decode($this->unb64url($parts[0]), true);
+        if (!is_array($claims) || empty($claims['exp']) || empty($claims['eid']) || empty($claims['bid'])) return null;
+        return $claims['exp'] >= time() ? $claims : null;
+    }
+
+    /** Domain-separated from Api_Controller::tokenKey() (real access tokens) so a QR pass can never be substituted for a bearer token or vice versa. */
+    private function qrTokenKey()
+    {
+        return hash('sha256', 'mobile-attendance-qr|' . (string)config_item('encryption_key'), true);
+    }
+
+    private function b64url($value) { return rtrim(strtr(base64_encode($value), '+/', '-_'), '='); }
+    private function unb64url($value) { return base64_decode(strtr($value, '-_', '+/')); }
 }

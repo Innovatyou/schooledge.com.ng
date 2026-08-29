@@ -73,6 +73,49 @@ this hasn't been exercised on a real device/emulator inside this environment.
   `notification` payload with zero extra code - only an in-foreground toast is
   missing).
 
+## Classmate chat (Firestore)
+
+Classmate chat (`Chat.php`, `mobile/lib/features/classmate_chat/`) uses two
+Firebase products that push notifications never needed: **Firestore** (message
+content, conversations, typing status - written directly by the Flutter
+client for instant delivery) and **Firebase Auth custom tokens** (so the app
+can sign in to Firestore using its own bearer-token identity, without a
+second real login system - minted server-side by
+`application/libraries/Firebase_auth_token.php`, reusing the exact same
+service-account key `Fcm_push` already uses).
+
+**Custom-token minting itself needs no setup beyond the existing service
+account file** - it's pure local JWT signing, no network call, and was
+verified live against the real `schooledgeapp` project while building this
+feature (`Chat::token()` returns a correctly-shaped, correctly-signed token
+today). What's NOT enabled yet:
+
+1. **Enable Cloud Firestore** for the `schooledgeapp` project: [Firebase
+   console](https://console.firebase.google.com/project/schooledgeapp/firestore)
+   → Create database → **Native mode** → any region. Confirmed via a live
+   call while building this feature: Firestore currently returns `403
+   PERMISSION_DENIED` / `SERVICE_DISABLED` for this project - every chat
+   endpoint that touches Firestore (`Chat::oversight()`, and the block/unblock
+   mirror) degrades gracefully in the meantime (same not-yet-configured
+   philosophy as `Fcm_push`), but the Flutter app's own direct Firestore
+   reads/writes (actual message sending) will fail client-side until this is
+   done. The Spark (free) plan's quota is expected to be more than enough for
+   this feature - no Blaze/billing upgrade needed.
+2. **Deploy the Security Rules** at `firestore.rules` (repo root) via the
+   Firebase CLI: `firebase deploy --only firestore:rules --project
+   schooledgeapp` (requires `firebase login` once, interactively - not
+   something this environment can do). Validate the rules in the console's
+   Rules Playground or the Firebase Emulator Suite's rules test harness
+   before relying on them in production; they haven't been runtime-tested
+   here since no live Firestore project is enabled to test against yet.
+3. Once both are done, mint a token via a logged-in student
+   (`POST chat/token`) and exercise `signInWithCustomToken` +
+   a Firestore read/write from the app to confirm the whole chain end-to-end.
+
+No new Android/iOS config is needed for either product - both ride on the
+same `google-services.json`/`GoogleService-Info.plist` already in place for
+push, since they're the same Firebase project/app registration.
+
 ## Local/CI environment variables
 
 None of the backend or Flutter code reads Firebase credentials from environment

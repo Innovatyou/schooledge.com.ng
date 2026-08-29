@@ -32,8 +32,14 @@ class _BroadcastPageState extends ConsumerState<BroadcastPage> {
         title: const Text('Send broadcast?'),
         content: Text('This will notify everyone at your school:\n\n"$title"'),
         actions: [
-          TextButton(onPressed: () => Navigator.of(dialogContext).pop(false), child: const Text('Cancel')),
-          FilledButton(onPressed: () => Navigator.of(dialogContext).pop(true), child: const Text('Send')),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('Send'),
+          ),
         ],
       ),
     );
@@ -41,14 +47,17 @@ class _BroadcastPageState extends ConsumerState<BroadcastPage> {
 
     setState(() => _sending = true);
     try {
-      await ref.read(dioProvider).post('admin/broadcast', data: {'title': title, 'body': body});
+      await ref
+          .read(dioProvider)
+          .post('admin/broadcast', data: {'title': title, 'body': body});
       ref.invalidate(upcomingEventsProvider);
       if (mounted) Navigator.of(context).pop();
     } on DioException catch (error) {
       if (mounted) {
         final data = error.response?.data;
         final message = data is Map && data['error'] is Map
-            ? ((data['error'] as Map)['message'] ?? 'Could not send broadcast.').toString()
+            ? ((data['error'] as Map)['message'] ?? 'Could not send broadcast.')
+                  .toString()
             : 'Could not send broadcast.';
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
@@ -84,7 +93,10 @@ class _BroadcastPageState extends ConsumerState<BroadcastPage> {
         FilledButton.icon(
           onPressed: _sending ? null : _send,
           icon: _sending
-              ? const SizedBox.square(dimension: 18, child: CircularProgressIndicator(strokeWidth: 2))
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Icon(Icons.campaign_rounded),
           label: const Text('Send broadcast'),
         ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../../core/widgets/module_ui.dart';
@@ -64,7 +65,8 @@ class _ResultsPageState extends ConsumerState<ResultsPage> {
                               ),
                             )
                             .toList(),
-                        onChanged: (value) => setState(() => _selectedExamId = value),
+                        onChanged: (value) =>
+                            setState(() => _selectedExamId = value),
                       ),
                     ),
                   _buildExamBreakdown(examId),
@@ -94,7 +96,8 @@ class _ResultsPageState extends ConsumerState<ResultsPage> {
           ),
           data: (result) {
             final average = result['average_percent'] as num?;
-            final subjects = (result['subjects'] as List).cast<Map<String, dynamic>>();
+            final subjects = (result['subjects'] as List)
+                .cast<Map<String, dynamic>>();
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -126,7 +129,10 @@ class _ResultsPageState extends ConsumerState<ResultsPage> {
                           children: [
                             Text(
                               result['exam']?['name']?.toString() ?? 'Exam',
-                              style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w900,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
@@ -151,11 +157,13 @@ class _ResultsPageState extends ConsumerState<ResultsPage> {
                     trailing: SizedBox.shrink(),
                   )
                 else
-                  ...subjects.map(
-                    (subject) => _SubjectResult(
-                      name: subject['name']?.toString() ?? 'Subject',
-                      percent: (subject['percent'] as num?)?.toDouble(),
-                      grade: (subject['grade'] as Map?)?['name']?.toString(),
+                  ...subjects.asMap().entries.map(
+                    (entry) => _SubjectResult(
+                      name: entry.value['name']?.toString() ?? 'Subject',
+                      percent: (entry.value['percent'] as num?)?.toDouble(),
+                      grade: (entry.value['grade'] as Map?)?['name']
+                          ?.toString(),
+                      index: entry.key,
                     ),
                   ),
               ],
@@ -166,10 +174,16 @@ class _ResultsPageState extends ConsumerState<ResultsPage> {
 }
 
 class _SubjectResult extends StatelessWidget {
-  const _SubjectResult({required this.name, required this.percent, this.grade});
+  const _SubjectResult({
+    required this.name,
+    required this.percent,
+    this.grade,
+    this.index = 0,
+  });
   final String name;
   final double? percent;
   final String? grade;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -181,32 +195,44 @@ class _SubjectResult extends StatelessWidget {
     };
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
-      child: DepthCard(
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(name, style: const TextStyle(fontWeight: FontWeight.w900)),
-                Text(
-                  percent != null ? '${percent!.toStringAsFixed(0)}%${grade != null ? ' · $grade' : ''}' : '-',
-                  style: TextStyle(fontWeight: FontWeight.w900, color: color),
+      child:
+          DepthCard(
+                child: Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          name,
+                          style: const TextStyle(fontWeight: FontWeight.w900),
+                        ),
+                        Text(
+                          percent != null
+                              ? '${percent!.toStringAsFixed(0)}%${grade != null ? ' · $grade' : ''}'
+                              : '-',
+                          style: TextStyle(
+                            fontWeight: FontWeight.w900,
+                            color: color,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 11),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: LinearProgressIndicator(
+                        value: (percent ?? 0) / 100,
+                        minHeight: 9,
+                        backgroundColor: color.withValues(alpha: .12),
+                        color: color,
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(10),
-              child: LinearProgressIndicator(
-                value: (percent ?? 0) / 100,
-                minHeight: 9,
-                backgroundColor: color.withValues(alpha: .12),
-                color: color,
-              ),
-            ),
-          ],
-        ),
-      ),
+              )
+              .animate(delay: (index * 50).ms)
+              .fadeIn(duration: 300.ms)
+              .slideX(begin: .05, end: 0),
     );
   }
 }

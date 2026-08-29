@@ -4,8 +4,14 @@ import 'package:intl/intl.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../../core/widgets/module_ui.dart';
 import '../data/events_repository.dart';
+import '../data/exam_calendar_repository.dart';
 import '../data/timetable_repository.dart';
+import '../data/todo_local_store.dart';
+import 'calendar_month_page.dart';
 import 'event_detail_page.dart';
+import 'exam_calendar_page.dart';
+import 'todo_list_page.dart';
+import '../../../core/navigation/page_transitions.dart';
 
 class PlannerPage extends ConsumerStatefulWidget {
   const PlannerPage({super.key});
@@ -18,7 +24,9 @@ class _PlannerPageState extends ConsumerState<PlannerPage> {
 
   @override
   Widget build(BuildContext context) {
-    final weekStart = _selectedDate.subtract(Duration(days: _selectedDate.weekday % 7));
+    final weekStart = _selectedDate.subtract(
+      Duration(days: _selectedDate.weekday % 7),
+    );
     final weekday = DateFormat('EEEE').format(_selectedDate).toLowerCase();
     final timetable = ref.watch(timetableProvider(weekday));
 
@@ -87,6 +95,48 @@ class _PlannerPageState extends ConsumerState<PlannerPage> {
             },
           ),
         ),
+        InfoRow(
+          icon: Icons.calendar_month_rounded,
+          title: 'Month view',
+          subtitle: 'Classes, exams and events in one calendar',
+          color: const Color(0xff2a9d8f),
+          onTap: () => Navigator.of(
+            context,
+          ).push(moduleRoute<void>(const CalendarMonthPage())),
+        ),
+        InfoRow(
+          icon: Icons.checklist_rounded,
+          title: 'My tasks',
+          subtitle: () {
+            final pending = ref
+                .watch(todoListProvider)
+                .where((item) => !item.done)
+                .length;
+            return pending == 0
+                ? 'Your personal to-do list'
+                : '$pending pending task${pending == 1 ? '' : 's'}';
+          }(),
+          color: const Color(0xff725cff),
+          onTap: () => Navigator.of(
+            context,
+          ).push(moduleRoute<void>(const TodoListPage())),
+        ),
+        InfoRow(
+          icon: Icons.event_note_rounded,
+          title: 'Exam calendar',
+          subtitle: ref
+              .watch(examCalendarProvider)
+              .maybeWhen(
+                data: (exams) => exams.isEmpty
+                    ? 'No exams scheduled yet'
+                    : '${exams.length} upcoming exam${exams.length == 1 ? '' : 's'}',
+                orElse: () => 'View your exam schedule',
+              ),
+          color: const Color(0xffffa62b),
+          onTap: () => Navigator.of(
+            context,
+          ).push(moduleRoute<void>(const ExamCalendarPage())),
+        ),
         const SectionTitle('Schedule'),
         timetable.when(
           loading: () => const Padding(
@@ -101,7 +151,8 @@ class _PlannerPageState extends ConsumerState<PlannerPage> {
             onTap: () => ref.invalidate(timetableProvider(weekday)),
           ),
           data: (data) {
-            final periods = (data['periods'] as List).cast<Map<String, dynamic>>();
+            final periods = (data['periods'] as List)
+                .cast<Map<String, dynamic>>();
             if (periods.isEmpty) {
               return const InfoRow(
                 icon: Icons.free_breakfast_rounded,
@@ -118,11 +169,15 @@ class _PlannerPageState extends ConsumerState<PlannerPage> {
                   time: period['time_start'] as String,
                   title: period['subject'] as String,
                   subtitle: [
-                    if (period['class_name'] != null) period['class_name'] as String,
-                    if (period['room'] != null && (period['room'] as String).isNotEmpty)
+                    if (period['class_name'] != null)
+                      period['class_name'] as String,
+                    if (period['room'] != null &&
+                        (period['room'] as String).isNotEmpty)
                       period['room'] as String,
                   ].join(' · '),
-                  color: isBreak ? const Color(0xff829ab1) : const Color(0xff725cff),
+                  color: isBreak
+                      ? const Color(0xff829ab1)
+                      : const Color(0xff725cff),
                 );
               }).toList(),
             );
@@ -148,7 +203,8 @@ class _PlannerPageState extends ConsumerState<PlannerPage> {
                   return const InfoRow(
                     icon: Icons.event_available_rounded,
                     title: 'No upcoming events',
-                    subtitle: 'Announcements from your school will appear here.',
+                    subtitle:
+                        'Announcements from your school will appear here.',
                     color: Color(0xff829ab1),
                     trailing: SizedBox.shrink(),
                   );
@@ -162,8 +218,8 @@ class _PlannerPageState extends ConsumerState<PlannerPage> {
                           '${event['start_date'] ?? ''}${event['type'] != null ? ' · ${event['type']}' : ''}',
                       color: const Color(0xffffa62b),
                       onTap: () => Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => EventDetailPage(
+                        moduleRoute<void>(
+                          EventDetailPage(
                             eventId: event['id'] as int,
                             initial: event,
                           ),

@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../../core/widgets/module_ui.dart';
+import '../../classmate_chat/presentation/chat_oversight_page.dart';
 import '../data/admin_repository.dart';
 import 'approvals_page.dart';
 import 'broadcast_page.dart';
 import 'lookup_page.dart';
+import '../../../core/navigation/page_transitions.dart';
 
 class AdminDashboardPage extends ConsumerWidget {
   const AdminDashboardPage({super.key});
@@ -80,27 +82,36 @@ class AdminDashboardPage extends ConsumerWidget {
                     title: 'Approvals',
                     subtitle: '${summary['pending_approvals']} pending',
                     color: const Color(0xff168aad),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const ApprovalsPage()),
-                    ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(moduleRoute<void>(const ApprovalsPage())),
                   ),
                   InfoRow(
                     icon: Icons.campaign_rounded,
                     title: 'Broadcast announcement',
                     subtitle: 'Send a school-wide message',
                     color: const Color(0xffd64545),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const BroadcastPage()),
-                    ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(moduleRoute<void>(const BroadcastPage())),
                   ),
                   InfoRow(
                     icon: Icons.search_rounded,
                     title: 'Lookup',
                     subtitle: 'Find a student, staff member or parent',
                     color: const Color(0xff725cff),
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const LookupPage()),
-                    ),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(moduleRoute<void>(const LookupPage())),
+                  ),
+                  InfoRow(
+                    icon: Icons.shield_rounded,
+                    title: 'Chat oversight',
+                    subtitle: 'Review classmate chat activity by class',
+                    color: const Color(0xff00a896),
+                    onTap: () => Navigator.of(
+                      context,
+                    ).push(moduleRoute<void>(const ChatOversightPage())),
                   ),
                 ],
               );

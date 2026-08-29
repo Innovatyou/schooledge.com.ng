@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'aurora_background.dart';
 import 'depth_card.dart';
+import 'parallax_header.dart';
 
 class ModulePage extends StatelessWidget {
   const ModulePage({
@@ -26,32 +28,36 @@ class ModulePage extends StatelessWidget {
           automaticallyImplyLeading: showBack,
           expandedHeight: 190,
           pinned: true,
+          stretch: true,
+          stretchTriggerOffset: 120,
+          onStretchTrigger: () async {},
           foregroundColor: Colors.white,
           flexibleSpace: FlexibleSpaceBar(
+            stretchModes: const [
+              StretchMode.zoomBackground,
+              StretchMode.blurBackground,
+            ],
             titlePadding: const EdgeInsets.fromLTRB(20, 0, 20, 18),
             title: Text(
               title,
               style: const TextStyle(fontWeight: FontWeight.w900),
             ),
-            background: DecoratedBox(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: colors,
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-              ),
+            background: AuroraBackground.ambient(
+              colors: colors,
+              baseAlpha: 1,
               child: Stack(
                 children: [
                   Positioned(
                     right: -15,
                     top: 35,
-                    child: Transform.rotate(
-                      angle: -.15,
-                      child: Icon(
-                        icon,
-                        size: 145,
-                        color: Colors.white.withValues(alpha: .14),
+                    child: ParallaxLayer(
+                      child: Transform.rotate(
+                        angle: -.15,
+                        child: Icon(
+                          icon,
+                          size: 145,
+                          color: Colors.white.withValues(alpha: .14),
+                        ),
                       ),
                     ),
                   ),

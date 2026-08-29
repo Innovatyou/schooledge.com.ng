@@ -16,11 +16,11 @@ final threadProvider = FutureProvider.autoDispose
       return Map<String, dynamic>.from(response.data['data']);
     });
 
-final contactsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>((
-  ref,
-) async {
-  final response = await ref.watch(dioProvider).get('messages/contacts');
-  return (response.data['data'] as List)
-      .map((item) => Map<String, dynamic>.from(item))
-      .toList();
-});
+final contactsProvider = FutureProvider.autoDispose<List<Map<String, dynamic>>>(
+  (ref) async {
+    final response = await ref.watch(dioProvider).get('messages/contacts');
+    return (response.data['data'] as List)
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+  },
+);

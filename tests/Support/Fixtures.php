@@ -134,6 +134,15 @@ final class Fixtures
         return array('staff_id' => $staffId, 'login_credential_id' => $credentialId, 'username' => $username, 'password' => $password, 'role_id' => $roleId);
     }
 
+    /** Assigns a staff member as homeroom teacher for a class/section (teacher_allocation) - role_id=3 (Teacher) is a real system role, but this only grants a literal role check in Attendance.php, never a staff_privileges row, so it's safe to use directly (see createStaff()). */
+    public function createTeacherAllocation($branchId, $teacherId, $classId, $sectionId, $sessionId)
+    {
+        return $this->insert('teacher_allocation', array(
+            'class_id' => $classId, 'section_id' => $sectionId, 'teacher_id' => $teacherId,
+            'session_id' => $sessionId, 'branch_id' => $branchId,
+        ));
+    }
+
     /** A login (role 6 = parent) for an existing `parent` row - tracked/cleaned up like every other fixture. */
     public function createParentLogin($parentId, $password = 'TestPass123')
     {
@@ -196,6 +205,69 @@ final class Fixtures
             $result['password'] = $password;
         }
         return $result;
+    }
+
+    public function createBookCategory($branchId)
+    {
+        $suffix = $this->randomSuffix();
+        return $this->insert('book_category', array('name' => 'Test Category ' . $suffix, 'branch_id' => $branchId));
+    }
+
+    public function createBook($branchId, $categoryId, array $overrides = array())
+    {
+        $suffix = $this->randomSuffix();
+        return $this->insert('book', array_merge(array(
+            'title' => 'Test Book ' . $suffix, 'author' => 'Test Author', 'isbn_no' => 'ISBN' . $suffix,
+            'category_id' => $categoryId, 'publisher' => 'Test Publisher', 'edition' => '1st',
+            'purchase_date' => date('Y-m-d'), 'description' => 'A test book.', 'price' => 10,
+            'total_stock' => 5, 'issued_copies' => 0, 'branch_id' => $branchId,
+        ), $overrides));
+    }
+
+    public function createSubject($branchId)
+    {
+        $suffix = $this->randomSuffix();
+        return $this->insert('subject', array(
+            'name' => 'Test Subject ' . $suffix, 'subject_code' => 'SUB' . $suffix,
+            'subject_type' => 'theory', 'subject_author' => 'n/a', 'branch_id' => $branchId,
+        ));
+    }
+
+    public function createExamHall($branchId)
+    {
+        $suffix = $this->randomSuffix();
+        return $this->insert('exam_hall', array('hall_no' => 'Hall ' . $suffix, 'seats' => 30, 'branch_id' => $branchId));
+    }
+
+    public function createExam($branchId, $sessionId)
+    {
+        $suffix = $this->randomSuffix();
+        return $this->insert('exam', array(
+            'name' => 'Test Exam ' . $suffix, 'branch_id' => $branchId, 'session_id' => $sessionId,
+            'type_id' => 0, 'remark' => '', 'mark_distribution' => '',
+        ));
+    }
+
+    /** A `timetable_exam` row - the exam-date/time/hall schedule for one class+section+subject. */
+    public function createExamSchedule($branchId, $sessionId, $examId, $classId, $sectionId, $subjectId, $hallId, array $overrides = array())
+    {
+        return $this->insert('timetable_exam', array_merge(array(
+            'exam_id' => $examId, 'class_id' => $classId, 'section_id' => $sectionId, 'subject_id' => $subjectId,
+            'time_start' => '09:00', 'time_end' => '11:00', 'hall_id' => $hallId,
+            'exam_date' => date('Y-m-d', strtotime('+3 days')), 'mark_distribution' => '',
+            'branch_id' => $branchId, 'session_id' => $sessionId,
+        ), $overrides));
+    }
+
+    public function createHomework($branchId, $classId, $sectionId, $sessionId, $subjectId, $teacherId, array $overrides = array())
+    {
+        $suffix = $this->randomSuffix();
+        return $this->insert('homework', array_merge(array(
+            'class_id' => $classId, 'section_id' => $sectionId, 'session_id' => $sessionId, 'subject_id' => $subjectId,
+            'date_of_homework' => date('Y-m-d'), 'date_of_submission' => date('Y-m-d', strtotime('+3 days')),
+            'description' => 'Test homework ' . $suffix, 'created_by' => $teacherId, 'create_date' => date('Y-m-d'),
+            'status' => '0', 'sms_notification' => 0, 'document' => '', 'evaluated_by' => 0, 'branch_id' => $branchId,
+        ), $overrides));
     }
 
     public function createOnlineAdmissionStaging($branchId, $stagedByUserId, array $payload)

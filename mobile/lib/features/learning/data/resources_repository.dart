@@ -7,10 +7,7 @@ final learningResourcesProvider =
       final studentId = ref.watch(studentContextProvider);
       final response = await ref
           .watch(dioProvider)
-          .get(
-            'resources',
-            queryParameters: {'student_id': ?studentId},
-          );
+          .get('resources', queryParameters: {'student_id': ?studentId});
       return (response.data['data'] as List)
           .map((item) => Map<String, dynamic>.from(item))
           .toList();

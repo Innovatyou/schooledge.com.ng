@@ -44,10 +44,12 @@ class PushService {
 
   Future<void> _send(String token) async {
     try {
-      await _ref.read(dioProvider).patch(
-        'profile/push-token',
-        data: {'push_token': token, 'push_enabled': true},
-      );
+      await _ref
+          .read(dioProvider)
+          .patch(
+            'profile/push-token',
+            data: {'push_token': token, 'push_enabled': true},
+          );
     } catch (e) {
       debugPrint('PushService: could not send token to backend - $e');
     }

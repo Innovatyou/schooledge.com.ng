@@ -45,6 +45,7 @@ tags:
   - name: Notifications
   - name: Admin
   - name: Reports
+  - name: Chat
 
 components:
   securitySchemes:
@@ -337,6 +338,31 @@ paths:
         '200': { description: Registered }
         '422': { description: No installation_id on this session (re-login required) }
 
+  /profile/id-card:
+    get:
+      tags: [Profile]
+      summary: Digital ID card fields for a student (name, class, roll, blood group, school). Pair with GET /attendance/qr-token for the scannable QR - the card has no static QR of its own.
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  enroll_id: 1
+                  name: "Jane Doe"
+                  photo_url: "https://.../uploads/images/student/abc.jpg"
+                  class_name: "JSS 1"
+                  section_name: "A"
+                  roll: 1
+                  register_no: "REG0001"
+                  blood_group: "O+"
+                  category: "General"
+                  school: { name: "Test School", address: "...", mobileno: "..." }
+        '404': { description: "student_not_found - no owned enrollment (wrong student_id, or not this parent's child)" }
+
   /fees/summary:
     get:
       tags: [Fees]
@@ -434,6 +460,12 @@ paths:
       summary: Stream the book's PDF (ebook_file) for in-app reading
       parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
       responses: { '200': { description: "PDF binary" }, '404': { description: No ebook uploaded for this book } }
+  /library/books/{id}/listen:
+    get:
+      tags: [Library]
+      summary: Stream the book's audiobook file for in-app listening
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: "audio binary" }, '404': { description: No audiobook uploaded for this book } }
 
   /events:
     get: { tags: [Events], summary: Upcoming events/announcements for this membership, responses: { '200': { description: OK } } }
@@ -534,6 +566,40 @@ paths:
         - { name: submissionId, in: path, required: true, schema: { type: integer } }
       responses: { '200': { description: "file binary" } }
 
+  /gamification/me:
+    get:
+      tags: [Gamification]
+      summary: My points total, class rank, and earned badges. Points/badges are earned automatically (attendance streaks, on-time homework) - distinct from the admin-only manual Award feature.
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  points_total: 42
+                  rank_in_class: 3
+                  badges:
+                    - { code: "streak_5", name: "5-Day Streak", description: "Present for 5 attendance records in a row.", icon: "local_fire_department", awarded_at: "2026-08-20 09:00:00" }
+
+  /gamification/leaderboard:
+    get:
+      tags: [Gamification]
+      summary: Points leaderboard, hard-scoped server-side to the requester's own class+section - never crosses class or school boundaries.
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  leaderboard:
+                    - { rank: 1, enroll_id: 12, student_name: "Jane Doe", points_total: 58, badge_count: 2 }
+
   /messages:
     get: { tags: [Messages], summary: Inbox thread list, responses: { '200': { description: OK } } }
     post:
@@ -556,6 +622,107 @@ paths:
       parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
       requestBody: { content: { application/json: { schema: { type: object, properties: { body: { type: string } } } } } }
       responses: { '200': { description: Sent }, '403': { description: demo_readonly on a demo branch } }
+  /messages/broadcast:
+    post:
+      tags: [Messages]
+      summary: "Teacher only: message every student in one of their own classes at once (inserts one message row per student, tagged with a shared broadcast_group_id)"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                class_id: { type: integer }
+                section_id: { type: integer }
+                subject: { type: string }
+                message: { type: string }
+      responses:
+        '200': { description: Sent }
+        '403': { description: "role_not_supported, class_not_assigned, or demo_readonly on a demo branch" }
+
+  /chat/token:
+    post:
+      tags: [Chat]
+      summary: "Student only: mint a Firebase custom auth token (classroomKey + membershipId claims) so the app can sign in to Firestore for classmate chat"
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data: { firebase_token: "eyJhbGciOi...", classroom_key: "541_645_582", membership_id: 590 }
+        '403': { description: "role_not_supported, or demo_readonly on a demo branch" }
+        '503': { description: firebase_not_configured - no service-account key present yet }
+  /chat/classmates:
+    get:
+      tags: [Chat]
+      summary: "Student only: classmates in the caller's own class+section who have an active mobile membership, each with a precomputed conversation_id"
+      responses: { '200': { description: OK } }
+  /chat/voice-notes:
+    post:
+      tags: [Chat]
+      summary: "Student only: upload a voice-note audio file for a conversation; returns an id to reference from the Firestore message doc"
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                conversation_id: { type: string, description: "\"{minMembershipId}_{maxMembershipId}\"" }
+                duration_ms: { type: integer }
+                file: { type: string, format: binary }
+      responses:
+        '200': { description: OK }
+        '404': { description: conversation_not_found - caller is not one of the two participants }
+  /chat/voice-notes/{id}:
+    get:
+      tags: [Chat]
+      summary: Stream a voice-note's audio bytes - gated to the conversation's two participants, derived from conversation_id alone (no Firestore call needed)
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses: { '200': { description: "audio binary" }, '404': { description: Not found or caller is not a participant } }
+  /chat/block:
+    post:
+      tags: [Chat]
+      summary: "Student only: block a classmate in chat (source of truth in MySQL, mirrored to Firestore's blocks collection for Security Rules to enforce)"
+      requestBody: { content: { application/json: { schema: { type: object, properties: { membership_id: { type: integer } } } } } }
+      responses: { '200': { description: OK } }
+  /chat/unblock:
+    post:
+      tags: [Chat]
+      summary: "Student only: lift a block - only the original blocker can unblock, never the blocked party"
+      requestBody: { content: { application/json: { schema: { type: object, properties: { membership_id: { type: integer } } } } } }
+      responses: { '200': { description: OK } }
+  /chat/reports:
+    post:
+      tags: [Chat]
+      summary: "Student only: report a classmate/conversation - notifies the reported student's class teacher(s) and branch admins with chat_oversight view access"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                conversation_id: { type: string }
+                reported_membership_id: { type: integer }
+                message_excerpt: { type: string }
+      responses: { '200': { description: OK } }
+  /chat/oversight/classes:
+    get:
+      tags: [Chat]
+      summary: "Teacher (own assigned classes) or admin (every enrolled class in the branch) only: classes available to pick from for oversight, each with a precomputed classroom_key"
+      responses:
+        '200': { description: OK }
+        '403': { description: "role_not_supported, or forbidden (missing chat_oversight permission)" }
+  /chat/oversight/{classroomKey}:
+    get:
+      tags: [Chat]
+      summary: "Teacher (own assigned class) or admin (chat_oversight permission) only: live-fetch a classroom's recent Firestore conversations/messages for moderation. Every view is itself audited (chat.oversight_viewed)."
+      parameters: [{ name: classroomKey, in: path, required: true, schema: { type: string }, description: "\"{branchId}_{classId}_{sectionId}\"" }]
+      responses:
+        '200': { description: OK }
+        '403': { description: "role_not_supported, class_not_assigned, or forbidden (missing chat_oversight permission)" }
+        '503': { description: firebase_not_configured }
 
   /timetable:
     get:
@@ -563,6 +730,30 @@ paths:
       summary: Weekly timetable for one student (or a teacher's own)
       parameters: [{ $ref: '#/components/parameters/StudentId' }]
       responses: { '200': { description: OK } }
+
+  /timetable/exams:
+    get:
+      tags: [Timetable]
+      summary: Exam schedule (date/time/hall/subject) - "when is my next exam". Reads timetable_exam, the same table used server-side for mark computation.
+      parameters: [{ $ref: '#/components/parameters/StudentId' }]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  exams:
+                    - id: 1
+                      exam_name: "First Term Exam"
+                      subject_name: "Mathematics"
+                      exam_date: "2026-09-15"
+                      time_start: "09:00"
+                      time_end: "11:00"
+                      hall_name: "Hall A"
+                      class_name: "JSS 1"
+                      section_name: "A"
 
   /resources:
     get: { tags: [Resources], summary: Downloadable class resources/study materials, responses: { '200': { description: OK } } }
@@ -662,3 +853,56 @@ paths:
       summary: Download a report file
       parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
       responses: { '200': { description: "file binary" } }
+
+  /safety/alerts:
+    get:
+      tags: [Safety]
+      summary: On-demand location share / SOS alerts visible to this membership. 3-tier visibility enforced server-side - a parent sees only their linked child's alerts, an admin/permission-holder sees the whole branch, a teacher sees only students in their assigned classes; every sender always sees their own.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              example:
+                success: true
+                data:
+                  alerts:
+                    - id: 1
+                      alert_type: "sos"
+                      status: "open"
+                      sender_name: "Jane Doe"
+                      sender_role: "student"
+                      latitude: 6.5244
+                      longitude: 3.3792
+                      accuracy_meters: 12.5
+                      note: null
+                      created_at: "2026-08-28 09:15:00"
+                      acknowledged_at: null
+    post:
+      tags: [Safety]
+      summary: "Submit a one-shot location share or SOS panic alert. Senders: students and teachers only (not parents - they aren't physically on campus). NOT continuous background tracking - one GPS fix per action. 'sos' bypasses every recipient's notification-preference toggle so a muted viewer can't silently miss it; 'share' respects it."
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [alert_type, latitude, longitude]
+              properties:
+                alert_type: { type: string, enum: [share, sos] }
+                latitude: { type: number }
+                longitude: { type: number }
+                accuracy_meters: { type: number }
+                note: { type: string }
+      responses:
+        '200': { description: "{ submitted: true, alert_id, status: 'open' }" }
+        '403': { description: role_not_supported (parent) or demo_readonly on a demo branch }
+        '422': { description: Invalid/missing alert_type or coordinates }
+
+  /safety/alerts/{id}/acknowledge:
+    post:
+      tags: [Safety]
+      summary: Mark an alert acknowledged - gated by the same 3-tier visibility rule as GET /safety/alerts (returns alert_not_found rather than a bare 403 for an unauthorized viewer, so existence isn't confirmed to them).
+      parameters: [{ name: id, in: path, required: true, schema: { type: integer } }]
+      responses:
+        '200': { description: "{ acknowledged: true }" }
+        '404': { description: alert_not_found }

@@ -47,7 +47,8 @@ class _LearningPageState extends ConsumerState<LearningPage> {
                 return const InfoRow(
                   icon: Icons.folder_off_rounded,
                   title: 'No resources yet',
-                  subtitle: 'Study materials from your school will appear here.',
+                  subtitle:
+                      'Study materials from your school will appear here.',
                   color: Color(0xff829ab1),
                   trailing: SizedBox.shrink(),
                 );
@@ -69,7 +70,9 @@ class _LearningPageState extends ConsumerState<LearningPage> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(Icons.download_rounded),
-                    onTap: _downloadingId == null ? () => _download(resource) : null,
+                    onTap: _downloadingId == null
+                        ? () => _download(resource)
+                        : null,
                   );
                 }).toList(),
               );
@@ -88,9 +91,10 @@ class _LearningPageState extends ConsumerState<LearningPage> {
             'resources/$id/download',
             options: Options(responseType: ResponseType.bytes),
           );
-      final safeName = (resource['title'] ?? 'resource')
-          .toString()
-          .replaceAll(RegExp(r'[^A-Za-z0-9_-]+'), '-');
+      final safeName = (resource['title'] ?? 'resource').toString().replaceAll(
+        RegExp(r'[^A-Za-z0-9_-]+'),
+        '-',
+      );
       final extension = (resource['extension'] as String?) ?? '';
       final file = File(
         '${Directory.systemTemp.path}${Platform.pathSeparator}$safeName${extension.isNotEmpty ? '.$extension' : ''}',
@@ -101,7 +105,8 @@ class _LearningPageState extends ConsumerState<LearningPage> {
       if (mounted) {
         final data = error.response?.data;
         final message = data is Map && data['error'] is Map
-            ? ((data['error'] as Map)['message'] ?? 'Could not download this resource.')
+            ? ((data['error'] as Map)['message'] ??
+                      'Could not download this resource.')
                   .toString()
             : 'Could not download this resource.';
         showModuleMessage(context, message);
