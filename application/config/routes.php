@@ -231,6 +231,10 @@ $route['sections'] = 'sections/index';
 
 $route['authentication'] = 'authentication/index';
 $route['home'] = 'home/index';
+// Without this, /search falls through to the catch-all (:any) route below
+// (the public-site branch-slug resolver) instead of reaching Search::index() -
+// same reason every other single-segment admin controller above is listed here.
+$route['search'] = 'search/index';
 $route['404_override'] = 'errors';
 if (!empty($saas_default) && $saas_default == true) {
 	$route['default_controller'] = 'saas_website/index';

@@ -97,13 +97,15 @@ class Search extends Admin_Controller
     {
         $index = $this->config->item('search_index');
         if (empty($index)) return array();
-        $needle = mb_strtolower($query);
+        // Plain strtolower/strpos, not the mb_ variants - labels here are ASCII
+        // config strings, and mbstring isn't guaranteed present on every host.
+        $needle = strtolower($query);
         $matches = array();
         foreach ($index as $entry) {
             if (!$this->pageAllowed($entry)) continue;
             $label = translate($entry['label']);
-            $haystack = mb_strtolower($label . ' ' . $entry['label']);
-            if (mb_strpos($haystack, $needle) === false) continue;
+            $haystack = strtolower($label . ' ' . $entry['label']);
+            if (strpos($haystack, $needle) === false) continue;
             $matches[] = array(
                 'label' => $label,
                 'url' => base_url($entry['url']),
