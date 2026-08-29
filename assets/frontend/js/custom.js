@@ -192,26 +192,12 @@
         });
     });
 
-    // Gallery Magnific Popup
-    if ($('.gallery-grid').length) {
-        $('.gallery-grid').magnificPopup({
-            delegate: 'a.zoom',
-            type: 'image',
-            gallery: {
-                enabled: true
-            }
-        });
-
-        $('.gallery-grid .popup-video').magnificPopup({
-            disableOn: 700,
-            type: 'iframe',
-            mainClass: 'mfp-fade',
-            removalDelay: 160,
-            preloader: true,
-            fixedContentPos: false,
-            gallery: {
-                enabled: true
-            }
+    // Gallery Lightbox (GLightbox)
+    if ($('.gallery-grid').length && typeof GLightbox !== 'undefined') {
+        GLightbox({
+            selector: '.glightbox',
+            touchNavigation: true,
+            loop: true
         });
     }
 
@@ -392,3 +378,34 @@ function ellipsis(str, length, ending) {
       return str;
     }
 };
+
+/**
+ * Cursor-reactive tilt for .se-tilt cards (theme-modern.css) - real
+ * mouse-position tilt rather than one fixed :hover angle, the same
+ * interaction the mobile app's DepthCard gives on touch. Plain JS, no
+ * jQuery/plugin dependency; skipped entirely for touch input (a finger
+ * has no hover position to tilt toward) and under
+ * prefers-reduced-motion.
+ */
+(function () {
+    if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    if (window.matchMedia && window.matchMedia('(hover: none)').matches) return;
+
+    document.addEventListener('mousemove', function (event) {
+        var card = event.target.closest ? event.target.closest('.se-tilt') : null;
+        if (!card) return;
+        var rect = card.getBoundingClientRect();
+        var px = (event.clientX - rect.left) / rect.width - 0.5;
+        var py = (event.clientY - rect.top) / rect.height - 0.5;
+        var maxDeg = 6;
+        card.style.transform = 'perspective(900px) rotateX(' + (py * -maxDeg) + 'deg) rotateY(' + (px * maxDeg) + 'deg) translateY(-4px)';
+    }, true);
+
+    document.addEventListener('mouseout', function (event) {
+        var card = event.target.closest ? event.target.closest('.se-tilt') : null;
+        if (!card) return;
+        var toElement = event.relatedTarget;
+        if (toElement && card.contains(toElement)) return;
+        card.style.transform = '';
+    }, true);
+})();

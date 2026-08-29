@@ -1,0 +1,588 @@
+/*
+ * Site-wide modern design system for the school public website
+ * (application/views/home/**). Loaded on every page from
+ * home/layout/index.php - unlike landing-modern.css (home page only,
+ * hardcoded --violet/--mint palette), everything here is built on the
+ * --thm-* CSS custom properties already set per-branch in
+ * home/layout/index.php from front_cms_setting, so a school's own brand
+ * color drives every gradient/glow/shadow below instead of one fixed look.
+ *
+ * No build step in this project (see the other files in this folder) -
+ * this is hand-authored, not run through a minifier, so it's kept
+ * readable across the multi-phase rollout that uses it.
+ */
+
+:root {
+  /* --thm-primary / --thm-hover / --thm-text / --thm-secondary-text /
+     --thm-footer-text / --thm-radius are set inline per-request in
+     home/layout/index.php from front_cms_setting. The var(...,fallback)
+     on every rule below is what applies before that inline <script> runs
+     (or if a branch has never set a color), matching the violet used by
+     the existing home-page hero so there's no flash of a different look. */
+  --thm-primary-fallback: #6c55e0;
+
+  --thm-surface: #ffffff;
+  --thm-surface-alt: #f8f9fc;
+  --thm-ink: #14213d;
+  --thm-muted: #68728a;
+  --thm-border: #ececf3;
+
+  --thm-primary-soft: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 12%, white);
+  --thm-primary-glow: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 35%, transparent);
+  --thm-primary-dark: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 80%, black);
+  --thm-primary-line: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 22%, white);
+
+  --thm-radius-sm: calc(var(--thm-radius, 8px) * 1px);
+  --thm-radius-lg: calc(var(--thm-radius, 8px) * 2px + 8px);
+  --thm-radius-pill: 999px;
+
+  --thm-shadow-soft: 0 8px 25px rgba(20, 33, 61, 0.06);
+  --thm-shadow-lift: 0 24px 48px rgba(20, 33, 61, 0.14);
+}
+
+/* ---------- Typography ---------- */
+
+.se-modern, .se-modern h1, .se-modern h2, .se-modern h3, .se-modern h4 {
+  font-family: 'Manrope', 'DM Sans', sans-serif;
+}
+.se-modern {
+  font-family: 'DM Sans', sans-serif;
+  color: var(--thm-ink);
+}
+.se-modern p, .se-modern li {
+  color: var(--thm-muted);
+}
+.se-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 14px;
+  border: 1px solid var(--thm-primary-line);
+  border-radius: var(--thm-radius-pill);
+  background: var(--thm-primary-soft);
+  color: var(--thm-primary, var(--thm-primary-fallback));
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+.se-eyebrow i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 0 5px var(--thm-primary-soft);
+}
+
+/* ---------- Buttons ---------- */
+
+.se-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 52px;
+  padding: 0 26px;
+  border-radius: var(--thm-radius-sm);
+  font-weight: 700;
+  text-decoration: none !important;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.se-btn:hover {
+  transform: translateY(-3px);
+}
+.se-btn.se-btn-primary {
+  color: #fff;
+  background: linear-gradient(135deg, var(--thm-primary, var(--thm-primary-fallback)), var(--thm-hover, var(--thm-primary-fallback)));
+  box-shadow: 0 13px 28px var(--thm-primary-glow);
+}
+.se-btn.se-btn-ghost {
+  color: var(--thm-ink);
+  background: #fff;
+  border: 1px solid rgba(20, 33, 61, 0.08);
+  box-shadow: var(--thm-shadow-soft);
+}
+
+/* ---------- Glassmorphism ---------- */
+
+.se-glass {
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: var(--thm-shadow-soft);
+}
+.se-glass-dark {
+  background: rgba(20, 33, 61, 0.55);
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+/* ---------- Depth / tilt cards ---------- */
+/* .se-tilt gets its rotateX/rotateY driven by a small mousemove handler
+   in custom.js (real cursor-reactive tilt, not just a fixed :hover angle -
+   the same interaction the mobile app's DepthCard uses on touch). The
+   transform/transition rules here are what that JS actually animates. */
+
+.se-card {
+  position: relative;
+  padding: 28px 24px;
+  border: 1px solid var(--thm-border);
+  border-radius: var(--thm-radius-lg);
+  background: var(--thm-surface);
+  box-shadow: var(--thm-shadow-soft);
+  transition: transform 0.28s ease, box-shadow 0.28s ease;
+}
+.se-card:hover {
+  box-shadow: var(--thm-shadow-lift);
+}
+.se-tilt {
+  transform-style: preserve-3d;
+  will-change: transform;
+  transition: transform 0.15s ease-out, box-shadow 0.28s ease;
+}
+.se-tilt:hover {
+  box-shadow: var(--thm-shadow-lift);
+}
+@media (prefers-reduced-motion: reduce) {
+  .se-tilt { transition: none; }
+}
+.se-icon-badge {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--thm-radius-sm);
+  font-size: 20px;
+  margin-bottom: 20px;
+  color: var(--thm-primary, var(--thm-primary-fallback));
+  background: var(--thm-primary-soft);
+}
+
+/* ---------- Aurora / gradient-orb backgrounds ---------- */
+
+.se-aurora {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(135deg, var(--thm-primary-soft), #fbfaff 48%, #effbf8);
+}
+.se-aurora::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(var(--thm-primary, var(--thm-primary-fallback)) 1px, transparent 1px);
+  background-size: 26px 26px;
+  opacity: 0.07;
+  z-index: -2;
+}
+.se-orb {
+  position: absolute;
+  border-radius: 50%;
+  z-index: -1;
+  filter: blur(0px);
+  animation: se-orb-float 7s ease-in-out infinite;
+}
+.se-orb.se-orb-a {
+  width: 280px;
+  height: 280px;
+  right: 6%;
+  top: 8%;
+  background: var(--thm-primary-glow);
+}
+.se-orb.se-orb-b {
+  width: 220px;
+  height: 220px;
+  left: 4%;
+  bottom: 6%;
+  background: color-mix(in srgb, var(--thm-hover, var(--thm-primary, var(--thm-primary-fallback))) 25%, transparent);
+  animation-delay: -3.5s;
+}
+@keyframes se-orb-float {
+  50% { transform: translateY(-16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .se-orb { animation: none; }
+}
+
+/* ---------- Section rhythm ---------- */
+
+.se-section {
+  padding: 90px 0;
+}
+.se-section-head {
+  max-width: 700px;
+  margin: 0 auto 48px;
+  text-align: center;
+}
+.se-section-head h2 {
+  font-size: clamp(31px, 4vw, 45px);
+  line-height: 1.15;
+  letter-spacing: -1.5px;
+  margin: 12px 0 0;
+}
+.se-section-head h2 em {
+  font-style: normal;
+  color: var(--thm-primary, var(--thm-primary-fallback));
+}
+.se-section-head > p {
+  margin-top: 15px;
+  font-size: 16px;
+  line-height: 1.7;
+}
+
+/* ---------- Modern page header (used by home/layout/page_header.php, Phase 4) ---------- */
+
+.se-page-header {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: 90px 0 60px;
+  background: linear-gradient(135deg, var(--thm-primary, var(--thm-primary-fallback)), var(--thm-primary-dark));
+  color: #fff;
+  text-align: center;
+}
+.se-page-header h1 {
+  font-family: 'Manrope', 'DM Sans', sans-serif;
+  font-size: clamp(32px, 4.5vw, 48px);
+  margin: 0 0 14px;
+  color: #fff;
+}
+.se-page-header .se-breadcrumb {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.85);
+}
+.se-page-header .se-breadcrumb a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+}
+.se-page-header .se-breadcrumb a:hover {
+  color: #fff;
+}
+.se-page-header .se-breadcrumb .se-crumb-sep {
+  opacity: 0.6;
+}
+
+@media (max-width: 767px) {
+  .se-section { padding: 60px 0; }
+  .se-page-header { padding: 70px 0 45px; }
+}
+
+/* =========================================================================
+   Phase 2 — Header + Footer
+   These target the EXISTING classes/IDs in home/layout/header.php and
+   footer.php on purpose (.stricky, #strickyMenu, .navbar-style3, .m-login,
+   .latest--news, .main-footer, .whatsapp-popup, etc.) rather than
+   rewriting those templates' structure - custom.js's sticky-scroll
+   handler and Bootstrap's collapse/dropdown behavior both depend on the
+   exact classes/IDs already there, so the safest way to restyle without
+   breaking that JS is new CSS layered on the same hooks, not a rebuild.
+   ========================================================================= */
+
+.se-topbar {
+  background: var(--thm-ink);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  padding: 8px 0;
+}
+.se-topbar a {
+  color: rgba(255, 255, 255, 0.85);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+.se-topbar a:hover {
+  color: #fff;
+}
+.se-topbar i {
+  color: var(--thm-primary, var(--thm-primary-fallback));
+  margin-right: 4px;
+}
+
+/* Glass nav - --se-menu-color is set inline per-branch in header.php from
+   front_cms_setting.menu_color, which an admin can set to ANY color
+   including white/light ones. A nav background at or near that raw color
+   would make the white nav-link text below unreadable for such branches,
+   so the color only ever TINTS a guaranteed-dark base here (accents like
+   the active-link state and CTA button use the raw color at full
+   strength instead, where light-on-dark contrast isn't a concern). */
+.se-glass-nav {
+  background: color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 25%, var(--thm-ink) 75%) !important;
+  transition: background 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
+}
+.se-glass-nav.stricky-fixed {
+  background: color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 20%, var(--thm-ink) 80%) !important;
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  box-shadow: 0 10px 30px rgba(20, 33, 61, 0.18);
+}
+.se-glass-nav .navbar-brand img {
+  max-height: 52px;
+  transition: max-height 0.3s ease;
+}
+.se-glass-nav .navbar-style3 > li > a.nav-link {
+  color: #fff !important;
+  font-weight: 600;
+  border-radius: var(--thm-radius-pill);
+  padding: 10px 18px !important;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.se-glass-nav .navbar-style3 > li > a.nav-link:hover,
+.se-glass-nav .navbar-style3 > li.active > a.nav-link {
+  background: rgba(255, 255, 255, 0.18);
+  color: #fff !important;
+}
+.se-glass-nav .dropdown-menu {
+  border: none;
+  border-radius: var(--thm-radius-lg);
+  box-shadow: var(--thm-shadow-lift);
+  padding: 10px;
+  margin-top: 12px;
+}
+.se-glass-nav .dropdown-item {
+  border-radius: var(--thm-radius-sm);
+  padding: 10px 14px;
+  font-weight: 600;
+  color: var(--thm-ink);
+}
+.se-glass-nav .dropdown-item:hover,
+.se-glass-nav .dropdown-item.active {
+  background: var(--thm-primary-soft);
+  color: var(--thm-primary, var(--thm-primary-fallback));
+}
+.se-glass-nav .m-login .se-btn {
+  min-height: 42px;
+  padding: 0 20px;
+}
+.se-glass-nav .navbar-toggler {
+  border: none;
+  color: #fff;
+}
+.se-glass-nav .navbar-toggler .fa-bars {
+  color: #fff;
+}
+@media (max-width: 991px) {
+  .se-glass-nav .navbar-collapse {
+    background: color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 25%, var(--thm-ink) 75%);
+    border-radius: var(--thm-radius-lg);
+    margin-top: 10px;
+    padding: 10px;
+  }
+}
+
+.latest--news {
+  background: linear-gradient(90deg, var(--thm-primary-dark), var(--thm-primary, var(--thm-primary-fallback)));
+  padding: 10px 0;
+}
+.latest--news .latest-title {
+  gap: 8px;
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.6px;
+}
+.latest--news .latest-title i {
+  color: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 20%, #ffd166);
+}
+
+/* Footer - --se-footer-color is the admin's footer_background_color;
+   blended into a dark gradient rather than used flat, so the "layered
+   depth" look holds even for a light color choice. */
+.se-footer .se-footer-area {
+  position: relative;
+  isolation: isolate;
+  padding: 70px 0 40px;
+  background-color: var(--se-footer-color, var(--thm-ink));
+  background-size: cover;
+  background-position: center;
+  color: rgba(255, 255, 255, 0.75);
+}
+.se-footer .se-footer-area::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--se-footer-color, var(--thm-ink)) 85%, black 15%), color-mix(in srgb, var(--se-footer-color, var(--thm-ink)) 65%, black 35%));
+  z-index: -1;
+}
+.se-footer h4 {
+  color: #fff;
+  font-family: 'Manrope', 'DM Sans', sans-serif;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+.se-footer .footer-logo {
+  display: inline-block;
+  padding: 10px 16px;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: var(--thm-radius-sm);
+}
+.se-footer .footer-logo img {
+  max-height: 40px;
+  display: block;
+}
+.se-footer .footer-dec {
+  margin-top: 16px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.se-footer .social {
+  display: flex;
+  gap: 10px;
+  padding: 0;
+  margin-top: 18px;
+  list-style: none;
+}
+.se-footer .social a {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+.se-footer .social a:hover {
+  background: var(--thm-primary, var(--thm-primary-fallback));
+  transform: translateY(-3px);
+}
+.se-footer .address-list,
+.se-footer .quick-links {
+  padding: 0;
+  list-style: none;
+}
+.se-footer .address-list li,
+.se-footer .quick-links li {
+  margin-bottom: 12px;
+  font-size: 14px;
+}
+.se-footer .quick-links a {
+  color: rgba(255, 255, 255, 0.75);
+  text-decoration: none;
+  transition: color 0.2s ease, padding-left 0.2s ease;
+}
+.se-footer .quick-links a:hover {
+  color: #fff;
+  padding-left: 4px;
+}
+.se-footer .address-list i,
+.se-footer .quick-links i {
+  color: var(--thm-primary, var(--thm-primary-fallback));
+  margin-right: 8px;
+}
+.se-footer .copyright {
+  padding: 18px 0;
+  font-size: 13px;
+}
+.se-footer .whatsapp-popup .popup-content {
+  border-radius: var(--thm-radius-lg);
+  box-shadow: var(--thm-shadow-lift);
+  overflow: hidden;
+}
+.se-footer .whatsapp-button {
+  box-shadow: 0 12px 28px rgba(20, 33, 61, 0.25);
+}
+
+/* ---------- FAQ accordion (Bootstrap 5 .collapse under the hood -
+   only visual, the data-bs-toggle/aria-expanded wiring is untouched) ---------- */
+.se-accordion .card {
+  border: 1px solid var(--thm-border);
+  border-radius: var(--thm-radius-lg);
+  overflow: hidden;
+  margin-bottom: 16px;
+  box-shadow: var(--thm-shadow-soft);
+  transition: box-shadow 0.28s ease;
+}
+.se-accordion .card:hover {
+  box-shadow: var(--thm-shadow-lift);
+}
+.se-accordion .card-header {
+  background: var(--thm-surface);
+  border-bottom: none;
+  padding: 0;
+}
+.se-accordion .card-header .card-title {
+  margin: 0;
+  padding: 20px 24px;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--thm-ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.se-accordion .card-header .card-title::after {
+  content: '\f078';
+  font-family: 'Font Awesome 5 Free';
+  font-weight: 900;
+  font-size: 14px;
+  color: var(--thm-primary, var(--thm-primary-fallback));
+  transition: transform 0.25s ease;
+  flex-shrink: 0;
+  margin-left: 16px;
+}
+.se-accordion .card-header .card-title[aria-expanded="true"]::after {
+  transform: rotate(180deg);
+}
+.se-accordion .card-body {
+  padding: 0 24px 24px;
+  color: var(--thm-muted);
+}
+
+/* ---------- Teachers/staff filter + grid (Shuffle.js hooks - #doctors-filter,
+   #doctors-grid, .doctors-grid, data-group(s) - are untouched, visual only) ---------- */
+.se-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 32px;
+}
+.se-filter-pills li {
+  margin: 0 !important;
+}
+.se-filter-pills a {
+  display: inline-block;
+  padding: 8px 20px;
+  border-radius: var(--thm-radius-pill);
+  border: 1px solid var(--thm-border);
+  color: var(--thm-ink);
+  font-weight: 600;
+  font-size: 13px;
+  text-decoration: none;
+  transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+.se-filter-pills a:hover {
+  border-color: var(--thm-primary, var(--thm-primary-fallback));
+}
+.se-filter-pills a.active {
+  background: var(--thm-primary, var(--thm-primary-fallback));
+  border-color: var(--thm-primary, var(--thm-primary-fallback));
+  color: #fff;
+}
+.se-staff-card {
+  overflow: hidden;
+  padding: 0;
+}
+.se-staff-card .txt-holder {
+  padding: 18px 20px;
+}
+
+/* ---------- Modern forms (Admission, Admit Card, Exam Results, Certificates
+   lookup screens) - CSS-only, every field name/id/JS hook is untouched ---------- */
+.se-modern .form-control:focus,
+.se-modern .form-select:focus,
+.se-modern select.form-control:focus {
+  border-color: var(--thm-primary, var(--thm-primary-fallback));
+  box-shadow: 0 0 0 4px var(--thm-primary-glow);
+}
+.se-modern .box2 {
+  margin-top: 24px;
+}
+.se-modern .headers-line {
+  font-weight: 700;
+}

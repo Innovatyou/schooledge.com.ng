@@ -13,6 +13,9 @@
 		<link href="<?php echo base_url() ?>assets/frontend/css/bootstrap.min.css" rel="stylesheet">
 		<!-- Template CSS Files  -->
 		<link rel="stylesheet" href="<?php echo base_url('assets/vendor/font-awesome/css/all.min.css'); ?>">
+		<link rel="preconnect" href="https://fonts.googleapis.com">
+		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/plugins/animate.min.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/responsive.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/owl.carousel.min.css'); ?>">
@@ -20,8 +23,9 @@
 		<link rel="stylesheet" href="<?php echo base_url('assets/vendor/sweetalert/sweetalert-custom.css?v=' . version_combine());?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/vendor/bootstrap-datepicker/css/bootstrap-datepicker.standalone.css'); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/vendor/bootstrap-fileupload/bootstrap-fileupload.min.css'); ?>">
-		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/plugins/magnific-popup/magnific-popup.css?v=' . version_combine()); ?>">
+		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/glightbox.min.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/style.css?v=' . version_combine()); ?>">
+		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/theme-modern.css?v=' . version_combine()); ?>">
 		<?php if ($this->router->fetch_class() === 'home' && in_array($this->router->fetch_method(), array('index', 'home'))) { ?>
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/landing-modern.css?v=' . version_combine()); ?>">
 		<?php } ?>

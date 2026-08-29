@@ -14,6 +14,31 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   final username = TextEditingController();
   final password = TextEditingController();
   bool hidden = true;
+  bool rememberMe = false;
+  bool biometricAvailable = false;
+
+  static const _formTextColor = Color(0xff102a43);
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedLogin();
+  }
+
+  Future<void> _loadSavedLogin() async {
+    final notifier = ref.read(authControllerProvider.notifier);
+    final saved = await notifier.savedUsername();
+    final canUseBiometrics = await notifier.biometricLoginAvailable();
+    if (!mounted) return;
+    setState(() {
+      if (saved != null) {
+        username.text = saved;
+        rememberMe = true;
+      }
+      biometricAvailable = canUseBiometrics;
+    });
+  }
+
   @override
   void dispose() {
     username.dispose();
@@ -71,9 +96,15 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                               TextField(
                                 controller: username,
                                 textInputAction: TextInputAction.next,
+                                style: const TextStyle(color: _formTextColor),
+                                cursorColor: _formTextColor,
                                 decoration: const InputDecoration(
                                   labelText: 'Username or email',
-                                  prefixIcon: Icon(Icons.person_rounded),
+                                  labelStyle: TextStyle(color: Color(0xff627d98)),
+                                  prefixIcon: Icon(
+                                    Icons.person_rounded,
+                                    color: _formTextColor,
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 14),
@@ -81,9 +112,17 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                 controller: password,
                                 obscureText: hidden,
                                 onSubmitted: (_) => _login(),
+                                style: const TextStyle(color: _formTextColor),
+                                cursorColor: _formTextColor,
                                 decoration: InputDecoration(
                                   labelText: 'Password',
-                                  prefixIcon: const Icon(Icons.lock_rounded),
+                                  labelStyle: const TextStyle(
+                                    color: Color(0xff627d98),
+                                  ),
+                                  prefixIcon: const Icon(
+                                    Icons.lock_rounded,
+                                    color: _formTextColor,
+                                  ),
                                   suffixIcon: IconButton(
                                     onPressed: () =>
                                         setState(() => hidden = !hidden),
@@ -91,7 +130,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                       hidden
                                           ? Icons.visibility_rounded
                                           : Icons.visibility_off_rounded,
+                                      color: _formTextColor,
                                     ),
+                                  ),
+                                ),
+                              ),
+                              InkWell(
+                                onTap: () =>
+                                    setState(() => rememberMe = !rememberMe),
+                                child: Padding(
+                                  padding: const EdgeInsets.only(top: 8),
+                                  child: Row(
+                                    children: [
+                                      Checkbox(
+                                        value: rememberMe,
+                                        onChanged: (value) => setState(
+                                          () => rememberMe = value ?? false,
+                                        ),
+                                      ),
+                                      const Text(
+                                        'Save my login details',
+                                        style: TextStyle(color: _formTextColor),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
@@ -127,6 +188,29 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   ),
                                 ),
                               ),
+                              if (biometricAvailable) ...[
+                                const SizedBox(height: 12),
+                                SizedBox(
+                                  height: 52,
+                                  child: OutlinedButton.icon(
+                                    onPressed: auth.isBusy
+                                        ? null
+                                        : () => ref
+                                              .read(
+                                                authControllerProvider
+                                                    .notifier,
+                                              )
+                                              .loginWithBiometrics(),
+                                    icon: const Icon(Icons.fingerprint_rounded),
+                                    label: const Text(
+                                      'Sign in with Face ID / Fingerprint',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ),
@@ -165,7 +249,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     if (username.text.trim().isNotEmpty && password.text.isNotEmpty) {
       ref
           .read(authControllerProvider.notifier)
-          .login(username.text.trim(), password.text);
+          .login(
+            username.text.trim(),
+            password.text,
+            rememberMe: rememberMe,
+          );
     }
   }
 }

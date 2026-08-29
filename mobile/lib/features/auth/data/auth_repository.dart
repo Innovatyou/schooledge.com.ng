@@ -74,6 +74,15 @@ class AuthRepository {
     }
   }
 
+  /// "Remember me" - see TokenStorage.saveCredentials for the storage/trust
+  /// rationale. Deliberately independent of logout()/clear(), which only
+  /// drops the session tokens: signing out shouldn't force retyping the
+  /// password next time if the user asked to be remembered.
+  Future<void> rememberCredentials(String username, String password) =>
+      _storage.saveCredentials(username, password);
+  Future<void> forgetCredentials() => _storage.clearSavedCredentials();
+  Future<(String, String)?> savedCredentials() => _storage.savedCredentials();
+
   Future<void> _saveTokens(dynamic value) async {
     final tokens = AuthTokens.fromJson(Map<String, dynamic>.from(value));
     await _storage.save(tokens.accessToken, tokens.refreshToken);

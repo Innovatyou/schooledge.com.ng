@@ -30,6 +30,8 @@
 		<string>SchoolEdge uses your location only when you tap "Share my location" or the SOS button, to send it to your school and family. Location is never tracked in the background.</string>
 		<key>NSMicrophoneUsageDescription</key>
 		<string>SchoolEdge uses your microphone only when you record a voice note to send a classmate.</string>
+		<key>NSFaceIDUsageDescription</key>
+		<string>SchoolEdge uses Face ID to sign you in quickly and securely instead of typing your password.</string>
 		<key>UIApplicationSceneManifest</key>
 		<dict>
 			<key>UIApplicationSupportsMultipleScenes</key>

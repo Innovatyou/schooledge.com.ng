@@ -1,26 +1,11 @@
-<!-- Main Banner Starts -->
-<div class="main-banner" style="background: url(<?php echo base_url('uploads/frontend/banners/' . $page_data['banner_image']); ?>) center top;">
-    <div class="container px-md-0">
-        <h2><span><?php echo $page_data['page_title']; ?></span></h2>
-    </div>
-</div>
-<!-- Main Banner Ends -->
-<!-- Breadcrumb Starts -->
-<div class="breadcrumb">
-    <div class="container px-md-0">
-        <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="<?php echo base_url('home') ?>">Home</a></li>
-            <li class="list-inline-item active"><?php echo $page_data['page_title']; ?></li>
-        </ul>
-    </div>
-</div>
-<!-- Breadcrumb Ends -->
+<?php $this->load->view('home/layout/page_header'); ?>
+<div class="se-modern">
 <!-- Main Container Starts -->
 <div class="container px-md-0 main-container">
     <h3 class="main-heading2 mt-0"><?php echo $page_data['title']; ?></h3>
     <?php echo $page_data['description'];?>
 
-    <div class="box2 form-box position-relative">
+    <div class="box2 form-box se-card position-relative">
         <div class="admission-status-frm">
             <button type="button" class="btn btn-1 admission-status-btn" data-bs-toggle="modal" data-bs-target="#admissionModal"><i class="fa-solid fa-file-lines"></i> Check Addmision Status</button>
 <?php if (!empty($page_data['application_form_file'])) { ?>
@@ -544,7 +529,7 @@
                         </div>
                         <?php endif; ?>
                         <?php if (!empty($page_data['terms_conditions_title'])) {?>
-                        <div class="accordion mb-3" id="accordion-faqs">
+                        <div class="accordion se-accordion mb-3" id="accordion-faqs">
                             <div class="card">
                                 <div class="card-header" id="faq1">
                                     <h5 class="card-title" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
@@ -565,6 +550,7 @@
             </div>
         </div>
     </div>
+</div>
 </div>
 
 <!-- Modal -->

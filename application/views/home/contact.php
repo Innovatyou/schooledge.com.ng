@@ -1,17 +1,5 @@
-<!-- Main Banner Starts -->
-<div class="main-banner" style="background: url(<?php echo base_url('uploads/frontend/banners/' . $page_data['banner_image']); ?>) center top;">
-    <div class="container px-md-0">
-        <h2><span><?php echo $page_data['page_title']; ?></span></h2>
-    </div>
-</div>
-<div class="breadcrumb">
-    <div class="container px-md-0">
-        <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="<?php echo base_url('home') ?>">Home</a></li>
-            <li class="list-inline-item active"><?php echo $page_data['page_title']; ?></li>
-        </ul>
-    </div>
-</div>
+<?php $this->load->view('home/layout/page_header'); ?>
+<div class="se-modern">
 <div class="container px-md-0 main-container">
     <!-- Contact Info Section Starts -->
     <div class="contact-info-box">
@@ -23,7 +11,7 @@
                 </div>
             </div>
             <div class="col-md-6 col-sm-12">
-                <div class="info-box">
+                <div class="info-box se-card">
                     <h3><?php echo $page_data['box_title']; ?></h3>
                     <h5><?php echo nl2br($page_data['box_description']); ?></h5>
                 </div>
@@ -37,6 +25,7 @@
         <div class="row">
             <!-- Contact Form Starts -->
             <div class="col-md-8 col-sm-12">
+              <div class="se-card">
                 <h3><?php echo $page_data['form_title']; ?></h3>
                 <?php if($this->session->flashdata('msg_success')): ?>
                 <div class="alert alert-success">
@@ -97,28 +86,29 @@
                         <!-- Message Field Ends -->
                         <div class="col-sm-12">
                             <button type="submit" name="new_patient" value="1"
-                                class="btn btn-black"><?php echo $page_data['submit_text']; ?></button>
+                                class="se-btn se-btn-primary"><?php echo $page_data['submit_text']; ?></button>
                         </div>
                     </div>
                 <?php echo form_close(); ?>
+              </div>
             </div>
             <div class="w-100 d-block d-md-none">
                 <p>&nbsp;</p>
             </div>
             <div class="col-md-4 col-sm-12">
-                <div class="cblock-1">
-                    <span class="icon-wrap"><i class="fas fa-map-marker-alt"></i></span>
+                <div class="cblock-1 se-card se-tilt">
+                    <span class="icon-wrap se-icon-badge"><i class="fas fa-map-marker-alt"></i></span>
                     <h4>Address</h4>
                     <p><?php echo nl2br($page_data['address']); ?></p>
                 </div>
 
-                <div class="cblock-1">
-                    <span class="icon-wrap"><i class="fas fa-phone"></i></span>
+                <div class="cblock-1 se-card se-tilt">
+                    <span class="icon-wrap se-icon-badge"><i class="fas fa-phone"></i></span>
                     <h4>Phone</h4>
                     <p><?php echo nl2br($page_data['phone']); ?></p>
                 </div>
-                <div class="cblock-1">
-                    <span class="icon-wrap"><i class="far fa-envelope"></i></span>
+                <div class="cblock-1 se-card se-tilt">
+                    <span class="icon-wrap se-icon-badge"><i class="far fa-envelope"></i></span>
                     <h4>Email</h4>
                     <p><?php echo nl2br($page_data['email']); ?></p>
                 </div>
@@ -134,3 +124,4 @@
     <iframe width="100%" height="350" id="gmap_canvas" src="<?php echo $page_data['map_iframe']; ?>" frameborder="0" scrolling="no" marginheight="0" marginwidth="0"></iframe>
 </div>
 <!--Map End-->
+</div>

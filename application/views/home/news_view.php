@@ -1,23 +1,10 @@
-<!-- Main Banner Starts -->
-<div class="main-banner" style="background: url(<?php echo base_url('uploads/frontend/banners/' . $page_data['banner_image']); ?>) center top;">
-    <div class="container px-md-0">
-        <h2><span><?php echo $page_data['page_title']; ?></span></h2>
-    </div>
-</div>
-
-<div class="breadcrumb">
-    <div class="container px-md-0">
-        <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="<?php echo base_url('home') ?>">Home</a></li>
-            <li class="list-inline-item active"><?php echo $page_data['page_title']; ?></li>
-        </ul>
-    </div>
-</div>
+<?php $this->load->view('home/layout/page_header'); ?>
+<div class="se-modern">
 <div class="container px-md-0 main-container">
     <div class="row">
         <div class="col-lg-9 col-md-8 col-sm-12">
             <div class="news-post-list">
-                <article class="news-post">
+                <article class="news-post se-card se-staff-card">
                     <div class="text-center">
                         <img src="<?=base_url('uploads/frontend/news/' . $event['image'] )?>" alt="Event Image" class="img-fluid">
                     </div>
@@ -38,6 +25,7 @@
         </div>
 
         <div class="col-lg-3 col-md-4 col-sm-12">
+          <div class="se-card">
             <h4 class="side-heading1 top">Recent News</h4>
             <ul class="list-unstyled recent-comments-list">
                 <?php
@@ -65,8 +53,9 @@
                 </li>
                 <?php } } ?>
             </ul>
-            </div>
+          </div>
         </div>
     </div>
 </div>
 <!-- Main Container Ends -->
+</div>

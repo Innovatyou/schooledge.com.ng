@@ -1,9 +1,9 @@
 
 <!-- Header Starts -->
-	<header class="main-header">
+	<header class="main-header se-modern">
 	<!-- Nested Container Starts -->
 	<!-- Top Bar Starts -->
-		<div class="top-bar d-none d-md-block">
+		<div class="top-bar se-topbar d-none d-md-block">
 			<div class="container px-md-0">
 			<div class="row">
 				<div class="col-md-6 col-sm-12"><?php echo $cms_setting['working_hours']; ?></div>
@@ -13,9 +13,9 @@
 							<i class="far fa-envelope"></i> <?php echo $cms_setting['email']; ?>
 						</a></li>
 						<li class="list-inline-item"><i class="fas fa-phone-volume"></i> <?php echo $cms_setting['mobile_no']; ?></li>
-					<?php 
+					<?php
 					$homeURL = base_url($cms_setting['url_alias']);
-					if (!is_loggedin()) { 
+					if (!is_loggedin()) {
 				        $authenticationURL = base_url($cms_setting['url_alias'] . '/authentication');
 				        $saasExisting = $this->app_lib->isExistingAddon('saas');
 				        if ($saasExisting && $this->db->table_exists("custom_domain")) {
@@ -35,7 +35,7 @@
 		</div>
 	<!-- Top Bar Ends -->
 	<!-- Navbar Starts -->
-		<div class="stricky" id="strickyMenu" style="background-color: <?php echo $cms_setting['menu_color'] ?>;">
+		<div class="stricky se-glass-nav" id="strickyMenu" style="--se-menu-color: <?php echo $cms_setting['menu_color'] ?>;">
 			<div class="container-md px-md-0">
 			<nav id="nav" class="navbar navbar-expand-lg" role="navigation">
 				<div class="container-md px-md-0">
@@ -100,9 +100,9 @@
 							<?php } ?>
 							<li class="nav-item m-login">
 							<?php if (!is_loggedin()) { ?>
-								<a href="<?php echo $authenticationURL; ?>" class="btn d-grid btn-black mt-sm">Login</a>
+								<a href="<?php echo $authenticationURL; ?>" class="btn d-grid se-btn se-btn-primary mt-sm">Login</a>
 							<?php } else { ?>
-								<a href="<?php echo base_url('dashboard'); ?>" class="btn d-grid btn-black mt-sm">Dashboard</a>
+								<a href="<?php echo base_url('dashboard'); ?>" class="btn d-grid se-btn se-btn-primary mt-sm">Dashboard</a>
 							<?php } ?>
 							</li>
 						</ul>

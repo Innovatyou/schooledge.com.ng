@@ -1,6 +1,6 @@
 <!-- Footer Starts -->
-<footer class="main-footer">
-    <div class="footer-area" style="background: <?php echo $cms_setting['footer_background_color'] ?> url(<?=base_url('assets/frontend/images/07.png')?>);">
+<footer class="main-footer se-modern se-footer">
+    <div class="footer-area se-footer-area" style="--se-footer-color: <?php echo $cms_setting['footer_background_color'] ?>; background-image: url(<?=base_url('assets/frontend/images/07.png')?>);">
         <div class="container px-md-0">
             <div class="row">
                 <div class="col-lg-4 col-md-4 col-sm-12">
@@ -148,7 +148,7 @@ if ($config['frontend_enable_chat'] == 1) {
 <script src="<?php echo base_url('assets/vendor/select2/js/select2.full.min.js'); ?>"></script>
 <script src="<?php echo base_url('assets/vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js'); ?>"></script>
 <script src="<?php echo base_url('assets/vendor/sweetalert/sweetalert.min.js');?>"></script>
-<script src="<?php echo base_url('assets/frontend/plugins/magnific-popup/jquery.magnific-popup.min.js');?>"></script>
+<script src="<?php echo base_url('assets/frontend/js/glightbox.min.js');?>"></script>
 <script src="<?php echo base_url('assets/frontend/js/jquery.marquee.min.js');?>"></script>
 <script src="<?php echo base_url('assets/frontend/js/custom.js?v=' . version_combine()); ?>"></script>
 

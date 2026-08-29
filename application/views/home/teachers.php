@@ -1,24 +1,9 @@
-<!-- Main Banner Starts -->
-<div class="main-banner" style="background: url(<?php echo base_url('uploads/frontend/banners/' . $page_data['banner_image']); ?>) center top;">
-    <div class="container px-md-0">
-        <h2><span><?php echo $page_data['page_title']; ?></span></h2>
-    </div>
-</div>
-<!-- Main Banner Ends -->
-<!-- Breadcrumb Starts -->
-<div class="breadcrumb">
-    <div class="container px-md-0">
-        <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="<?php echo base_url('home'); ?>">Home</a></li>
-            <li class="list-inline-item active"><?php echo $page_data['page_title']; ?></li>
-        </ul>
-    </div>
-</div>
-<!-- Breadcrumb Ends -->
+<?php $this->load->view('home/layout/page_header'); ?>
+<div class="se-modern">
 <!-- Main Container Starts -->
 <div class="container px-md-0 main-container">
     <!-- Doctors Desigination Filters Starts -->
-    <ul id="doctors-filter" class="list-unstyled list-inline">
+    <ul id="doctors-filter" class="list-unstyled list-inline se-filter-pills">
         <li class="list-inline-item"><a href="#" class="active" data-group="all">All Departments</a></li>
         <?php foreach ($departments as $row) { ?>
         <li class="list-inline-item"><a href="#" data-group="<?php echo $row['department_id']; ?>"><?php echo $row['department_name']; ?></a></li>
@@ -29,7 +14,7 @@
     <ul id="doctors-grid" class="row grid">
         <?php foreach ($doctor_list as $row) { ?>
         <li class="col-lg-3 col-md-6 col-sm-12 doctors-grid" data-groups='["all", "<?php echo $row['department']; ?>"]'>
-            <div class="bio-box">
+            <div class="bio-box se-card se-tilt se-staff-card">
                 <div class="profile-img">
                     <div class="dlab-border-left"></div>
                     <div class="dlab-border-right"></div>
@@ -63,3 +48,4 @@
     <!-- Doctors List Ends -->
 </div>
 <!-- Main Container Ends -->
+</div>

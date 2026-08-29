@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
+import '../../../core/auth/biometric_service.dart';
 import '../data/auth_repository.dart';
 
 enum AuthStage { restoring, signedOut, otp, signedIn }
@@ -30,20 +31,54 @@ class AuthState {
 }
 
 final authControllerProvider = StateNotifierProvider<AuthController, AuthState>(
-  (ref) => AuthController(ref.watch(authRepositoryProvider)),
+  (ref) => AuthController(
+    ref.watch(authRepositoryProvider),
+    ref.watch(biometricServiceProvider),
+  ),
 );
 
 class AuthController extends StateNotifier<AuthState> {
-  AuthController(this._repository)
+  AuthController(this._repository, this._biometrics)
     : super(const AuthState(AuthStage.restoring)) {
     _restore();
   }
   final AuthRepository _repository;
+  final BiometricService _biometrics;
+
+  // Carried from login() through the optional OTP step so "remember me" is
+  // applied at the point the user actually ends up signed in, whichever path
+  // got them there.
+  bool _pendingRemember = false;
+  String? _pendingUsername;
+  String? _pendingPassword;
+
   Future<void> _restore() async => state = AuthState(
     await _repository.isSignedIn() ? AuthStage.signedIn : AuthStage.signedOut,
   );
-  Future<void> login(String username, String password) async {
+
+  Future<bool> biometricLoginAvailable() async =>
+      await _biometrics.isAvailable() &&
+      await _repository.savedCredentials() != null;
+
+  Future<String?> savedUsername() async =>
+      (await _repository.savedCredentials())?.$1;
+
+  Future<void> loginWithBiometrics() async {
+    final saved = await _repository.savedCredentials();
+    if (saved == null) return;
+    if (!await _biometrics.authenticate()) return;
+    await login(saved.$1, saved.$2, rememberMe: true);
+  }
+
+  Future<void> login(
+    String username,
+    String password, {
+    bool rememberMe = false,
+  }) async {
     state = const AuthState(AuthStage.signedOut, isBusy: true);
+    _pendingRemember = rememberMe;
+    _pendingUsername = username;
+    _pendingPassword = password;
     try {
       final result = await _repository.login(username, password);
       if (result['requires_otp'] == true) {
@@ -55,6 +90,7 @@ class AuthController extends StateNotifier<AuthState> {
           destination: challenge['destination'],
         );
       } else {
+        await _applyRememberMe();
         state = const AuthState(AuthStage.signedIn);
       }
     } catch (error) {
@@ -67,10 +103,21 @@ class AuthController extends StateNotifier<AuthState> {
     state = current.copyWith(isBusy: true);
     try {
       await _repository.verifyOtp(current.challengeToken!, code);
+      await _applyRememberMe();
       state = const AuthState(AuthStage.signedIn);
     } catch (error) {
       state = current.copyWith(isBusy: false, error: _message(error));
     }
+  }
+
+  Future<void> _applyRememberMe() async {
+    if (_pendingRemember && _pendingUsername != null && _pendingPassword != null) {
+      await _repository.rememberCredentials(_pendingUsername!, _pendingPassword!);
+    } else if (!_pendingRemember) {
+      await _repository.forgetCredentials();
+    }
+    _pendingUsername = null;
+    _pendingPassword = null;
   }
 
   Future<void> resendOtp() async {
@@ -90,6 +137,11 @@ class AuthController extends StateNotifier<AuthState> {
     state = const AuthState(AuthStage.signedOut);
   }
 
+  // Keeps a status/type hint on truly-unexpected failures (a non-JSON body,
+  // a response shape the app doesn't recognise, or a non-Dio exception like a
+  // JSON-decode/type error) instead of a dead-end generic string, so a report
+  // like "something went wrong" comes with something a next debugging pass
+  // can act on.
   String _message(Object error) {
     if (error is DioException) {
       final body = error.response?.data;
@@ -100,6 +152,15 @@ class AuthController extends StateNotifier<AuthState> {
       }
       if (error.type == DioExceptionType.connectionError) {
         return 'Cannot reach SchoolEdge. Check your connection and try again.';
+      }
+      if (error.type == DioExceptionType.connectionTimeout ||
+          error.type == DioExceptionType.receiveTimeout ||
+          error.type == DioExceptionType.sendTimeout) {
+        return 'SchoolEdge is taking too long to respond. Please try again.';
+      }
+      final status = error.response?.statusCode;
+      if (status != null) {
+        return 'Something went wrong on the server (error $status). Please try again or contact support.';
       }
     }
     return 'Something went wrong. Please try again.';

@@ -8,28 +8,13 @@
         font-weight: 500;
     }
 </style>
-<!-- Main Banner Starts -->
-<div class="main-banner" style="background: url(<?php echo base_url('uploads/frontend/banners/' . $page_data['banner_image']); ?>) center top;">
-    <div class="container px-md-0">
-        <h2><span><?php echo $page_data['page_title']; ?></span></h2>
-    </div>
-</div>
-<!-- Main Banner Ends -->
-<!-- Breadcrumb Starts -->
-<div class="breadcrumb">
-    <div class="container px-md-0">
-        <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="<?php echo base_url('home'); ?>">Home</a></li>
-            <li class="list-inline-item active"><?php echo $page_data['page_title']; ?></li>
-        </ul>
-    </div>
-</div>
-<!-- Breadcrumb Ends -->
+<?php $this->load->view('home/layout/page_header'); ?>
+<div class="se-modern">
 <!-- Main Container Starts -->
 <div class="container px-md-0 main-container">
     <p><?php echo $page_data['description']; ?></p>
     <?php echo form_open('home/examResultsPrintFn', array('class' => 'printIn')); ?>
-    <div class="box2 form-box">
+    <div class="box2 form-box se-card">
         <div class="row">
             <div class="col-md-4 mb-sm">
                 <div class="form-group">
@@ -97,6 +82,7 @@
     </div>
 </div>
 <!-- Main Container Ends -->
+</div>
 
 <script type="text/javascript">
     $(document).ready(function () {

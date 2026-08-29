@@ -37,4 +37,29 @@ class TokenStorage {
     await _storage.delete(key: accessKey);
     await _storage.delete(key: refreshKey);
   }
+
+  static const _savedUsernameKey = 'mobile_saved_username';
+  static const _savedPasswordKey = 'mobile_saved_password';
+
+  /// "Remember me" on the login screen. Stored in the same OS-encrypted
+  /// keystore/keychain as the auth tokens above (Android Keystore / iOS
+  /// Keychain via flutter_secure_storage), which is the same trust boundary
+  /// this app already relies on for the refresh token - never plain
+  /// SharedPreferences/disk.
+  Future<void> saveCredentials(String username, String password) async {
+    await _storage.write(key: _savedUsernameKey, value: username);
+    await _storage.write(key: _savedPasswordKey, value: password);
+  }
+
+  Future<(String, String)?> savedCredentials() async {
+    final username = await _storage.read(key: _savedUsernameKey);
+    final password = await _storage.read(key: _savedPasswordKey);
+    if (username == null || password == null) return null;
+    return (username, password);
+  }
+
+  Future<void> clearSavedCredentials() async {
+    await _storage.delete(key: _savedUsernameKey);
+    await _storage.delete(key: _savedPasswordKey);
+  }
 }

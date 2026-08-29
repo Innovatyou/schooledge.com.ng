@@ -1,26 +1,8 @@
 <?php $service = $this->db->get_where('front_cms_services', array('branch_id' => $branchID))->row_array(); ?>
-<!-- Main Banner Starts -->
-<div class="main-banner" style="background: url(<?php echo base_url('uploads/frontend/banners/' . $page_data['banner_image']); ?>) center top;">
-    <div class="container px-md-0">
-        <h2><span><?php echo $page_data['page_title']; ?></span></h2>
-    </div>
-</div>
-<!-- Main Banner Ends -->
-<!-- Breadcrumb Starts -->
-<div class="breadcrumb">
-    <div class="container px-md-0">
-        <ul class="list-unstyled list-inline">
-            <li class="list-inline-item"><a href="<?php echo base_url('home') ?>">Home</a>
-            </li>
-            <li class="list-inline-item active">
-                <?php echo $page_data['page_title']; ?>
-            </li>
-        </ul>
-    </div>
-</div>
-<!-- Breadcrumb Ends -->
+<?php $this->load->view('home/layout/page_header'); ?>
+<div class="se-modern">
 <!-- Main Container Starts -->
-<div class="container px-md-0">
+<div class="container px-md-0 se-section">
     <!-- About Intro Text Starts -->
     <section class="welcome-area about"
         style="background: url(<?php echo base_url('uploads/frontend/about/' . $page_data['about_image']); ?>) no-repeat right bottom;">
@@ -50,9 +32,11 @@
             foreach ($services_list as $key => $value) {
             ?>
             <li class="col-lg-4 col-md-6 col-sm-12">
-                <i class="<?php echo $value['icon']; ?>"></i>
-                <h4><?php echo $value['title']; ?></h4>
-                <p><?php echo $value['description']; ?></p>
+                <div class="se-card se-tilt">
+                    <span class="se-icon-badge"><i class="<?php echo $value['icon']; ?>"></i></span>
+                    <h4><?php echo $value['title']; ?></h4>
+                    <p><?php echo $value['description']; ?></p>
+                </div>
             </li>
             <?php } ?>
         </ul>
@@ -65,9 +49,10 @@
         <h3 class="float-left  mb-3">
             <?php $elements = json_decode($page_data['elements'], true); echo $elements['cta_title']; ?>
         </h3>
-        <a href="<?php echo $elements['button_url'] ?>" class="btn btn-black text-uppercase float-right">
+        <a href="<?php echo $elements['button_url'] ?>" class="se-btn se-btn-primary text-uppercase float-right">
             <?php echo $elements['button_text'] ?>
         </a>
     </div>
 </section>
 <!-- Footer Top Bar Ends -->
+</div>

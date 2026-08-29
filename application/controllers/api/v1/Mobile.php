@@ -14,19 +14,29 @@ class Mobile extends Api_Controller
     {
         $input = $this->body();
         if (empty($input['username']) || empty($input['password'])) $this->fail('validation_error', 'Username and password are required.', 422);
-        $credential = $this->authentication_model->login_credential($input['username'], $input['password']);
-        if (!$credential || !$credential->active) $this->fail('invalid_credentials', 'The supplied credentials are invalid.', 401);
-        $memberships = $this->membershipsForCredential($credential);
-        if (!$memberships) $this->fail('no_membership', 'No active school membership is available.', 403);
-        $selected = $memberships[0];
-        if (!empty($input['membership_id'])) foreach ($memberships as $membership) if ((int)$membership['id'] === (int)$input['membership_id']) $selected = $membership;
-        if ($this->requiresTwoFactor($credential, $selected)) {
-            $challenge = $this->beginTwoFactorChallenge($credential, $selected, $input['installation_id'] ?? null);
-            $this->ok(array('requires_otp'=>true, 'challenge'=>$challenge), array(), 202);
+        try {
+            $credential = $this->authentication_model->login_credential($input['username'], $input['password']);
+            if (!$credential || !$credential->active) $this->fail('invalid_credentials', 'The supplied credentials are invalid.', 401);
+            $memberships = $this->membershipsForCredential($credential);
+            if (!$memberships) $this->fail('no_membership', 'No active school membership is available.', 403);
+            $selected = $memberships[0];
+            if (!empty($input['membership_id'])) foreach ($memberships as $membership) if ((int)$membership['id'] === (int)$input['membership_id']) $selected = $membership;
+            if ($this->requiresTwoFactor($credential, $selected)) {
+                $challenge = $this->beginTwoFactorChallenge($credential, $selected, $input['installation_id'] ?? null);
+                $this->ok(array('requires_otp'=>true, 'challenge'=>$challenge), array(), 202);
+            }
+            $tokens = $this->newTokenPair($selected, null, $input['installation_id'] ?? null, $input['platform'] ?? null, $input['app_version'] ?? null);
+            $this->audit('auth.login', $selected);
+            $this->ok(array('tokens'=>$tokens, 'membership'=>$this->membershipPayload($selected), 'memberships'=>array_map(array($this, 'membershipPayload'), $memberships)));
+        } catch (\Throwable $e) {
+            // A raw PHP error/warning here would otherwise corrupt the JSON body
+            // (or return an HTML error page) that the mobile client expects,
+            // which the app can only surface as a dead-end "something went
+            // wrong" - log the real cause server-side and still answer with a
+            // well-formed error the client can parse and show sensibly.
+            log_message('error', 'Mobile login failed for "' . $input['username'] . '": ' . $e->getMessage());
+            $this->fail('server_error', 'An unexpected error occurred while signing you in. Please try again.', 500);
         }
-        $tokens = $this->newTokenPair($selected, null, $input['installation_id'] ?? null, $input['platform'] ?? null, $input['app_version'] ?? null);
-        $this->audit('auth.login', $selected);
-        $this->ok(array('tokens'=>$tokens, 'membership'=>$this->membershipPayload($selected), 'memberships'=>array_map(array($this, 'membershipPayload'), $memberships)));
     }
 
     public function verify_otp()
