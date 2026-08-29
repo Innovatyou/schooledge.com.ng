@@ -27,6 +27,7 @@ android {
 
     buildFeatures {
         resValues = true
+        buildConfig = true
     }
 
     compileOptions {

@@ -47,16 +47,27 @@ block in `build.gradle.kts` to select per-flavor properties (e.g. a
 ## Building a release artifact
 
 ```sh
-flutter build appbundle --flavor <id> --release   # Play Store upload format
-flutter build apk --flavor <id> --release          # for sideloading/testing
+flutter build appbundle --flavor <id> --release --dart-define=APP_ENV=<id>   # Play Store upload format
+flutter build apk --flavor <id> --release --dart-define=APP_ENV=<id>          # for sideloading/testing
 ```
 
 Play Store review requires the `.aab` (App Bundle) format, not a raw APK.
 
+`--flavor` only controls the Android build variant (applicationId, app name) -
+it does **not** set which API base URL the app talks to. That's
+`--dart-define=APP_ENV=<id>` (see `lib/core/config/app_environment.dart`), and
+the two are easy to pass out of sync: a `--flavor production` build with no
+matching `--dart-define` silently compiled against the emulator-only
+`10.0.2.2` address and failed to connect at all on a real device - always pass
+both together. As a safety net, `AppConfig.applyNativeFlavor()` now reads the
+actual Gradle flavor natively (Android only, via `BuildConfig.FLAVOR`) and
+uses it whenever `--dart-define=APP_ENV` was left off entirely, but an
+explicit `--dart-define` always wins, so don't rely on that net - pass both.
+
 ## Verifying
 
 ```sh
-flutter build apk --flavor <id> --debug
+flutter build apk --flavor <id> --debug --dart-define=APP_ENV=<id>
 ```
 
 succeeds today for every flavor including a freshly-generated branded one (see

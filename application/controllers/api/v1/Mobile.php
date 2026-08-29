@@ -34,7 +34,15 @@ class Mobile extends Api_Controller
             // which the app can only surface as a dead-end "something went
             // wrong" - log the real cause server-side and still answer with a
             // well-formed error the client can parse and show sensibly.
-            log_message('error', 'Mobile login failed for "' . $input['username'] . '": ' . $e->getMessage());
+            //
+            // PHP's native error_log(), not CI3's log_message(): the latter
+            // goes through Log::write_log()'s flock(LOCK_EX) (a *blocking*
+            // exclusive lock, no LOCK_NB), which was found to hang every
+            // request that hit it in this environment once log_threshold was
+            // turned on (confirmed directly - the PHPUnit suite went from
+            // ~60s to a 45-test timeout wall the moment logging was enabled).
+            // error_log() has no such dependency and needs no config change.
+            error_log('Mobile login failed for "' . $input['username'] . '": ' . $e->getMessage());
             $this->fail('server_error', 'An unexpected error occurred while signing you in. Please try again.', 500);
         }
     }
