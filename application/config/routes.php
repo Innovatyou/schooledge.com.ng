@@ -113,6 +113,12 @@ $route['api/v1/mobile/fees/receipt/(:num)/download']['get'] = 'api/v1/fees/recei
 $route['api/v1/mobile/fees/checkout']['post'] = 'api/v1/fees/checkout';
 $route['api/v1/mobile/fees/checkout/(:num)/verify']['post'] = 'api/v1/fees/verify/$1';
 $route['api/v1/mobile/fees/checkout/complete']['get'] = 'api/v1/fees/checkout_complete';
+$route['api/v1/mobile/fees/pay-with-wallet']['post'] = 'api/v1/fees/pay_with_wallet';
+
+$route['api/v1/mobile/wallet/summary']['get'] = 'api/v1/wallet/summary';
+$route['api/v1/mobile/wallet/history']['get'] = 'api/v1/wallet/history';
+$route['api/v1/mobile/wallet/topup/checkout']['post'] = 'api/v1/wallet/topup_checkout';
+$route['api/v1/mobile/wallet/topup/(:num)/verify']['post'] = 'api/v1/wallet/topup_verify/$1';
 
 $route['api/v1/mobile/library/books']['get'] = 'api/v1/library/books';
 $route['api/v1/mobile/library/categories']['get'] = 'api/v1/library/categories';
@@ -241,6 +247,9 @@ $route['search'] = 'search/index';
 // is why it looked like "redirects to dashboard/landing page" rather than
 // an access-denied error from inside the controller itself.
 $route['audit_log'] = 'audit_log/index';
+// Same missing-route bug as /search and /audit_log above - /wallet needs an
+// explicit entry too or it falls through to the branch-slug catch-all.
+$route['wallet'] = 'wallet/index';
 $route['404_override'] = 'errors';
 if (!empty($saas_default) && $saas_default == true) {
 	$route['default_controller'] = 'saas_website/index';

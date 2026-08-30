@@ -7,8 +7,10 @@ import 'package:open_filex/open_filex.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/session/current_user_provider.dart';
+import '../../../core/widgets/child_switcher.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../../../core/widgets/module_ui.dart';
+import '../../wallet/data/wallet_repository.dart';
 import '../data/fees_repository.dart';
 
 class FeesPage extends ConsumerStatefulWidget {
@@ -31,6 +33,7 @@ class _FeesPageState extends ConsumerState<FeesPage> {
       icon: Icons.account_balance_wallet_rounded,
       colors: const [Color(0xff126e82), Color(0xff168aad)],
       children: [
+        const ChildSwitcher(),
         summary.when(
           loading: () => const Padding(
             padding: EdgeInsets.symmetric(vertical: 60),
@@ -303,16 +306,31 @@ class _FeesPageState extends ConsumerState<FeesPage> {
       if (context.mounted) showModuleMessage(context, _dioErrorMessage(error));
       return;
     }
+    // Best-effort: a wallet load failure just means "no wallet option offered"
+    // rather than blocking the gateway payment path entirely.
+    double? walletBalance;
+    try {
+      final wallet = await ref.read(walletSummaryProvider.future);
+      walletBalance = (wallet['balance'] as num).toDouble();
+    } catch (_) {
+      walletBalance = null;
+    }
+    final canPayFromWallet = walletBalance != null && walletBalance >= balance;
+
+    final options = [
+      if (canPayFromWallet) {'code': 'wallet', 'name': 'Wallet balance'},
+      ...gateways,
+    ];
     if (!context.mounted) return;
-    if (gateways.isEmpty) {
+    if (options.isEmpty) {
       showModuleMessage(
         context,
         'Online payment has not been set up for your school yet. Please contact your school administrator.',
       );
       return;
     }
-    var gateway = gateways.first['code'] as String;
-    if (gateways.length > 1) {
+    var choice = options.first['code'] as String;
+    if (options.length > 1) {
       final chosen = await showModalBottomSheet<String>(
         context: context,
         showDragHandle: true,
@@ -320,8 +338,11 @@ class _FeesPageState extends ConsumerState<FeesPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              for (final option in gateways)
+              for (final option in options)
                 ListTile(
+                  leading: option['code'] == 'wallet'
+                      ? const Icon(Icons.account_balance_wallet_rounded)
+                      : null,
                   title: Text(option['name']?.toString() ?? ''),
                   onTap: () =>
                       Navigator.of(sheetContext).pop(option['code'] as String),
@@ -331,8 +352,20 @@ class _FeesPageState extends ConsumerState<FeesPage> {
         ),
       );
       if (chosen == null || !context.mounted) return;
-      gateway = chosen;
+      choice = chosen;
     }
+
+    if (choice == 'wallet') {
+      await _payFromWallet(
+        context,
+        allocationId: allocationId,
+        typeId: typeId,
+        transportFeeDetailsId: transportFeeDetailsId,
+        amount: balance,
+      );
+      return;
+    }
+    final gateway = choice;
 
     setState(() => _processing = true);
     try {
@@ -385,6 +418,42 @@ class _FeesPageState extends ConsumerState<FeesPage> {
       );
       if (confirmed == true && context.mounted) {
         await _verify(context, transactionId);
+      }
+    } on DioException catch (error) {
+      if (context.mounted) showModuleMessage(context, _dioErrorMessage(error));
+    } finally {
+      if (mounted) setState(() => _processing = false);
+    }
+  }
+
+  Future<void> _payFromWallet(
+    BuildContext context, {
+    int? allocationId,
+    int? typeId,
+    int? transportFeeDetailsId,
+    required double amount,
+  }) async {
+    setState(() => _processing = true);
+    try {
+      final studentId = ref.read(studentContextProvider);
+      await ref
+          .read(dioProvider)
+          .post(
+            'fees/pay-with-wallet',
+            data: {
+              'student_id': ?studentId,
+              'allocation_id': ?allocationId,
+              'type_id': ?typeId,
+              'transport_fee_details_id': ?transportFeeDetailsId,
+              'amount': amount,
+            },
+          );
+      ref.invalidate(feeSummaryProvider);
+      ref.invalidate(feeHistoryProvider);
+      ref.invalidate(walletSummaryProvider);
+      ref.invalidate(walletHistoryProvider);
+      if (context.mounted) {
+        showModuleMessage(context, 'Paid from your wallet. Thank you!');
       }
     } on DioException catch (error) {
       if (context.mounted) showModuleMessage(context, _dioErrorMessage(error));

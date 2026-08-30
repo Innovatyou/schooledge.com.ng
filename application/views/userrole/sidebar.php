@@ -217,6 +217,13 @@ if ($getAttendanceType == 2 || $getAttendanceType == 0) { ?>
                         </a>
                     </li>
 
+                   <!-- wallet -->
+                    <li class="<?php if ($main_menu == 'wallet') echo 'nav-active';?> ">
+                        <a href="<?=base_url('userrole/wallet')?>">
+                            <i class="icons icon-wallet"></i><span><?=translate('wallet')?></span>
+                        </a>
+                    </li>
+
                     <!-- message -->
                     <li class="<?php if ($main_menu == 'message') echo 'nav-active'; ?> ">
                         <a href="<?=base_url('communication/mailbox/inbox')?>">

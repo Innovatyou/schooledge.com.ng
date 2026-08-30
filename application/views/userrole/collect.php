@@ -22,6 +22,9 @@ if (count($allocations)) {
 				<li>
 					<a href="#collect_fees" data-toggle="tab"><i class="far fa-credit-card"></i> <?=translate('online_pay')?></a>
 				</li>
+				<li>
+					<a href="#pay_wallet" data-toggle="tab"><i class="icons icon-wallet"></i> <?=translate('wallet')?></a>
+				</li>
 			<?php if ($getOfflinePaymentsConfig == 1) { ?>
 				<li>
 					<a href="#offline_payments" data-toggle="tab"><i class="far fa-credit-card"></i> <?=translate('offline_payments')?></a>
@@ -619,6 +622,41 @@ if (moduleIsEnabled('transport')) {
 								</div>
 							</footer>
 						<?php echo form_close();?>
+					</div>
+					<div id="pay_wallet" class="tab-pane">
+						<div class="mb-xlg">
+							<div class="alert alert-info">
+								<?=translate('wallet_balance')?>: <b><?=currencyFormat($walletBalance)?></b>
+							</div>
+							<?php echo form_open('userrole/payFeeFromWallet', array('class' => 'form-horizontal frm-submit')); ?>
+								<div class="form-group">
+									<label class="col-md-3 control-label"><?=translate('fees_type')?> <span class="required">*</span></label>
+									<div class="col-md-6">
+									<?php
+										echo form_dropdown("fees_type", $typeData, set_value('fees_type'), "class='form-control' onchange='getBalanceByType(this)'
+										data-plugin-selectTwo data-width='100%' ");
+									?>
+									<span class="error"></span>
+									</div>
+								</div>
+								<div class="form-group">
+									<label class="col-md-3 control-label"><?=translate('amount')?> <span class="required">*</span></label>
+									<div class="col-md-6">
+										<input type="text" class="form-control" name="fee_amount" id="feeAmount" value="" autocomplete="off" />
+										<span class="error"></span>
+									</div>
+								</div>
+								<footer class="panel-footer">
+									<div class="row">
+										<div class="col-md-offset-3 col-md-3">
+											<button type="submit" class="btn btn-default" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing" <?=$walletBalance <= 0 ? 'disabled' : ''?>>
+												<i class="icons icon-wallet"></i> <?=translate('pay_from_wallet')?>
+											</button>
+										</div>
+									</div>
+								</footer>
+							<?php echo form_close();?>
+						</div>
 					</div>
 					<?php if ($getOfflinePaymentsConfig == 1) { ?>
 					<div id="offline_payments" class="tab-pane">

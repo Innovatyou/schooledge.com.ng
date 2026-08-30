@@ -22,6 +22,7 @@ class Userrole extends User_Controller
         $this->load->model('leave_model');
         $this->load->model('fees_model');
         $this->load->model('exam_model');
+        $this->load->model('wallet_model');
     }
 
     public function index()
@@ -432,9 +433,88 @@ class Userrole extends User_Controller
         if (moduleIsEnabled('transport')) {
             $this->data['transport_fees'] = $this->fees_model->getStudentTransportFees($stu['enroll_id'], $this->data['basic']['stoppage_point_id']);
         }
+        $this->data['walletBalance'] = $this->wallet_model->getOrCreateWallet($stu['branch_id'], $stu['student_id'])['balance'];
         $this->data['title'] = translate('fees_history');
         $this->data['main_menu'] = 'fees';
         $this->data['sub_page'] = 'userrole/collect';
+        $this->load->view('layout/index', $this->data);
+    }
+
+    /**
+     * Pay a fee item straight from the student's wallet balance - instant,
+     * no maker-checker, no Offline-Payments human review, because the funds
+     * are already verified and sitting in the wallet. Mirrors the balance
+     * check Feespayment.php's gateway checkout does, but debits the wallet
+     * instead of redirecting to an external gateway.
+     */
+    public function payFeeFromWallet()
+    {
+        if (is_demo_readonly()) {
+            echo json_encode(array('status' => 'fail', 'error' => array('fee_amount' => translate('this_is_a_read_only_demo_school'))));
+            return;
+        }
+        $stu = $this->userrole_model->getStudentDetails();
+        $feesType = explode('|', (string)$this->input->post('fees_type'));
+        $amount = (float)$this->input->post('fee_amount');
+        if (empty($feesType[0]) || $amount <= 0) {
+            echo json_encode(array('status' => 'fail', 'error' => array('fees_type' => translate('this_field_is_required'))));
+            return;
+        }
+
+        $isTransport = $feesType[0] === 'transport';
+        if ($isTransport) {
+            $transportId = (int)$feesType[1];
+            $balance = $this->fees_model->getTransportBalance($transportId)['balance'];
+        } else {
+            $allocationId = (int)$feesType[0];
+            $typeId = (int)$feesType[1];
+            $balance = $this->fees_model->getBalance($allocationId, $typeId)['balance'];
+        }
+        if ($amount - $balance > 0.01) {
+            echo json_encode(array('status' => 'fail', 'error' => array('fee_amount' => translate('the_amount_exceeds_the_outstanding_balance'))));
+            return;
+        }
+
+        $ok = $this->wallet_model->adjustBalance($stu['branch_id'], $stu['student_id'], 'debit', $amount, 'fee_payment', 'Fee payment via wallet', loggedin_role_id(), get_loggedin_user_id());
+        if (!$ok) {
+            echo json_encode(array('status' => 'fail', 'error' => array('fee_amount' => translate('insufficient_wallet_balance'))));
+            return;
+        }
+
+        $walletType = $this->db->where('name', 'Wallet')->get('payment_types')->row();
+        $feeData = array(
+            'collect_by' => 'wallet', 'amount' => $amount, 'discount' => 0, 'fine' => 0,
+            'pay_via' => $walletType ? $walletType->id : null,
+            'remarks' => 'Fees deposit via wallet',
+            'date' => date('Y-m-d'),
+        );
+        if ($isTransport) {
+            $feeData['transport_fee_details_id'] = $transportId;
+        } else {
+            $feeData['allocation_id'] = $allocationId;
+            $feeData['type_id'] = $typeId;
+        }
+        $this->db->insert('fee_payment_history', $feeData);
+        $paymentHistoryId = $this->db->insert_id();
+
+        $links = $this->db->where('branch_id', $stu['branch_id'])->get('transactions_links')->row_array();
+        if ($links && !empty($links['status']) && !empty($links['deposit'])) {
+            $this->fees_model->saveTransaction(array('account_id' => $links['deposit'], 'amount' => $amount, 'date' => date('Y-m-d')));
+        }
+
+        audit_log('add', 'fee_payment_history', $paymentHistoryId, null, $feeData);
+        echo json_encode(array('status' => 'success'));
+    }
+
+    /* Parent/student wallet balance + transaction ledger */
+    public function wallet()
+    {
+        $stu = $this->userrole_model->getStudentDetails();
+        $this->data['wallet'] = $this->wallet_model->getOrCreateWallet($stu['branch_id'], $stu['student_id']);
+        $this->data['transactions'] = $this->wallet_model->getTransactions($stu['branch_id'], $stu['student_id']);
+        $this->data['title'] = translate('wallet');
+        $this->data['main_menu'] = 'wallet';
+        $this->data['sub_page'] = 'userrole/wallet';
         $this->load->view('layout/index', $this->data);
     }
 

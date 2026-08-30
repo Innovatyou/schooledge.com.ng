@@ -9,11 +9,18 @@ final currentUserProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   return Map<String, dynamic>.from(response.data['data']);
 });
 
-/// The student id a fees/events/live-class request should act on: the
-/// student's own id, or - for a parent - their first/only linked child in
-/// this school (the app doesn't yet have a full child switcher; this keeps
-/// every student-scoped feature usable today and is the single place to
-/// extend once multi-child switching is built).
+/// The parent's manually-selected child, set by ChildSwitcher
+/// (core/widgets/child_switcher.dart) and restored from on-device storage
+/// per membership id. Null means "no explicit choice yet" - studentContextProvider
+/// below then falls back to the first linked child, same as before a switcher
+/// existed.
+final selectedChildIdProvider = StateProvider<int?>((ref) => null);
+
+/// The student id a fees/wallet/events/live-class request should act on: the
+/// student's own id, or - for a parent - the child picked in ChildSwitcher,
+/// falling back to their first/only linked child if nothing has been picked
+/// yet (or the school has only one child linked, in which case ChildSwitcher
+/// never renders at all).
 final studentContextProvider = Provider<int?>((ref) {
   final user = ref.watch(currentUserProvider).valueOrNull;
   if (user == null) return null;
@@ -23,5 +30,10 @@ final studentContextProvider = Provider<int?>((ref) {
   if (roleId == 7) return user['id'] as int?;
   final children = (user['children'] as List?)?.cast<Map<String, dynamic>>();
   if (children == null || children.isEmpty) return null;
+  final selected = ref.watch(selectedChildIdProvider);
+  if (selected != null &&
+      children.any((child) => (child['id'] as int?) == selected)) {
+    return selected;
+  }
   return children.first['id'] as int?;
 });

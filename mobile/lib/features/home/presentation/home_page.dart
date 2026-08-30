@@ -28,6 +28,7 @@ import '../../notifications/presentation/notifications_page.dart';
 import '../../planner/presentation/planner_page.dart';
 import '../../profile/presentation/profile_page.dart';
 import '../../results/presentation/results_page.dart';
+import '../../wallet/presentation/wallet_page.dart';
 import '../../../core/navigation/page_transitions.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -439,6 +440,11 @@ class _ModuleGridState extends State<_ModuleGrid> {
         label: 'Fees',
         color: module.fees,
       ),
+      (
+        icon: Icons.savings_rounded,
+        label: 'Wallet',
+        color: module.wallet,
+      ),
       (icon: Icons.forum_rounded, label: 'Messages', color: module.messages),
       (
         icon: Icons.local_library_rounded,
@@ -512,6 +518,7 @@ class _ModuleGridState extends State<_ModuleGrid> {
               'Homework' => HomeworkPage(role: role),
               'Results' => ResultsPage(role: role),
               'Fees' => const FeesPage(),
+              'Wallet' => const WalletPage(),
               'Library' => const LibraryPage(),
               'Online Class' => const LiveClassesPage(),
               'Rewards' => const GamificationPage(),

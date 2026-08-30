@@ -1580,4 +1580,35 @@ if (tableExists($m, 'schooledge_chat_voice_notes') && !columnExists($m, 'schoole
     echo "736: added schooledge_chat_voice_notes.classroom_key\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 738: student wallets - a per-student balance a parent can
+// fund and spend against any of that student's fees. Named distinctly
+// from the unrelated school_wallet/school_wallet_transaction tables
+// (migration 737, a per-branch SMS/email credit balance) - these are
+// two different kinds of "wallet" in this app.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'student_wallets')) {
+    $m->query("CREATE TABLE student_wallets (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, student_id INT NOT NULL, balance DECIMAL(18,2) NOT NULL DEFAULT 0.00, currency VARCHAR(10) NOT NULL DEFAULT 'NGN', created_at DATETIME NOT NULL, updated_at DATETIME NOT NULL, UNIQUE KEY uniq_branch_student (branch_id, student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "738: created student_wallets table\n";
+}
+if (!tableExists($m, 'student_wallet_transactions')) {
+    $m->query("CREATE TABLE student_wallet_transactions (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, student_id INT NOT NULL, type ENUM('credit','debit') NOT NULL, amount DECIMAL(18,2) NOT NULL, balance_after DECIMAL(18,2) NOT NULL, source VARCHAR(20) NOT NULL, reference_type VARCHAR(40) NULL, reference_id INT NULL, actor_role_id INT NULL, actor_user_id INT NULL, remarks VARCHAR(255) NULL, created_at DATETIME NOT NULL, KEY idx_branch_student (branch_id, student_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "738: created student_wallet_transactions table\n";
+}
+
+if (tableExists($m, 'payment_types')) {
+    $res = $m->query("SELECT id FROM payment_types WHERE name = 'Wallet'");
+    if ($res->num_rows === 0) {
+        $m->query("INSERT INTO payment_types (name) VALUES ('Wallet')");
+        echo "738: seeded payment_types 'Wallet'\n";
+    }
+}
+
+$walletPermissionId = seedPermission($m, 16, 'Student Wallet', 'wallet', 1, 1, 1, 0);
+$walletGrants = array(2 => [1, 1, 1, 0], 3 => [0, 0, 0, 0], 4 => [1, 1, 1, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($walletGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $walletPermissionId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "738: seeded wallet permission\n";
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

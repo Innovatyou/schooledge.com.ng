@@ -1269,6 +1269,7 @@
                         get_permission('sendsmsmail_template', 'is_view') ||
                         get_permission('student_birthday_wishes', 'is_view') ||
                         get_permission('staff_birthday_wishes', 'is_view') ||
+                        get_permission('veltrix_wallet', 'is_view') ||
                         get_permission('sendsmsmail_reports', 'is_view')) {
                         ?>
                     <!-- SMS -->
@@ -1311,6 +1312,12 @@
                                     <span><i class="fas fa-caret-right"></i> Staff Birthday Wishes</span>
                                 </a>
                             </li>
+                            <?php } if (get_permission('veltrix_wallet', 'is_view')) {  ?>
+                            <li class="<?php if ($sub_page == 'veltrixwallet/index') echo 'nav-active';?>">
+                                <a href="<?=base_url('veltrixwallet')?>">
+                                    <span><i class="fas fa-caret-right"></i> SMS/Email Wallet</span>
+                                </a>
+                            </li>
                             <?php } ?>
                         </ul>
                     </li>
@@ -1326,6 +1333,7 @@
                         get_permission('collect_fees_approve', 'is_view') ||
                         get_permission('offline_payments', 'is_view') ||
                         get_permission('offline_payments_type', 'is_view') ||
+                        get_permission('wallet', 'is_view') ||
                         get_permission('fees_reminder', 'is_view')) {
                             $getOfflinePaymentsTotal = $this->application_model->getOfflinePaymentsTotal();
                         ?>
@@ -1388,6 +1396,10 @@
                             <?php } if(get_permission('fees_reminder', 'is_view')) { ?>
                             <li class="<?php if ($sub_page == 'fees/reminder') echo 'nav-active';?>">
                                 <a href="<?=base_url('fees/reminder')?>"><span><i class="fas fa-caret-right"></i><?=translate('fees_reminder')?></span></a>
+                            </li>
+                            <?php } if(get_permission('wallet', 'is_view')) { ?>
+                            <li class="<?php if ($main_menu == 'wallet') echo 'nav-active';?>">
+                                <a href="<?=base_url('wallet')?>"><span><i class="fas fa-caret-right"></i><?=translate('wallet')?></span></a>
                             </li>
                             <?php } ?>
                         </ul>

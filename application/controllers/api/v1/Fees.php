@@ -19,6 +19,7 @@ class Fees extends Api_Controller
         parent::__construct();
         $this->load->model('fees_model');
         $this->load->model('authentication_model');
+        $this->load->model('wallet_model');
     }
 
     public function summary()
@@ -162,7 +163,7 @@ class Fees extends Api_Controller
         $config = $this->db->where('branch_id', $membership['branch_id'])->get('payment_config')->row_array();
         if (!$config || empty($config[$gateway . '_status'])) $this->fail('gateway_not_configured', 'This payment method is not available for your school.', 409);
 
-        $existing = $this->db->where(array('branch_id' => $membership['branch_id'], 'idempotency_key' => $input['idempotency_key']))->get('payment_transactions')->row_array();
+        $existing = $this->db->where(array('branch_id' => $membership['branch_id'], 'purpose' => 'fee_payment', 'idempotency_key' => $input['idempotency_key']))->get('payment_transactions')->row_array();
         if ($existing) {
             $this->ok(array('transaction_id' => (int)$existing['id'], 'status' => $existing['status'], 'gateway' => $existing['gateway'], 'reference' => $existing['gateway_reference'], 'checkout_url' => null));
             return;
@@ -192,7 +193,7 @@ class Fees extends Api_Controller
     {
         $membership = $this->requireAuth();
         $this->blockIfDemoReadonly($membership['branch_id']);
-        $transaction = $this->db->where(array('id' => (int)$transactionId, 'branch_id' => $membership['branch_id'], 'membership_id' => $membership['id']))->get('payment_transactions')->row_array();
+        $transaction = $this->db->where(array('id' => (int)$transactionId, 'branch_id' => $membership['branch_id'], 'membership_id' => $membership['id'], 'purpose' => 'fee_payment'))->get('payment_transactions')->row_array();
         if (!$transaction) $this->fail('transaction_not_found', 'Payment transaction not found.', 404);
 
         if ($transaction['status'] === 'success') {
@@ -234,6 +235,80 @@ class Fees extends Api_Controller
             $this->notifyMembership($membership['id'], $membership['branch_id'], 'payment', 'Payment received', 'Your payment of ' . $transaction['currency'] . ' ' . number_format((float)$transaction['amount'], 2) . ' was received.', array('transaction_id' => $transaction['id']));
         }
         $this->ok(array('status' => 'success', 'summary' => $this->summaryForTransaction($membership, $transaction)));
+    }
+
+    /**
+     * Pay a fee item straight from the student's wallet balance - instant,
+     * no maker-checker, no Offline-Payments human review, because the funds
+     * are already verified and sitting in the wallet. This is the "offline
+     * automatic payment" the wallet feature exists for: a manual "pay from
+     * wallet" tap that succeeds immediately as long as the balance covers it.
+     */
+    public function pay_with_wallet()
+    {
+        $membership = $this->requireAuth();
+        $this->blockIfDemoReadonly($membership['branch_id']);
+        $input = $this->body();
+        $enrollment = $this->resolveOwnedEnrollment($membership, $input['student_id'] ?? null);
+
+        $amount = isset($input['amount']) ? (float)$input['amount'] : 0;
+        if ($amount <= 0) $this->fail('validation_error', 'A positive amount is required.', 422, array('amount' => 'required'));
+
+        $isTransport = !empty($input['transport_fee_details_id']);
+        if ($isTransport) {
+            $transportId = (int)$input['transport_fee_details_id'];
+            $owned = $this->db->where(array('id' => $transportId, 'enroll_id' => $enrollment['id']))->get('transport_fee_details')->row();
+            if (!$owned) $this->fail('resource_not_found', 'Transport fee item not found for this student.', 404);
+            $balance = $this->transportBalance($transportId)['balance'];
+            $allocationId = null;
+            $typeId = null;
+        } else {
+            $allocationId = (int)($input['allocation_id'] ?? 0);
+            $typeId = (int)($input['type_id'] ?? 0);
+            if (!$allocationId || !$typeId) $this->fail('validation_error', 'allocation_id and type_id (or transport_fee_details_id) are required.', 422);
+            $owned = $this->db->where(array('id' => $allocationId, 'student_id' => $enrollment['id']))->get('fee_allocation')->row();
+            if (!$owned) $this->fail('resource_not_found', 'Fee allocation not found for this student.', 404);
+            $balance = $this->fees_model->getBalance($allocationId, $typeId)['balance'];
+            $transportId = null;
+        }
+        if ($amount - $balance > 0.01) $this->fail('amount_exceeds_balance', 'The amount exceeds the outstanding balance.', 422, array('balance' => round($balance, 2)));
+
+        $ok = $this->wallet_model->adjustBalance(
+            $membership['branch_id'], $enrollment['student_id'], 'debit', $amount, 'fee_payment',
+            'Fee payment via wallet - mobile app', $membership['role_id'], $membership['user_id']
+        );
+        if (!$ok) $this->fail('insufficient_balance', 'The wallet balance is not enough to cover this amount.', 422);
+
+        $walletType = $this->db->where('name', 'Wallet')->get('payment_types')->row();
+        $data = array(
+            'collect_by' => 'wallet', 'amount' => $amount, 'discount' => 0, 'fine' => 0,
+            'pay_via' => $walletType ? (int)$walletType->id : null,
+            'remarks' => 'Fees deposit via wallet - mobile app',
+            'date' => date('Y-m-d'),
+        );
+        if ($isTransport) {
+            $data['transport_fee_details_id'] = $transportId;
+        } else {
+            $data['allocation_id'] = $allocationId;
+            $data['type_id'] = $typeId;
+        }
+        $this->db->insert('fee_payment_history', $data);
+        $paymentHistoryId = $this->db->insert_id();
+
+        $links = $this->db->where('branch_id', $membership['branch_id'])->get('transactions_links')->row_array();
+        if ($links && !empty($links['status']) && !empty($links['deposit'])) {
+            $this->bridgeLegacySession($membership);
+            $this->fees_model->saveTransaction(array('account_id' => $links['deposit'], 'amount' => $amount, 'date' => date('Y-m-d')));
+        }
+
+        $this->audit('wallet.fee_payment', $membership, $paymentHistoryId);
+        $this->notifyMembership($membership['id'], $membership['branch_id'], 'payment', 'Payment received', 'Your payment of ' . $this->branchCurrency($membership['branch_id']) . ' ' . number_format($amount, 2) . ' was paid from your wallet.', array('payment_id' => $paymentHistoryId));
+
+        $this->ok(array(
+            'payment_id' => $paymentHistoryId,
+            'wallet_balance' => round((float)$this->wallet_model->getOrCreateWallet($membership['branch_id'], $enrollment['student_id'])['balance'], 2),
+            'summary' => $this->buildSummary($membership, $enrollment),
+        ));
     }
 
     /** Public landing page Paystack redirects the user's browser to after checkout. No auth: the app never trusts this, it only tells the user to return and re-verifies independently via verify(). */

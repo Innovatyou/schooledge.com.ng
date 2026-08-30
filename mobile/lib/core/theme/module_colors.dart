@@ -16,6 +16,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
     required this.liveClasses,
     required this.admin,
     required this.rewards,
+    required this.wallet,
   });
 
   final Color learning;
@@ -28,6 +29,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
   final Color liveClasses;
   final Color admin;
   final Color rewards;
+  final Color wallet;
 
   static const light = ModuleColors(
     learning: AppColors.learningPurple,
@@ -40,6 +42,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
     liveClasses: AppColors.liveClassesOrangeRed,
     admin: AppColors.adminNavy,
     rewards: AppColors.gold,
+    wallet: Color(0xff2e9e6c),
   );
 
   // Same hues, slightly lifted for dark-surface contrast.
@@ -54,6 +57,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
     liveClasses: Color(0xffef9377),
     admin: Color(0xff5c85c2),
     rewards: Color(0xffffda85),
+    wallet: Color(0xff4cc790),
   );
 
   @override
@@ -68,6 +72,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
     Color? liveClasses,
     Color? admin,
     Color? rewards,
+    Color? wallet,
   }) => ModuleColors(
     learning: learning ?? this.learning,
     attendance: attendance ?? this.attendance,
@@ -79,6 +84,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
     liveClasses: liveClasses ?? this.liveClasses,
     admin: admin ?? this.admin,
     rewards: rewards ?? this.rewards,
+    wallet: wallet ?? this.wallet,
   );
 
   @override
@@ -95,6 +101,7 @@ class ModuleColors extends ThemeExtension<ModuleColors> {
       liveClasses: Color.lerp(liveClasses, other.liveClasses, t)!,
       admin: Color.lerp(admin, other.admin, t)!,
       rewards: Color.lerp(rewards, other.rewards, t)!,
+      wallet: Color.lerp(wallet, other.wallet, t)!,
     );
   }
 }
