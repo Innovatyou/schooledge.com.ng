@@ -13,6 +13,15 @@ final dioProvider = Provider<Dio>((ref) {
   final apiUri = Uri.parse(AppConfig.apiBaseUrl);
   final headers = <String, dynamic>{
     'Accept': 'application/json',
+    // Dio's default User-Agent ("Dart/x.x (dart:io)") is a classic bot-scanner
+    // signature - schooledge.com.ng's host fronts the app with LiteSpeed's Bot
+    // Verification challenge, which was confirmed intercepting mobile login
+    // requests with a 403 HTML CAPTCHA page instead of ever reaching the PHP
+    // app. A real UA alone won't bypass a challenge gated on IP reputation,
+    // but it removes one obvious signal - the actual fix is a server-side
+    // bot-verification exception for the /api/v1/mobile/ path, since an API
+    // client can never complete a JS+reCAPTCHA challenge.
+    'User-Agent': 'SchoolEdgeMobile/1.0 (Android)',
     if (AppConfig.environment == AppEnvironment.development &&
         apiUri.host == '10.0.2.2')
       'Host': 'localhost',
