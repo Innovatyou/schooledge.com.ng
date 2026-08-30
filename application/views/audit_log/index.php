@@ -6,7 +6,7 @@
 			</header>
 			<div class="panel-body">
 				<div class="export_title">Audit Log</div>
-				<table class="table table-bordered table-hover table-condensed table-export" id="auditLogTable" cellpadding="0" cellspacing="0" width="100%">
+				<table class="table table-bordered table-hover table-condensed" id="auditLogTable" cellpadding="0" cellspacing="0" width="100%">
 					<thead>
 						<tr>
 <?php if (is_superadmin_loggedin()): ?>
