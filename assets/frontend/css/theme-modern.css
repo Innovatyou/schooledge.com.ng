@@ -169,7 +169,12 @@
   position: relative;
   isolation: isolate;
   overflow: hidden;
-  background: linear-gradient(135deg, var(--thm-primary-soft), #fbfaff 48%, #effbf8);
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 26%, #fff),
+    color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 9%, #fff) 55%,
+    color-mix(in srgb, var(--thm-hover, var(--thm-primary, var(--thm-primary-fallback))) 18%, #fff)
+  );
 }
 .se-aurora::before {
   content: "";
@@ -312,12 +317,19 @@
    so the color only ever TINTS a guaranteed-dark base here (accents like
    the active-link state and CTA button use the raw color at full
    strength instead, where light-on-dark contrast isn't a concern). */
+/* menu_color defaults to white for most schools that never touch it, which
+   used to make the nav ignore the school's actual brand color entirely
+   (color-mix's first argument fell back to --thm-primary only when
+   menu_color was unset, but a real white value still "won"). Mixing
+   menu_color and --thm-primary together first, then blending that into
+   --thm-ink, keeps an admin's deliberate menu_color choice meaningful while
+   guaranteeing the school's own primary color always shows through too. */
 .se-glass-nav {
-  background: color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 25%, var(--thm-ink) 75%) !important;
+  background: color-mix(in srgb, color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 50%, var(--thm-primary, var(--thm-primary-fallback)) 50%) 42%, var(--thm-ink) 58%) !important;
   transition: background 0.3s ease, box-shadow 0.3s ease, backdrop-filter 0.3s ease;
 }
 .se-glass-nav.stricky-fixed {
-  background: color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 20%, var(--thm-ink) 80%) !important;
+  background: color-mix(in srgb, color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 50%, var(--thm-primary, var(--thm-primary-fallback)) 50%) 36%, var(--thm-ink) 64%) !important;
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
   box-shadow: 0 10px 30px rgba(20, 33, 61, 0.18);
@@ -369,7 +381,7 @@
 }
 @media (max-width: 991px) {
   .se-glass-nav .navbar-collapse {
-    background: color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 25%, var(--thm-ink) 75%);
+    background: color-mix(in srgb, color-mix(in srgb, var(--se-menu-color, var(--thm-primary, var(--thm-primary-fallback))) 50%, var(--thm-primary, var(--thm-primary-fallback)) 50%) 42%, var(--thm-ink) 58%);
     border-radius: var(--thm-radius-lg);
     margin-top: 10px;
     padding: 10px;
