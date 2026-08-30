@@ -235,6 +235,12 @@ $route['home'] = 'home/index';
 // (the public-site branch-slug resolver) instead of reaching Search::index() -
 // same reason every other single-segment admin controller above is listed here.
 $route['search'] = 'search/index';
+// Same missing-route bug as /search above, just never caught until now:
+// /audit_log had no explicit entry either, so it never reached
+// Audit_log::index() - it fell through to the branch-slug catch-all, which
+// is why it looked like "redirects to dashboard/landing page" rather than
+// an access-denied error from inside the controller itself.
+$route['audit_log'] = 'audit_log/index';
 $route['404_override'] = 'errors';
 if (!empty($saas_default) && $saas_default == true) {
 	$route['default_controller'] = 'saas_website/index';
