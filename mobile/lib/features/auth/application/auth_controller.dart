@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:dio/dio.dart';
 import '../../../core/auth/biometric_service.dart';
@@ -144,22 +143,6 @@ class AuthController extends StateNotifier<AuthState> {
   // like "something went wrong" comes with something a next debugging pass
   // can act on.
   String _message(Object error) {
-    // TEMPORARY diagnostic - remove once the live-device login investigation
-    // is done. The UI only ever shows the friendly string below, so without
-    // this the real DioException/status/body never surfaces anywhere visible.
-    if (kDebugMode) {
-      if (error is DioException) {
-        debugPrint(
-          'LOGIN DEBUG: DioException type=${error.type} '
-          'status=${error.response?.statusCode} '
-          'uri=${error.requestOptions.uri} '
-          'body=${error.response?.data} '
-          'message=${error.message}',
-        );
-      } else {
-        debugPrint('LOGIN DEBUG: non-Dio error ${error.runtimeType}: $error');
-      }
-    }
     if (error is DioException) {
       final body = error.response?.data;
       if (body is Map &&
