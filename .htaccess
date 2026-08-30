@@ -4,3 +4,17 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php?/$1 [L]
 </IfModule>
+
+# Dev-only tooling files that have no business being served - see
+# mobile/.htaccess, tests/.htaccess, docs/.htaccess for the equivalent
+# per-folder blocks (those three trees were added after the original CI3
+# template and never got the deny-all treatment application/ and system/
+# ship with by default, so they were sitting fully public).
+<FilesMatch "^(composer\.(json|lock)|phpunit\.xml)$">
+    <IfModule authz_core_module>
+        Require all denied
+    </IfModule>
+    <IfModule !authz_core_module>
+        Deny from all
+    </IfModule>
+</FilesMatch>
