@@ -250,6 +250,12 @@ $route['audit_log'] = 'audit_log/index';
 // Same missing-route bug as /search and /audit_log above - /wallet needs an
 // explicit entry too or it falls through to the branch-slug catch-all.
 $route['wallet'] = 'wallet/index';
+// Same bug again - /veltrixwallet (bare, no method segment) falls through to
+// the branch-slug catch-all and renders the public homepage instead of
+// reaching Veltrixwallet::index(). Two-segment paths like
+// veltrixwallet/topup and veltrixwebhook/paystack already route correctly
+// without an explicit entry, same as every other multi-segment controller.
+$route['veltrixwallet'] = 'veltrixwallet/index';
 $route['404_override'] = 'errors';
 if (!empty($saas_default) && $saas_default == true) {
 	$route['default_controller'] = 'saas_website/index';
