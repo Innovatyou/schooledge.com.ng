@@ -1,20 +1,23 @@
 # Mobile app download (Android APK)
 
-The public marketing site (`/` &rarr; `saas_website/index.php`, "Mobile App"
-section) and the logged-in dashboard (`/mobile_app`, `Mobile_app.php`) both
-link directly to a static file:
+The logged-in dashboard only (`/mobile_app`, `Mobile_app.php` - gated behind
+`Admin_Controller`, i.e. a registered school with a valid subscription) links
+directly to a static file:
 
 ```
 uploads/mobile_app/SchoolEdge.apk
 ```
 
+Deliberately **not** on the public marketing site (`saas_website/index.php`) -
+the download is only surfaced to schools that have actually signed up.
+
 That file is **not committed to git** (see `.gitignore`) - a release APK is
 80-100MB+, GitHub hard-blocks any single file over 100MB, and binaries don't
 delta-compress so every rebuild would permanently grow `.git` by another
-80-100MB. Both pages check `is_file()`/`file_exists()` before showing the
-Android download button, so a missing APK degrades to a "check back shortly"
-message instead of a broken link - deploying code changes without the binary
-present is safe.
+80-100MB. The dashboard page checks `is_file()` before showing the Android
+download button, so a missing APK degrades to a "check back shortly" message
+instead of a broken link - deploying code changes without the binary present
+is safe.
 
 ## Deploying a build
 
@@ -34,6 +37,6 @@ change between releases - just overwrite the file in place.
 
 ## iOS
 
-No iOS build exists yet - both pages show an "iOS - Coming Soon" badge
-instead of a download link. See `mobile/docs/ios-signing-guide.md` when that
-changes.
+No iOS build exists yet - the dashboard page shows an "iOS - Coming Soon"
+badge instead of a download link. See `mobile/docs/ios-signing-guide.md` when
+that changes.
