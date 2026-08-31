@@ -1636,6 +1636,26 @@ foreach ($walletGrants as $roleId => $grant) {
 echo "738: seeded wallet permission\n";
 
 // ---------------------------------------------------------------------
+// Migration 739: one verified Veltrix sending domain per school
+// (self-service domain setup, migration 737's Veltrix integration) + the
+// veltrix_wallet permission gating Veltrixwallet.php. This block previously
+// existed only in application/migrations/739_version_739.php, which never
+// actually runs (CI's migration library is disabled) - moved here so it's
+// part of the script that does.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'school_veltrix_domain')) {
+    $m->query("CREATE TABLE school_veltrix_domain (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, domain_uid VARCHAR(20) NOT NULL, name VARCHAR(255) NOT NULL, dns_host VARCHAR(255) NOT NULL, dns_value TEXT NOT NULL, verified TINYINT(1) NOT NULL DEFAULT 0, created_at DATETIME NOT NULL, updated_at DATETIME NULL, UNIQUE KEY uniq_branch (branch_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "739: created school_veltrix_domain table\n";
+}
+
+$veltrixWalletPermissionId = seedPermission($m, 16, 'SMS/Email Wallet', 'veltrix_wallet', 1, 1, 0, 0);
+$veltrixWalletGrants = array(2 => [1, 1, 0, 0], 3 => [0, 0, 0, 0], 4 => [1, 1, 0, 0], 5 => [0, 0, 0, 0], 6 => [0, 0, 0, 0], 7 => [0, 0, 0, 0], 8 => [0, 0, 0, 0]);
+foreach ($veltrixWalletGrants as $roleId => $grant) {
+    seedStaffPrivilege($m, $roleId, $veltrixWalletPermissionId, $grant[0], $grant[1], $grant[2], $grant[3]);
+}
+echo "739: seeded veltrix_wallet permission\n";
+
+// ---------------------------------------------------------------------
 // Migration 740: UNIQUE(branch_id, reference) on school_wallet_transaction
 // -- backstops a double credit if both the Paystack browser callback and
 // the Paystack webhook land for the same wallet top-up reference.
