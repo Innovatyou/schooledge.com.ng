@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/session/current_user_provider.dart';
@@ -19,7 +20,27 @@ class WalletPage extends ConsumerStatefulWidget {
 }
 
 class _WalletPageState extends ConsumerState<WalletPage> {
+  static const _hiddenPrefsKey = 'schooledge.wallet_balance_hidden';
   bool _processing = false;
+  bool _balanceHidden = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreHiddenPreference();
+  }
+
+  Future<void> _restoreHiddenPreference() async {
+    final prefs = await SharedPreferences.getInstance();
+    final hidden = prefs.getBool(_hiddenPrefsKey) ?? false;
+    if (mounted) setState(() => _balanceHidden = hidden);
+  }
+
+  Future<void> _toggleBalanceHidden() async {
+    setState(() => _balanceHidden = !_balanceHidden);
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_hiddenPrefsKey, _balanceHidden);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,14 +92,29 @@ class _WalletPageState extends ConsumerState<WalletPage> {
             ),
           ),
           const SizedBox(height: 5),
-          Text(
-            'Wallet balance',
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurfaceVariant,
-            ),
+          Row(
+            children: [
+              Text(
+                'Wallet balance',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(width: 6),
+              GestureDetector(
+                onTap: _toggleBalanceHidden,
+                child: Icon(
+                  _balanceHidden
+                      ? Icons.visibility_off_rounded
+                      : Icons.visibility_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.onSurfaceVariant,
+                ),
+              ),
+            ],
           ),
           Text(
-            formatMoney(balance, currency),
+            _balanceHidden ? '••••••' : formatMoney(balance, currency),
             style: const TextStyle(
               fontSize: 32,
               fontWeight: FontWeight.w900,
@@ -97,7 +133,15 @@ class _WalletPageState extends ConsumerState<WalletPage> {
   }
 
   Widget _buildHistory(BuildContext context, Map<String, dynamic>? currency) =>
-      Consumer(
+      _balanceHidden
+          ? const InfoRow(
+              icon: Icons.visibility_off_rounded,
+              title: 'Amounts hidden',
+              subtitle: 'Tap the eye icon above to show your balance and history.',
+              color: Color(0xff829ab1),
+              trailing: SizedBox.shrink(),
+            )
+          : Consumer(
         builder: (context, ref, _) => ref
             .watch(walletHistoryProvider)
             .when(
