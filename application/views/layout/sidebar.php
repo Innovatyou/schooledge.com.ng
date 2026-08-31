@@ -41,7 +41,13 @@
                                 </a>
                             </li>
                     <?php } ?>
-                    <?php if (moduleIsEnabled('inventory')) { 
+                    <!-- User Guide -->
+                    <li class="<?php if ($main_menu == 'userguide') echo 'nav-active'; ?>">
+                        <a href="<?=base_url('userguide')?>">
+                            <i class="fas fa-question-circle"></i><span><?=translate('user_guide')?></span>
+                        </a>
+                    </li>
+                    <?php if (moduleIsEnabled('inventory')) {
                         if (get_permission('product', 'is_view') ||
                             get_permission('product_category', 'is_view') ||
                             get_permission('product_store', 'is_view') ||

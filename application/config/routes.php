@@ -222,6 +222,7 @@ $route['modules'] = 'modules/index';
 $route['system_student_field'] = 'system_student_field/index';
 $route['custom_field'] = 'custom_field/index';
 $route['backup'] = 'backup/index';
+$route['userguide'] = 'userguide/index';
 $route['advance_salary'] = 'advance_salary/index';
 $route['system_update'] = 'system_update/index';
 $route['certificate'] = 'certificate/index';
