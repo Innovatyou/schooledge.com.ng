@@ -450,6 +450,51 @@ class School_settings extends Admin_Controller
         echo json_encode($array);
     }
 
+    /** Self-service: apply for this school's own Corporate Sender ID on the shared Veltrix account. */
+    public function veltrixSenderId()
+    {
+        if (!get_permission('sms_settings', 'is_add')) {
+            ajax_access_denied();
+        }
+        $branchID = $this->school_model->getBranchID();
+        $this->form_validation->set_rules('sender_id', translate('sender_id'), 'trim|required|max_length[11]');
+        $this->form_validation->set_rules('organization_name', 'Organization Name', 'trim|required');
+        $this->form_validation->set_rules('sample_message', 'Sample Message', 'trim|required');
+        if ($this->form_validation->run() !== false) {
+            $this->load->library('veltrix');
+            $result = $this->veltrix->createSenderId(
+                $branchID,
+                $this->input->post('sender_id'),
+                $this->input->post('organization_name'),
+                $this->input->post('sample_message'),
+                $this->input->post('use_case')
+            );
+            if ($result['success']) {
+                $array = array('status' => 'success', 'message' => 'Sender ID application submitted. It is pending approval -- messages will use the shared default sender ID until then.');
+            } else {
+                $array = array('status' => 'fail', 'error' => array('sender_id' => $result['error']));
+            }
+        } else {
+            $error = $this->form_validation->error_array();
+            $array = array('status' => 'fail', 'error' => $error);
+        }
+        echo json_encode($array);
+    }
+
+    /** AJAX: poll Veltrix for this school's Sender ID approval status. */
+    public function veltrixCheckSenderStatus()
+    {
+        if (!get_permission('sms_settings', 'is_view')) {
+            ajax_access_denied();
+        }
+        $branchID = $this->school_model->getBranchID();
+        $this->load->library('veltrix');
+        $result = $this->veltrix->checkSenderIdStatus($branchID);
+        echo json_encode($result['success']
+            ? array('status' => 'success', 'sender_status' => $result['status'], 'message' => $result['message'])
+            : array('status' => 'fail', 'error' => $result['error']));
+    }
+
     public function smstemplate()
     {
         if (!get_permission('sms_settings', 'is_add')) {
@@ -521,6 +566,7 @@ class School_settings extends Admin_Controller
         }
         $branchID = $this->school_model->getBranchID();
         $this->data['config'] = $this->school_model->get('email_config', array('branch_id' => $branchID), true);
+        $this->data['veltrix_domain'] = $this->db->where('branch_id', $branchID)->get('school_veltrix_domain')->row_array();
         $this->data['title'] = translate('email_settings');
         $this->data['sub_page'] = 'school_settings/emailconfig';
         $this->data['main_menu'] = 'school_m';
@@ -571,6 +617,48 @@ class School_settings extends Admin_Controller
             $array = array('status' => 'fail', 'error' => $error);
         }
         echo json_encode($array);
+    }
+
+    /** Self-service: register a Veltrix sending domain for this school and return its DNS record. */
+    public function veltrixDomain()
+    {
+        if (!get_permission('email_settings', 'is_add')) {
+            ajax_access_denied();
+        }
+        $branchID = $this->school_model->getBranchID();
+        $domain = strtolower(trim($this->input->post('domain_name')));
+        if ($domain === '' || !preg_match('/^(?!-)[a-z0-9-]+(\.[a-z0-9-]+)+$/', $domain)) {
+            echo json_encode(array('status' => 'fail', 'error' => array('domain_name' => 'A valid domain name is required, e.g. yourschool.com')));
+            return;
+        }
+
+        $this->load->library('veltrix');
+        $result = $this->veltrix->createSendingDomain($branchID, $domain);
+        if ($result['success']) {
+            $array = array(
+                'status' => 'success',
+                'message' => 'Domain registered. Publish the DNS TXT record below, then click Verify.',
+                'dns_host' => $result['dns_host'],
+                'dns_value' => $result['dns_value'],
+            );
+        } else {
+            $array = array('status' => 'fail', 'error' => array('domain_name' => $result['error']));
+        }
+        echo json_encode($array);
+    }
+
+    /** AJAX: check DNS for this school's pending Veltrix sending domain. */
+    public function veltrixVerifyDomain()
+    {
+        if (!get_permission('email_settings', 'is_view')) {
+            ajax_access_denied();
+        }
+        $branchID = $this->school_model->getBranchID();
+        $this->load->library('veltrix');
+        $result = $this->veltrix->verifySendingDomain($branchID);
+        echo json_encode($result['success']
+            ? array('status' => 'success', 'verified' => $result['verified'], 'message' => 'Domain verified.')
+            : array('status' => 'fail', 'error' => $result['error']));
     }
 
     public function emailtemplate()

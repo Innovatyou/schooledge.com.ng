@@ -51,6 +51,7 @@ function smsIsarray($array)
 													"6" 		=> "SMS country",
 													"7" 		=> "Bulksmsbd.net",
 													"8" 		=> "Custom Gateway",
+													"9" 		=> "Veltrix",
 												);
 												echo form_dropdown("sms_service_provider", $arraySMS, set_value('sms_service', $sms_service_provider), "class='form-control'
 												data-plugin-selectTwo data-width='100%' data-minimum-results-for-search='Infinity' ");
@@ -404,6 +405,71 @@ function smsIsarray($array)
 									<?php echo form_close();?>
 								</div>
 							</div>
+
+							<div class="panel panel-accordion">
+								<div class="panel-heading">
+									<h4 class="panel-title">
+										<a class="accordion-toggle" data-toggle="collapse" data-parent="#accordion" href="#veltrix">Veltrix Gateway</a>
+									</h4>
+								</div>
+								<div id="veltrix" class="accordion-body collapse">
+									<?php
+									$veltrix = smsIsarray($api['veltrix']);
+									$veltrixStatus = $veltrix['field_two'] ?? '';
+									?>
+									<div class="panel-body">
+										<?php if ($veltrixStatus !== '') { ?>
+											<div class="form-group">
+												<div class="col-md-offset-3 col-md-6">
+													<span class="label label-<?=$veltrixStatus === 'approved' ? 'success' : ($veltrixStatus === 'rejected' ? 'danger' : 'warning')?>">
+														Sender ID "<?=htmlspecialchars($veltrix['field_one'])?>": <?=ucfirst($veltrixStatus)?>
+													</span>
+													<button type="button" id="veltrixCheckStatus" class="btn btn-xs btn-default">Check Status</button>
+													<div id="veltrixStatusMsg" class="mt-sm"></div>
+												</div>
+											</div>
+										<?php } else { ?>
+											<div class="form-group">
+												<div class="col-md-offset-3 col-md-6 text-muted">
+													No Sender ID application on file -- messages send under the shared default sender ID until you apply for your own.
+												</div>
+											</div>
+										<?php } ?>
+										<?php echo form_open('school_settings/veltrixSenderId' . $url, array('class' => 'form-horizontal form-bordered frm-submit-msg')); ?>
+										<div class="form-group mt-md">
+											<label class="col-md-3 control-label">Sender ID <span class="required">*</span></label>
+											<div class="col-md-6">
+												<input type="text" class="form-control" maxlength="11" name="sender_id" placeholder="e.g. YOURSCH" value="<?=$veltrix['field_one']?>">
+												<span class="error"></span>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-md-3 control-label">Organization Name <span class="required">*</span></label>
+											<div class="col-md-6">
+												<input type="text" class="form-control" name="organization_name" value="<?=$veltrix['field_four']?>">
+												<span class="error"></span>
+											</div>
+										</div>
+										<div class="form-group">
+											<label class="col-md-3 control-label">Sample Message <span class="required">*</span></label>
+											<div class="col-md-6 mb-md">
+												<textarea class="form-control" name="sample_message" rows="3" placeholder="An example of the SMS you'll send, for the telco/regulator review"></textarea>
+												<span class="error"></span>
+											</div>
+										</div>
+									</div>
+									<div class="panel-footer">
+										<div class="row">
+											<div class="col-md-offset-3 col-md-3">
+												<button type="submit" class="btn btn-default btn-block" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing">
+													<i class="fas fa-plus-circle"></i> Apply for Sender ID
+												</button>
+											</div>
+										</div>
+									</div>
+									<?php echo form_close();?>
+								</div>
+							</div>
 						</div>
 					</div>
 				</div>
@@ -411,3 +477,23 @@ function smsIsarray($array)
 		</section>
 	</div>
 </div>
+
+<script type="text/javascript">
+	$(document).ready(function () {
+		$('#veltrixCheckStatus').on('click', function () {
+			var btn = $(this);
+			btn.prop('disabled', true);
+			$.post('<?=base_url('school_settings/veltrixCheckSenderStatus' . $url)?>', {}, function (res) {
+				btn.prop('disabled', false);
+				if (res.status === 'success') {
+					$('#veltrixStatusMsg').html('<div class="alert alert-info">' + (res.message || ('Status: ' + res.sender_status)) + '</div>');
+					if (res.sender_status === 'approved' || res.sender_status === 'rejected') {
+						location.reload();
+					}
+				} else {
+					$('#veltrixStatusMsg').html('<div class="alert alert-danger">' + res.error + '</div>');
+				}
+			}, 'json');
+		});
+	});
+</script>

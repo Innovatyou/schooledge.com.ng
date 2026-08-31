@@ -18,6 +18,27 @@ class Mailer
         $getConfig = $this->CI->db->get_where('email_config', array('branch_id' => $data['branch_id']))->row();
         if (!empty($getConfig)) {
             $school_name = get_global_setting('institute_name');
+
+            if ($getConfig->protocol == 'veltrix') {
+                $attachment = !empty($data['file']) ? array(
+                    'content' => $data['file'],
+                    'name'    => $data['file_name'] ?? 'attachment.pdf',
+                    'mime'    => 'application/pdf',
+                ) : null;
+
+                $this->CI->load->library('veltrix');
+                $sent = $this->CI->veltrix->sendEmailForBranch(
+                    $data['branch_id'],
+                    $data['recipient'],
+                    $data['subject'],
+                    $data['message'],
+                    $getConfig->email,
+                    $school_name,
+                    $attachment
+                );
+                return $sent ? true : ($err == false ? false : 'Veltrix email send failed (insufficient wallet balance or gateway error).');
+            }
+
             $mail = new PHPMailer();
             $mail->CharSet = 'UTF-8';
             $mail->Encoding = 'base64';

@@ -17,6 +17,7 @@ class Sms_model extends CI_Model
         $this->load->library("smscountry");
         $this->load->library("bulksmsbd");
         $this->load->library("custom_sms");
+        $this->load->library("veltrix");
     }
 
     // common function for sending sms
@@ -55,7 +56,7 @@ class Sms_model extends CI_Model
 
             if ($template['notify_student'] == 1) {
                 if (!empty($student['mobileno'])) {
-                    $this->_send($sms_api, $student['mobileno'], $text, $template['dlt_template_id']);
+                    $this->_send($sms_api, $student['mobileno'], $text, $template['dlt_template_id'], $branchID);
                 }
             }
 
@@ -63,7 +64,7 @@ class Sms_model extends CI_Model
                 if (!empty($student['parent_id'])) {
                     $parent = $this->db->select('mobileno')->where('id', $student['parent_id'])->get('parent')->row_array();
                     if (!empty($parent['mobileno'])) {
-                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id']);
+                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id'], $branchID);
                     }
                 }
             }
@@ -80,7 +81,7 @@ class Sms_model extends CI_Model
             $text = str_replace('{end_date}', $arrayData['to_date'], $text);
             $text = str_replace('{event_title}', $arrayData['event_title'], $text);
             if (!empty($arrayData['mobile_no'])) {
-                $this->_send($sms_api, $arrayData['mobile_no'], $text, $template['dlt_template_id']);
+                $this->_send($sms_api, $arrayData['mobile_no'], $text, $template['dlt_template_id'], $arrayData['branch_id']);
             }
         }
     }
@@ -96,12 +97,12 @@ class Sms_model extends CI_Model
             $text = str_replace('{fee_type}', $stuData['type_name'], $text);
             if ($remData['student'] == 1) {
                 if (!empty($stuData['child_mobileno'])) {
-                    $this->_send($sms_api, $stuData['child_mobileno'], $text, $remData['dlt_template_id']);
+                    $this->_send($sms_api, $stuData['child_mobileno'], $text, $remData['dlt_template_id'], $remData['branch_id']);
                 }
             }
             if ($remData['guardian'] == 1) {
                 if (!empty($stuData['guardian_mobileno'])) {
-                    $this->_send($sms_api, $stuData['guardian_mobileno'], $text, $remData['dlt_template_id']);
+                    $this->_send($sms_api, $stuData['guardian_mobileno'], $text, $remData['dlt_template_id'], $remData['branch_id']);
                 }
             }
         }
@@ -122,14 +123,14 @@ class Sms_model extends CI_Model
             $text = str_replace('{subject}', get_type_name_by_id('subject', $data['subject_id']), $text);
             if ($template['notify_student'] == 1) {
                 if (!empty($data['mobileno'])) {
-                    $this->_send($sms_api, $data['mobileno'], $text, $template['dlt_template_id']);
+                    $this->_send($sms_api, $data['mobileno'], $text, $template['dlt_template_id'], $data['branch_id']);
                 }
             }
             if ($template['notify_parent'] == 1) {
                 if (!empty($data['parent_id'])) {
                     $parent = $this->db->select('mobileno')->where('id', $data['parent_id'])->get('parent')->row_array();
                     if (!empty($parent['mobileno'])) {
-                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id']);
+                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id'], $data['branch_id']);
                     }
                 }
             }
@@ -153,14 +154,14 @@ class Sms_model extends CI_Model
             $text = str_replace('{host_by}', $data['host_by'], $text);
             if ($template['notify_student'] == 1) {
                 if (!empty($data['mobileno'])) {
-                    $this->_send($sms_api, $data['mobileno'], $text, $template['dlt_template_id']);
+                    $this->_send($sms_api, $data['mobileno'], $text, $template['dlt_template_id'], $data['branch_id']);
                 }
             }
             if ($template['notify_parent'] == 1) {
                 if (!empty($data['parent_id'])) {
                     $parent = $this->db->select('mobileno')->where('id', $data['parent_id'])->get('parent')->row_array();
                     if (!empty($parent['mobileno'])) {
-                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id']);
+                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id'], $data['branch_id']);
                     }
                 }
             }
@@ -187,14 +188,14 @@ class Sms_model extends CI_Model
             $text = str_replace('{exam_fee}', $data['exam_fee'], $text);
             if ($template['notify_student'] == 1) {
                 if (!empty($data['mobileno'])) {
-                    $this->_send($sms_api, $data['mobileno'], $text, $template['dlt_template_id']);
+                    $this->_send($sms_api, $data['mobileno'], $text, $template['dlt_template_id'], $data['branch_id']);
                 }
             }
             if ($template['notify_parent'] == 1) {
                 if (!empty($data['parent_id'])) {
                     $parent = $this->db->select('mobileno')->where('id', $data['parent_id'])->get('parent')->row_array();
                     if (!empty($parent['mobileno'])) {
-                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id']);
+                        $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id'], $data['branch_id']);
                     }
                 }
             }
@@ -217,14 +218,14 @@ class Sms_model extends CI_Model
                 $text = str_replace('{birthday}', _d($student['birthday']), $text);
                 if ($template['notify_student'] == 1) {
                     if (!empty($student['mobileno'])) {
-                        $this->_send($sms_api, $student['mobileno'], $text, $template['dlt_template_id']);
+                        $this->_send($sms_api, $student['mobileno'], $text, $template['dlt_template_id'], $student['branch_id']);
                     }
                 }
                 if ($template['notify_parent'] == 1) {
                     if (!empty($student['parent_id'])) {
                         $parent = $this->db->select('mobileno')->where('id', $student['parent_id'])->get('parent')->row_array();
                         if (!empty($parent['mobileno'])) {
-                            $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id']);
+                            $this->_send($sms_api, $parent['mobileno'], $text, $template['dlt_template_id'], $student['branch_id']);
                         }
                     }
                 }
@@ -246,14 +247,14 @@ class Sms_model extends CI_Model
                 $text = str_replace('{birthday}', _d($staff['birthday']), $text);
                 if ($template['notify_student'] == 1) {
                     if (!empty($staff['mobileno'])) {
-                        $this->_send($sms_api, $staff['mobileno'], $text, $template['dlt_template_id']);
+                        $this->_send($sms_api, $staff['mobileno'], $text, $template['dlt_template_id'], $staff['branch_id']);
                     }
                 }
             }
         }
     }
 
-    public function _send($sms_api, $receiver, $text, $dlt_template_id = '')
+    public function _send($sms_api, $receiver, $text, $dlt_template_id = '', $branchID = '')
     {
         if ($sms_api == 2) {
             $res = $this->clickatell->send_message($receiver, $text);
@@ -271,6 +272,8 @@ class Sms_model extends CI_Model
             $res = $this->bulksmsbd->send($receiver, $text);
         } elseif ($sms_api == 8) {
             $res = $this->custom_sms->send($receiver, $text, $dlt_template_id);
+        } elseif ($sms_api == 9) {
+            $res = $this->veltrix->sendSmsForBranch($branchID, $receiver, $text);
         }
     }
 }

@@ -275,7 +275,7 @@ class Sendsmsmail extends Admin_Controller
                 } else {
                     foreach ($user_array as $key => $value) {
                         if ($messageType == 1) {
-                            $response = $this->sendsmsmail_model->sendSMS($value['mobileno'], $message, $value['name'], $value['email'], $smsGateway, $dlt_templateID);
+                            $response = $this->sendsmsmail_model->sendSMS($value['mobileno'], $message, $value['name'], $value['email'], $smsGateway, $dlt_templateID, $branchID);
                         } else {
                             $response = $this->sendsmsmail_model->sendEmail($value['email'], $message, $value['name'], $value['mobileno'], $emailSubject);
                         }

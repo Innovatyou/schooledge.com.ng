@@ -111,12 +111,19 @@ class Sendsmsmail_model extends CI_Model
         }
     }
 
-    public function sendSMS($sendTo, $message, $name, $eMail, $smsGateway, $dlt_templateID)
+    public function sendSMS($sendTo, $message, $name, $eMail, $smsGateway, $dlt_templateID, $branchID = '')
     {
 
         $message = str_replace('{name}', $name, $message);
         $message = str_replace('{email}', $eMail, $message);
         $message = str_replace('{mobile_no}', $sendTo, $message);
+        if ($smsGateway == 'veltrix') {
+            $this->load->library("veltrix");
+            if (empty($branchID)) {
+                $branchID = $this->application_model->get_branch_id();
+            }
+            return $this->veltrix->sendSmsForBranch($branchID, $sendTo, $message);
+        }
         if ($smsGateway == 'twilio') {
             $this->load->library("twilio");
             $response = $this->twilio->sms($sendTo, $message);

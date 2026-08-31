@@ -1581,6 +1581,30 @@ if (tableExists($m, 'schooledge_chat_voice_notes') && !columnExists($m, 'schoole
 }
 
 // ---------------------------------------------------------------------
+// Migration 737: Veltrix SMS/email gateway option + per-school wallet
+// ledger. One shared Veltrix (mailwizz) account serves every school;
+// schools spend from their own prepaid wallet balance here instead of
+// Veltrix's own wallet, so credit control happens locally.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'sms_api')) {
+    $res = $m->query("SELECT id FROM sms_api WHERE id = 9");
+    if ($res->num_rows === 0) {
+        $m->query("INSERT INTO sms_api (id, name) VALUES (9, 'veltrix')");
+        echo "737: seeded sms_api id 9 (veltrix)\n";
+    }
+}
+
+if (!tableExists($m, 'school_wallet')) {
+    $m->query("CREATE TABLE school_wallet (branch_id INT NOT NULL PRIMARY KEY, balance DECIMAL(12,2) NOT NULL DEFAULT 0.00, updated_at DATETIME NULL) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "737: created school_wallet table\n";
+}
+
+if (!tableExists($m, 'school_wallet_transaction')) {
+    $m->query("CREATE TABLE school_wallet_transaction (id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, type VARCHAR(10) NOT NULL, channel VARCHAR(10) NOT NULL, amount DECIMAL(12,2) NOT NULL, balance_after DECIMAL(12,2) NOT NULL, reference VARCHAR(60) NULL, description VARCHAR(255) NULL, created_at DATETIME NOT NULL, KEY idx_branch_created (branch_id, created_at)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "737: created school_wallet_transaction table\n";
+}
+
+// ---------------------------------------------------------------------
 // Migration 738: student wallets - a per-student balance a parent can
 // fund and spend against any of that student's fees. Named distinctly
 // from the unrelated school_wallet/school_wallet_transaction tables
@@ -1610,5 +1634,21 @@ foreach ($walletGrants as $roleId => $grant) {
     seedStaffPrivilege($m, $roleId, $walletPermissionId, $grant[0], $grant[1], $grant[2], $grant[3]);
 }
 echo "738: seeded wallet permission\n";
+
+// ---------------------------------------------------------------------
+// Migration 740: UNIQUE(branch_id, reference) on school_wallet_transaction
+// -- backstops a double credit if both the Paystack browser callback and
+// the Paystack webhook land for the same wallet top-up reference.
+// ---------------------------------------------------------------------
+$uniqExists = $m->query("
+    SELECT 1 FROM information_schema.statistics
+    WHERE table_schema = DATABASE()
+      AND table_name = 'school_wallet_transaction'
+      AND index_name = 'uniq_branch_reference'
+")->fetch_assoc();
+if (!$uniqExists) {
+    $m->query("ALTER TABLE school_wallet_transaction ADD UNIQUE KEY uniq_branch_reference (branch_id, reference)");
+    echo "740: added school_wallet_transaction UNIQUE(branch_id, reference)\n";
+}
 
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

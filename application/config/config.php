@@ -457,7 +457,7 @@ $config['csrf_exclude_uris'] = array(
     'api/v1/mobile/.*',
 );
 
-if($config['csrf_protection'] == TRUE && isset($_SERVER['REQUEST_URI']) && (strpos($_SERVER['REQUEST_URI'],'feespayment/') !== FALSE || strpos($_SERVER['REQUEST_URI'],'admissionpayment/') !== FALSE || strpos($_SERVER['REQUEST_URI'],'onlineexam_payment/') !== FALSE || strpos($_SERVER['REQUEST_URI'],'subscription/') !== FALSE || strpos($_SERVER['REQUEST_URI'], 'saas_payment/') !== FALSE)){
+if($config['csrf_protection'] == TRUE && isset($_SERVER['REQUEST_URI']) && (strpos($_SERVER['REQUEST_URI'],'feespayment/') !== FALSE || strpos($_SERVER['REQUEST_URI'],'admissionpayment/') !== FALSE || strpos($_SERVER['REQUEST_URI'],'onlineexam_payment/') !== FALSE || strpos($_SERVER['REQUEST_URI'],'subscription/') !== FALSE || strpos($_SERVER['REQUEST_URI'], 'saas_payment/') !== FALSE || strpos($_SERVER['REQUEST_URI'], 'veltrixwebhook/') !== FALSE)){
     $config['csrf_protection'] = FALSE;
 }
 

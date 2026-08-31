@@ -29,7 +29,8 @@
 								<?php
 								$array = array(
 									"mail" => "PHP Mail",
-									"smtp" => "SMTP Mail"
+									"smtp" => "SMTP Mail",
+									"veltrix" => "Veltrix"
 								);
 								echo form_dropdown("protocol", $array, $config['protocol'], "class='form-control' data-plugin-selectTwo id='emailProtocol'
 								data-width='100%' data-minimum-results-for-search='Infinity' ");
@@ -109,6 +110,48 @@
 			</div>
 		</section>
 
+		<section class="panel veltrix-domain-panel" style="display:none">
+			<div class="panel-heading">
+				<h4 class="panel-title"><i class="fas fa-globe"></i> Veltrix Sending Domain</h4>
+			</div>
+			<div class="panel-body">
+				<?php if (!empty($veltrix_domain)) { ?>
+					<p>
+						Domain: <strong><?=htmlspecialchars($veltrix_domain['name'])?></strong>
+						&mdash;
+						<?php if ($veltrix_domain['verified']) { ?>
+							<span class="label label-success">Verified</span>
+						<?php } else { ?>
+							<span class="label label-warning">Not verified yet</span>
+						<?php } ?>
+					</p>
+					<?php if (!$veltrix_domain['verified']) { ?>
+						<p>Publish this DNS TXT record, then click Verify (DNS can take up to 48h to propagate):</p>
+						<table class="table table-bordered">
+							<tr><th>Host</th><td><code><?=htmlspecialchars($veltrix_domain['dns_host'])?></code></td></tr>
+							<tr><th>Value</th><td><code style="word-break:break-all"><?=htmlspecialchars($veltrix_domain['dns_value'])?></code></td></tr>
+						</table>
+						<button type="button" id="veltrixVerifyDomain" class="btn btn-default">Verify Domain</button>
+						<div id="veltrixDomainMsg" class="mt-sm"></div>
+					<?php } ?>
+					<hr>
+					<p class="text-muted">Registering a different domain below replaces this one.</p>
+				<?php } ?>
+				<div class="form-group">
+					<label class="col-md-3 control-label">Sending Domain</label>
+					<div class="col-md-6">
+						<input type="text" class="form-control" id="veltrixDomainName" placeholder="yourschool.com" value="">
+					</div>
+				</div>
+				<div class="form-group">
+					<div class="col-md-offset-3 col-md-6">
+						<button type="button" id="veltrixRegisterDomain" class="btn btn-default">Register Domain</button>
+					</div>
+				</div>
+				<div id="veltrixRegisterMsg"></div>
+			</div>
+		</section>
+
         <section class="panel pg-fw">
             <div class="panel-body">
             	<?php echo form_open('school_settings/send_test_email' . $url, array('class' => 'form-horizontal form-bordered frm-submit')); ?>
@@ -143,18 +186,42 @@
 
 <script type="text/javascript">
 	$(document).ready(function () {
-		var protocol = "<?=$config['protocol']?>"
-		if (protocol !== "smtp") {
-			$(".smtp").prop('disabled', true);
+		function applyProtocol(mode) {
+			$(".smtp").prop('disabled', mode !== 'smtp');
+			$(".veltrix-domain-panel").toggle(mode === 'veltrix');
 		}
-		
+		applyProtocol("<?=$config['protocol']?>");
+
 		$('#emailProtocol').on('change', function(){
-			var mode = $(this).val();
-			if(mode == 'smtp'){
-				$(".smtp").prop('disabled', false);
-			} else {
-				$(".smtp").prop('disabled', true);
-			}
+			applyProtocol($(this).val());
+		});
+
+		$('#veltrixRegisterDomain').on('click', function () {
+			var domain = $('#veltrixDomainName').val();
+			var btn = $(this);
+			btn.prop('disabled', true);
+			$.post('<?=base_url('school_settings/veltrixDomain' . $url)?>', {domain_name: domain}, function (res) {
+				btn.prop('disabled', false);
+				if (res.status === 'success') {
+					location.reload();
+				} else {
+					var msg = (res.error && res.error.domain_name) ? res.error.domain_name : 'Could not register domain.';
+					$('#veltrixRegisterMsg').html('<div class="alert alert-danger mt-sm">' + msg + '</div>');
+				}
+			}, 'json');
+		});
+
+		$('#veltrixVerifyDomain').on('click', function () {
+			var btn = $(this);
+			btn.prop('disabled', true);
+			$.post('<?=base_url('school_settings/veltrixVerifyDomain' . $url)?>', {}, function (res) {
+				btn.prop('disabled', false);
+				if (res.status === 'success') {
+					location.reload();
+				} else {
+					$('#veltrixDomainMsg').html('<div class="alert alert-danger">' + res.error + '</div>');
+				}
+			}, 'json');
 		});
 	});
 </script>
