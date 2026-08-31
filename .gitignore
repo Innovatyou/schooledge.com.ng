@@ -30,6 +30,12 @@ uploads/attachments/*/*
 uploads/online_ad_documents/*
 !uploads/online_ad_documents/index.html
 
+# Built mobile app binaries - too large for normal git history (GitHub hard-
+# blocks >100MB, and binaries don't delta-compress), deploy this file to the
+# server directly instead - see docs/mobile-app-download.md
+uploads/mobile_app/*
+!uploads/mobile_app/index.html
+
 # Local/editor files
 .env
 .env.*

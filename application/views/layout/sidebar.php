@@ -47,6 +47,12 @@
                             <i class="fas fa-question-circle"></i><span><?=translate('user_guide')?></span>
                         </a>
                     </li>
+                    <!-- Mobile App -->
+                    <li class="<?php if ($main_menu == 'mobile_app') echo 'nav-active'; ?>">
+                        <a href="<?=base_url('mobile_app')?>">
+                            <i class="fas fa-mobile-alt"></i><span><?=translate('mobile_app')?></span>
+                        </a>
+                    </li>
                     <?php if (moduleIsEnabled('inventory')) {
                         if (get_permission('product', 'is_view') ||
                             get_permission('product_category', 'is_view') ||

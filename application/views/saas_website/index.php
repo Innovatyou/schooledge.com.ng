@@ -124,6 +124,9 @@
                                         <a href="<?php echo base_url('saas_website/demo') ?>" aria-label="Toggle navigation"><?php echo translate('live_demo'); ?></a>
                                     </li>
                                     <li class="nav-item">
+                                        <a href="#app" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('mobile_app'); ?></a>
+                                    </li>
+                                    <li class="nav-item">
                                         <a href="#faq" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('faq'); ?></a>
                                     </li>
                                     <li class="nav-item">
@@ -330,6 +333,48 @@
         <div class="bg-ring-right"></div>
     </section>
     <!--/ End Pricing Table Area -->
+
+    <!-- Start Mobile App Area -->
+    <section class="section" id="app">
+        <div class="container">
+            <div class="row">
+                <div class="col-12">
+                    <div class="section-title">
+                        <h3 class="wow zoomIn" data-wow-delay=".2s"><?php echo translate('mobile_app'); ?></h3>
+                        <h2 class="wow fadeInUp" data-wow-delay=".4s">Take SchoolEdge with you</h2>
+                        <p class="wow fadeInUp" data-wow-delay=".6s">Attendance, fees, homework, results and messages &mdash; all from your phone.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="row justify-content-center">
+                <div class="col-lg-5 col-md-6 col-12">
+                    <div class="single-feature wow fadeInUp" data-wow-delay=".2s" style="text-align:center;">
+                        <i class="fab fa-android" style="color:#3ddc84;"></i>
+                        <h3><?php echo translate('android'); ?></h3>
+                        <p>Download the APK and install it directly on your phone.</p>
+                        <div class="button mt-lg">
+                            <a href="<?php echo base_url('uploads/mobile_app/SchoolEdge.apk') ?>" class="btn" download>
+                                <i class="fas fa-download"></i> <?php echo translate('download_for_android'); ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-5 col-md-6 col-12">
+                    <div class="single-feature wow fadeInUp" data-wow-delay=".4s" style="text-align:center;opacity:.7;">
+                        <i class="fab fa-apple"></i>
+                        <h3>iOS</h3>
+                        <p>The iPhone/iPad app is on its way.</p>
+                        <div class="button mt-lg">
+                            <a href="javascript:void(0)" class="btn btn-alt disabled" aria-disabled="true" tabindex="-1">
+                                <i class="fas fa-clock"></i> <?php echo translate('coming_soon'); ?>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- End Mobile App Area -->
 
     <!-- Start Faq Area -->
     <section class="faq section" id="faq">
