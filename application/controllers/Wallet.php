@@ -38,6 +38,9 @@ class Wallet extends Admin_Controller
         }
         $studentID = (int)$this->input->post('student_id');
         $branchID = $this->application_model->get_branch_id();
+        if (!$this->wallet_model->studentInBranch($branchID, $studentID)) {
+            ajax_access_denied();
+        }
         $this->data['student'] = $this->db->select('s.id,CONCAT_WS(" ",s.first_name,s.last_name) as fullname,s.register_no')
             ->from('student as s')->where('s.id', $studentID)->get()->row_array();
         $this->data['wallet'] = $this->wallet_model->getOrCreateWallet($branchID, $studentID);
@@ -58,8 +61,8 @@ class Wallet extends Admin_Controller
         $studentID = (int)$this->input->post('student_id');
         $amount = (float)$this->input->post('amount');
         $remarks = trim((string)$this->input->post('remarks'));
-        if ($studentID && $amount > 0 && $remarks !== '') {
-            $branchID = $this->application_model->get_branch_id();
+        $branchID = $this->application_model->get_branch_id();
+        if ($studentID && $amount > 0 && $remarks !== '' && $this->wallet_model->studentInBranch($branchID, $studentID)) {
             $ok = $this->wallet_model->adjustBalance($branchID, $studentID, 'credit', $amount, 'topup_manual', $remarks, loggedin_role_id(), get_loggedin_user_id());
             if ($ok) {
                 audit_log('add', 'student_wallets', $studentID, null, array('type' => 'credit', 'amount' => $amount));
@@ -84,8 +87,8 @@ class Wallet extends Admin_Controller
         $studentID = (int)$this->input->post('student_id');
         $amount = (float)$this->input->post('amount');
         $remarks = trim((string)$this->input->post('remarks'));
-        if ($studentID && $amount > 0 && $remarks !== '') {
-            $branchID = $this->application_model->get_branch_id();
+        $branchID = $this->application_model->get_branch_id();
+        if ($studentID && $amount > 0 && $remarks !== '' && $this->wallet_model->studentInBranch($branchID, $studentID)) {
             $ok = $this->wallet_model->adjustBalance($branchID, $studentID, 'debit', $amount, 'adjustment', $remarks, loggedin_role_id(), get_loggedin_user_id());
             if ($ok) {
                 audit_log('edit', 'student_wallets', $studentID, null, array('type' => 'debit', 'amount' => $amount));

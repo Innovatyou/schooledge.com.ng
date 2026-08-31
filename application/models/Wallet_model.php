@@ -35,6 +35,18 @@ class Wallet_model extends MY_Model
         return $this->db->get()->result();
     }
 
+    /**
+     * `student` is a global table across this whole multi-tenant app - a raw
+     * student_id posted from a form is never proof it belongs to the staff
+     * member's own branch/school. Every wallet action that takes a student_id
+     * from input must check this first, or a non-super-admin Admin/Accountant
+     * could view or adjust a wallet belonging to a student at a different school.
+     */
+    public function studentInBranch($branchID, $studentID)
+    {
+        return (bool)$this->db->where(array('student_id' => $studentID, 'branch_id' => $branchID))->get('enroll')->row();
+    }
+
     public function getWallet($branchID, $studentID)
     {
         return $this->db->where(array('branch_id' => $branchID, 'student_id' => $studentID))->get('student_wallets')->row_array();
