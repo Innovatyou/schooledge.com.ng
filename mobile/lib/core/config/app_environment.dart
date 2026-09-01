@@ -43,6 +43,16 @@ class AppConfig {
     }
   }
 
+  /// The web app's own root, derived from [apiBaseUrl] by dropping its fixed
+  /// `/api/v1/mobile` suffix - for handing off to a browser for flows that
+  /// only exist as a web page (password reset), not for calling the API.
+  static String get siteBaseUrl {
+    const suffix = '/api/v1/mobile';
+    return apiBaseUrl.endsWith(suffix)
+        ? apiBaseUrl.substring(0, apiBaseUrl.length - suffix.length)
+        : apiBaseUrl;
+  }
+
   static AppEnvironment get environment {
     if (environmentName.isNotEmpty) {
       return AppEnvironment.values.firstWhere(

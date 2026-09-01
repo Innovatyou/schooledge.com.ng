@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../../../core/config/app_environment.dart';
 import '../../../core/widgets/aurora_background.dart';
 import '../../../core/widgets/depth_card.dart';
 import '../application/auth_controller.dart';
@@ -135,26 +137,46 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                   ),
                                 ),
                               ),
-                              InkWell(
-                                onTap: () =>
-                                    setState(() => rememberMe = !rememberMe),
-                                child: Padding(
-                                  padding: const EdgeInsets.only(top: 8),
-                                  child: Row(
-                                    children: [
-                                      Checkbox(
-                                        value: rememberMe,
-                                        onChanged: (value) => setState(
-                                          () => rememberMe = value ?? false,
-                                        ),
+                              Wrap(
+                                alignment: WrapAlignment.spaceBetween,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  InkWell(
+                                    onTap: () => setState(
+                                      () => rememberMe = !rememberMe,
+                                    ),
+                                    child: Padding(
+                                      padding: const EdgeInsets.only(top: 8),
+                                      child: Row(
+                                        children: [
+                                          Checkbox(
+                                            value: rememberMe,
+                                            onChanged: (value) => setState(
+                                              () =>
+                                                  rememberMe = value ?? false,
+                                            ),
+                                          ),
+                                          const Text(
+                                            'Save my login details',
+                                            style: TextStyle(
+                                              color: _formTextColor,
+                                            ),
+                                          ),
+                                        ],
                                       ),
-                                      const Text(
-                                        'Save my login details',
-                                        style: TextStyle(color: _formTextColor),
-                                      ),
-                                    ],
+                                    ),
                                   ),
-                                ),
+                                  TextButton(
+                                    onPressed: _openForgotPassword,
+                                    child: const Text(
+                                      'Forgot password?',
+                                      style: TextStyle(
+                                        color: _formTextColor,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
                               if (auth.error != null)
                                 Padding(
@@ -255,6 +277,14 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             rememberMe: rememberMe,
           );
     }
+  }
+
+  /// Password reset only exists as a web page today (same one the school
+  /// dashboard uses) - hand off to the system browser rather than
+  /// reimplementing the email-link flow natively.
+  Future<void> _openForgotPassword() async {
+    final uri = Uri.parse('${AppConfig.siteBaseUrl}/authentication/forgot');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 }
 

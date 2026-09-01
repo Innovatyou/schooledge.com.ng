@@ -88,7 +88,7 @@
                                                 <i class="fas fa-unlock-alt"></i>
                                             </span>
                                         </span>
-                                        <input type="text" class="form-control" name="username" value="<?=set_value('username')?>" autocomplete="off" placeholder="<?php echo translate('usename');?>" />
+                                        <input type="text" class="form-control" name="username" value="<?=set_value('username')?>" autocomplete="off" placeholder="<?php echo translate('username');?>" />
                                     </div>
                                     <span class="error"><?php echo form_error('username'); ?></span>
                                 </div>
