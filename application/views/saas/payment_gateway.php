@@ -42,6 +42,9 @@
 					<li>
 						<a href="#payhere" data-toggle="tab">Payhere</a>
 					</li>
+					<li>
+						<a href="#veltrix" data-toggle="tab">Veltrix</a>
+					</li>
 				</ul>
 				<div class="tab-content">
 					<div class="tab-pane box active" id="paypal">
@@ -468,6 +471,58 @@
 										<button type="submit" class="btn btn btn-default btn-block" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing" autocomplete="off">
 											<i class="fas fa-plus-circle"></i> <?=translate('save');?>
 										</button>
+									</div>
+								</div>
+							</footer>
+						<?php echo form_close();?>
+					</div>
+
+					<div class="tab-pane box" id="veltrix">
+						<?php echo form_open('saas/savePaymentConfig', array('class' => 'form-horizontal frm-submit-msg'));?>
+							<p class="text-muted">One shared Veltrix (mailwizz) account serves every school on this platform for SMS and email. This is the master account's own API credentials -- not something any individual school ever sees.</p>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">API Base URL</label>
+								<div class="col-md-6">
+									<input type="text" class="form-control" name="veltrix_api_base" placeholder="https://app.veltrix.ng/api/v1" value="<?=$config['veltrix_api_base']?>" autocomplete="off">
+									<span class="error"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">API Key</label>
+								<div class="col-md-6">
+									<input type="text" class="form-control" name="veltrix_api_key" value="<?=$config['veltrix_api_key']?>" autocomplete="off">
+									<span class="error"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">Default Sender ID</label>
+								<div class="col-md-6">
+									<input type="text" class="form-control" maxlength="11" name="veltrix_default_sender_id" value="<?=$config['veltrix_default_sender_id']?>" autocomplete="off">
+									<span class="error"></span>
+									<p class="help-block">Used for a school's SMS until it has its own approved Corporate Sender ID. Must already be approved on the Veltrix account.</p>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">SMS Price (per message)</label>
+								<div class="col-md-6">
+									<input type="number" step="0.01" min="0" class="form-control" name="veltrix_sms_price" value="<?=$config['veltrix_sms_price']?>" autocomplete="off">
+									<span class="error"></span>
+								</div>
+							</div>
+							<div class="form-group">
+								<label class="col-sm-3 control-label">Email Price (per message)</label>
+								<div class="col-md-6 mb-md">
+									<input type="number" step="0.01" min="0" class="form-control" name="veltrix_email_price" value="<?=$config['veltrix_email_price']?>" autocomplete="off">
+									<span class="error"></span>
+									<p class="help-block">What a school's wallet is charged per unit sent -- independent of what Veltrix itself charges this account.</p>
+								</div>
+							</div>
+							<footer class="panel-footer">
+								<div class="row">
+									<div class="col-md-3 col-sm-offset-3">
+									<button type="submit" class="btn btn btn-default btn-block" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing" autocomplete="off">
+									<i class="fas fa-plus-circle"></i> <?=translate('save');?>
+									</button>
 									</div>
 								</div>
 							</footer>

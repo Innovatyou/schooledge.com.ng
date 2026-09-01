@@ -3,9 +3,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
  * Shared Veltrix (mailwizz) account integration used by every school on this
- * platform. One master API key (application/config/veltrix.php) authenticates
- * every call -- a school never sees or holds it. Per-school spending is
- * metered against that school's own wallet (Veltrix_wallet_model) BEFORE
+ * platform. One master API key authenticates every call -- a school never
+ * sees or holds it. Credentials live in payment_config (branch_id 9999,
+ * migration 742), the same global row every other gateway secret in this
+ * app already lives in, edited from Saas::settings_payment() -- not a
+ * server config file a deploy could silently overwrite. Per-school spending
+ * is metered against that school's own wallet (Veltrix_wallet_model) BEFORE
  * calling Veltrix, since Veltrix only ever sees this one consolidated
  * account.
  */
@@ -21,14 +24,15 @@ class Veltrix
     public function __construct()
     {
         $this->ci = &get_instance();
-        $this->ci->config->load('veltrix', true);
         $this->ci->load->model('veltrix_wallet_model');
 
-        $this->apiBase         = rtrim($this->ci->config->item('veltrix_api_base', 'veltrix'), '/');
-        $this->apiKey          = $this->ci->config->item('veltrix_api_key', 'veltrix');
-        $this->smsPrice        = (float) $this->ci->config->item('veltrix_sms_price', 'veltrix');
-        $this->emailPrice      = (float) $this->ci->config->item('veltrix_email_price', 'veltrix');
-        $this->defaultSenderId = $this->ci->config->item('veltrix_default_sender_id', 'veltrix');
+        $config = $this->ci->db->where('branch_id', 9999)->get('payment_config')->row_array();
+
+        $this->apiBase         = rtrim((string) ($config['veltrix_api_base'] ?? ''), '/');
+        $this->apiKey          = (string) ($config['veltrix_api_key'] ?? '');
+        $this->smsPrice        = (float) ($config['veltrix_sms_price'] ?? 4.00);
+        $this->emailPrice      = (float) ($config['veltrix_email_price'] ?? 1.00);
+        $this->defaultSenderId = (string) ($config['veltrix_default_sender_id'] ?? 'SCHLEDGE');
     }
 
     /**

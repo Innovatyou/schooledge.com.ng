@@ -1687,4 +1687,23 @@ if (tableExists($m, 'school_wallet_transaction') && !columnExists($m, 'school_wa
     echo "741: added school_wallet_transaction.status\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 742: Veltrix master API credentials move from a git-tracked
+// config file into the global payment_config row (branch_id 9999), edited
+// from Saas::settings_payment() like every other gateway secret.
+// ---------------------------------------------------------------------
+$veltrixColumns = array(
+    'veltrix_api_base'          => "VARCHAR(255) NOT NULL DEFAULT ''",
+    'veltrix_api_key'           => "VARCHAR(255) NOT NULL DEFAULT ''",
+    'veltrix_default_sender_id' => "VARCHAR(20) NOT NULL DEFAULT 'SCHLEDGE'",
+    'veltrix_sms_price'         => "DECIMAL(8,2) NOT NULL DEFAULT 4.00",
+    'veltrix_email_price'       => "DECIMAL(8,2) NOT NULL DEFAULT 1.00",
+);
+foreach ($veltrixColumns as $name => $definition) {
+    if (!columnExists($m, 'payment_config', $name)) {
+        $m->query("ALTER TABLE payment_config ADD COLUMN `{$name}` {$definition}");
+        echo "742: added payment_config.{$name}\n";
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";
