@@ -131,4 +131,65 @@ class Cron_api extends MY_Controller
             }
         }
     }
+
+    /**
+     * Resolves Veltrix wallet top-ups (school_wallet_transaction, channel
+     * 'topup') left 'pending' by Veltrixwallet::paystack(). Necessary
+     * because this SchoolEdge Paystack account's webhook URL is already
+     * pointed at a different platform sharing the account, so
+     * Veltrixwebhook::paystack() never fires here -- if the customer's
+     * browser never makes it back to verify_paystack_payment() (closed tab,
+     * dropped connection, ...), this cron is the only thing that will ever
+     * notice Paystack actually processed the charge.
+     */
+    public function veltrix_reconcile_command($api_key = '')
+    {
+        if ($api_key != "" && $this->api_key != $api_key) {
+            echo "API Key is required or API Key does not match.";
+            exit();
+        }
+        $this->load->model('veltrix_wallet_model');
+
+        $secret = (string) ($this->db->where('branch_id', 9999)->get('payment_config')->row_array()['paystack_secret_key'] ?? '');
+        if ($secret === '') {
+            echo "Paystack is not configured.";
+            exit();
+        }
+
+        // 10-minute grace period so this never races a customer who is
+        // still mid-checkout in their browser.
+        $pending = $this->db->where('channel', 'topup')
+            ->where('status', 'pending')
+            ->where('created_at <', date('Y-m-d H:i:s', strtotime('-10 minutes')))
+            ->get('school_wallet_transaction')->result_array();
+
+        foreach ($pending as $row) {
+            $ch = curl_init('https://api.paystack.co/transaction/verify/' . rawurlencode($row['reference']));
+            curl_setopt_array($ch, array(
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_SSL_VERIFYHOST => 0,
+                CURLOPT_SSL_VERIFYPEER => 0,
+                CURLOPT_HTTPHEADER     => array('Authorization: Bearer ' . $secret),
+            ));
+            $request = curl_exec($ch);
+            curl_close($ch);
+            $result = $request ? json_decode($request, true) : null;
+
+            $status       = $result['data']['status'] ?? '';
+            $paidKobo     = (int) ($result['data']['amount'] ?? -1);
+            $expectedKobo = (int) round($row['amount'] * 100);
+
+            if ($status === 'success' && $paidKobo === $expectedKobo) {
+                $this->veltrix_wallet_model->completePending($row['branch_id'], (float) $row['amount'], $row['reference'], $row['description']);
+                echo "Completed {$row['reference']}\n";
+            } elseif (in_array($status, array('failed', 'abandoned'), true) || strtotime($row['created_at']) < strtotime('-24 hours')) {
+                // Genuinely failed on Paystack's side, or old enough that
+                // there's no realistic chance it's still coming through.
+                $this->veltrix_wallet_model->markFailed($row['branch_id'], $row['reference']);
+                echo "Failed {$row['reference']}\n";
+            }
+            // Anything else (still "pending"/"ongoing" on Paystack's side, or
+            // a transient API error) is left alone for the next run.
+        }
+    }
 }

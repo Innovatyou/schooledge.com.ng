@@ -82,6 +82,73 @@ class Veltrix_wallet_model extends CI_Model
         return $this->credit($branchId, $amount, $channel, $reference !== '' ? ('REFUND-' . $reference) : '', $description);
     }
 
+    /**
+     * Record a Paystack top-up as started, before redirecting to checkout,
+     * without touching the balance. Without this row, a payment where the
+     * browser never returns to verify_paystack_payment() (and this account's
+     * webhook, claimed by another platform, never fires either) leaves zero
+     * trace anywhere in SchoolEdge even though Paystack processed it.
+     */
+    public function recordPending($branchId, $amount, $reference, $description = '')
+    {
+        $this->db->insert('school_wallet_transaction', array(
+            'branch_id'     => $branchId,
+            'type'          => 'credit',
+            'channel'       => 'topup',
+            'status'        => 'pending',
+            'amount'        => $amount,
+            'balance_after' => $this->getBalance($branchId),
+            'reference'     => $reference,
+            'description'   => $description,
+            'created_at'    => date('Y-m-d H:i:s'),
+        ));
+    }
+
+    /**
+     * Complete a pending top-up: apply the balance change and flip its row
+     * to 'completed'. Falls back to credit() (fresh completed row) if no
+     * pending row is found, so a caller that never went through
+     * recordPending() still works, and credit()'s UNIQUE(branch_id,
+     * reference) constraint remains the backstop against a double credit.
+     */
+    public function completePending($branchId, $amount, $reference, $description = '')
+    {
+        $pending = $this->db->where(array('branch_id' => $branchId, 'reference' => $reference, 'status' => 'pending'))
+            ->get('school_wallet_transaction')->row_array();
+
+        if (!$pending) {
+            return $this->credit($branchId, $amount, 'topup', $reference, $description);
+        }
+
+        $this->db->trans_start();
+        $row        = $this->db->query('SELECT balance FROM school_wallet WHERE branch_id = ? FOR UPDATE', array($branchId))->row_array();
+        $balance    = $row ? (float) $row['balance'] : 0.0;
+        $newBalance = $balance + $amount;
+
+        $this->applyBalance($branchId, $row, $newBalance);
+        $this->db->where('id', $pending['id'])->update('school_wallet_transaction', array(
+            'status'        => 'completed',
+            'balance_after' => $newBalance,
+        ));
+
+        $this->db->trans_complete();
+        return $this->db->trans_status();
+    }
+
+    /**
+     * Mark a pending top-up as failed/abandoned -- no balance change. Only
+     * call this once Paystack itself has confirmed the charge failed (or it's
+     * been pending long enough to give up on), never just because a browser
+     * callback's verify call didn't succeed -- that could just as easily be
+     * a transient error on a payment Paystack actually completed, and the
+     * reconciliation cron needs it to still be 'pending' to get another look.
+     */
+    public function markFailed($branchId, $reference)
+    {
+        $this->db->where(array('branch_id' => $branchId, 'reference' => $reference, 'status' => 'pending'))
+            ->update('school_wallet_transaction', array('status' => 'failed'));
+    }
+
     private function applyBalance($branchId, $existingRow, $newBalance)
     {
         if ($existingRow) {

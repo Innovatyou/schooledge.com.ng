@@ -43,5 +43,14 @@
 				<div class="alert alert-subl"><?php echo "curl ".site_url("cron_api/fees_reminder_command")."/".$global_config['cron_secret_key']; ?></div>
 			</div>
 		</section>
+		<section class="panel">
+			<header class="panel-heading">
+				<h4 class="panel-title"><i class="far fa-clock"></i> SMS/Email Wallet Payment Reconciliation Cron Job Command [every 10-15 minutes]</h4>
+			</header>
+			<div class="panel-body">
+				<div class="alert alert-subl"><?php echo "curl ".site_url("cron_api/veltrix_reconcile_command")."/".$global_config['cron_secret_key']; ?></div>
+				<p class="text-muted mb-none">Resolves wallet top-ups left "Pending" because the Paystack webhook is not available to this site (checks Paystack directly and marks each Completed or Failed).</p>
+			</div>
+		</section>
 	</div>
 </div>

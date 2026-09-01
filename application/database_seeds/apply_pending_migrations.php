@@ -1671,4 +1671,20 @@ if (!$uniqExists) {
     echo "740: added school_wallet_transaction UNIQUE(branch_id, reference)\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 741: status column on school_wallet_transaction. Defaults to
+// 'completed' so every pre-existing row (and every other credit()/debit()
+// caller that doesn't know about this column) keeps its current meaning.
+// Needed because this Paystack account's webhook URL is already claimed by
+// another platform sharing the account, so Veltrixwebhook::paystack() never
+// fires for SchoolEdge -- the browser callback is the only path that can
+// record a top-up, and a payment where the browser never returns must still
+// leave a 'pending' trace for the reconciliation cron
+// (Cron_api::veltrix_reconcile_command) to resolve later.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'school_wallet_transaction') && !columnExists($m, 'school_wallet_transaction', 'status')) {
+    $m->query("ALTER TABLE `school_wallet_transaction` ADD COLUMN `status` VARCHAR(10) NOT NULL DEFAULT 'completed' AFTER `channel`");
+    echo "741: added school_wallet_transaction.status\n";
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

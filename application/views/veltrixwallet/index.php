@@ -21,24 +21,30 @@
 						<th>Date</th>
 						<th>Type</th>
 						<th>Channel</th>
+						<th>Status</th>
 						<th>Amount</th>
 						<th>Balance After</th>
 						<th>Description</th>
 					</tr>
 				</thead>
 				<tbody>
+					<?php
+					$statusClass = array('completed' => 'success', 'pending' => 'warning', 'failed' => 'danger');
+					?>
 					<?php foreach ($transactions as $row): ?>
+					<?php $status = $row['status'] ?? 'completed'; ?>
 					<tr>
 						<td><?=_d($row['created_at'])?></td>
 						<td><span class="label label-<?=$row['type'] === 'credit' ? 'success' : 'default'?>"><?=ucfirst($row['type'])?></span></td>
 						<td><?=ucfirst($row['channel'])?></td>
+						<td><span class="label label-<?=$statusClass[$status] ?? 'default'?>"><?=ucfirst($status)?></span></td>
 						<td><?=currencyFormat($row['amount'])?></td>
-						<td><?=currencyFormat($row['balance_after'])?></td>
+						<td><?=$status === 'completed' ? currencyFormat($row['balance_after']) : '-'?></td>
 						<td><?=htmlspecialchars($row['description'] ?? '')?></td>
 					</tr>
 					<?php endforeach; ?>
 					<?php if (empty($transactions)): ?>
-					<tr><td colspan="6" class="text-center"><?=translate('no_data_found')?></td></tr>
+					<tr><td colspan="7" class="text-center"><?=translate('no_data_found')?></td></tr>
 					<?php endif; ?>
 				</tbody>
 			</table>

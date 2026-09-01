@@ -97,6 +97,14 @@ class Veltrixwallet extends Admin_Controller
             redirect(base_url('veltrixwallet'));
         }
 
+        // Record the attempt now, before handing off to Paystack: this
+        // account's webhook URL is claimed by another platform, so the
+        // browser callback below is the only path that can normally
+        // complete this reference. Without a pending row here, a customer
+        // who pays but never makes it back to that callback leaves no trace
+        // anywhere in SchoolEdge.
+        $this->veltrix_wallet_model->recordPending($params['branch_id'], $params['amount'], $params['reference'], 'Wallet top-up via Paystack');
+
         header('Location: ' . $result['data']['authorization_url']);
         exit;
     }
@@ -112,12 +120,16 @@ class Veltrixwallet extends Admin_Controller
             redirect(base_url('veltrixwallet'));
         }
 
-        // Idempotency: a refreshed callback page must never credit the same
-        // reference twice.
-        $already = $this->db->where(array('branch_id' => $params['branch_id'], 'reference' => $ref))
-            ->get('school_wallet_transaction')->row();
-        if ($already) {
-            set_alert('success', 'Payment already credited.');
+        // Idempotency: a refreshed callback page (or the reconciliation cron
+        // beating us to it) must never credit the same reference twice.
+        $existing = $this->db->where(array('branch_id' => $params['branch_id'], 'reference' => $ref))
+            ->get('school_wallet_transaction')->row_array();
+        if ($existing && $existing['status'] !== 'pending') {
+            if ($existing['status'] === 'completed') {
+                set_alert('success', 'Payment already credited.');
+            } else {
+                set_alert('error', 'Payment verification failed.');
+            }
             redirect(base_url('veltrixwallet'));
         }
 
@@ -139,10 +151,15 @@ class Veltrixwallet extends Admin_Controller
             && ($result['data']['reference'] ?? '') === $ref;
 
         if ($success) {
-            $this->veltrix_wallet_model->credit($params['branch_id'], $params['amount'], 'topup', $ref, 'Wallet top-up via Paystack');
+            $this->veltrix_wallet_model->completePending($params['branch_id'], $params['amount'], $ref, 'Wallet top-up via Paystack');
             set_alert('success', 'Wallet funded successfully.');
         } else {
-            set_alert('error', 'Payment verification failed.');
+            // Do NOT mark this failed here -- a curl blip or a Paystack
+            // status that isn't "success" yet doesn't mean the charge
+            // failed. Leave it 'pending' so the reconciliation cron
+            // (Cron_api::veltrix_reconcile_command) can check Paystack
+            // directly and resolve it either way.
+            set_alert('info', 'We could not confirm this payment yet. It will be checked automatically shortly -- refresh this page in a few minutes.');
         }
         redirect(base_url('veltrixwallet'));
     }
