@@ -24,6 +24,8 @@ if ($this->input->get('branch_id')) {
             <li <?=$sub_page == 'school_settings/whatsapp_settings' ? 'class="active"' : '';?>><a href="<?=base_url('school_settings/whatsapp_setting' . $url)?>"><i class="fab fa-whatsapp"></i> <?=translate('whatsapp_settings')?></a></li>
         <?php } if (moduleIsEnabled('attendance')) { ?>
             <li <?=$sub_page == 'school_settings/attendance_type' ? 'class="active"' : '';?>><a href="<?=base_url('school_settings/attendance_type' . $url)?>"><i class="fa-solid fa-signal"></i> <?=translate('attendance_type')?></a></li>
+        <?php } if (is_superadmin_loggedin()) { ?>
+            <li <?=$sub_page == 'veltrixwallet/index' ? 'class="active"' : '';?>><a href="<?=base_url('veltrixwallet' . $url)?>"><i class="icons icon-wallet"></i> SMS/Email Wallet</a></li>
         <?php } ?>
         </ul>
     </div>

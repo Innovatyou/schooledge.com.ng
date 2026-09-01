@@ -14,6 +14,28 @@
 		<?php echo form_close(); ?>
 		<?php } ?>
 
+		<?php if (is_superadmin_loggedin()) { ?>
+		<div class="alert alert-warning mb-md">
+			<strong>Manual adjustment (superadmin only).</strong> Use this only to reconcile a payment confirmed successful on Paystack that isn't reflected here, or to correct a mistaken credit. The reason is required and stored on the transaction.
+		</div>
+		<?php echo form_open('veltrixwallet/admin_adjust', array('class' => 'form-inline mb-lg')); ?>
+			<input type="hidden" name="branch_id" value="<?=$branch_id?>">
+			<div class="form-group">
+				<select name="type" class="form-control" required>
+					<option value="credit">Credit</option>
+					<option value="debit">Debit</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<input type="number" step="0.01" min="0.01" name="amount" class="form-control" placeholder="Amount" required>
+			</div>
+			<div class="form-group">
+				<input type="text" name="note" class="form-control" placeholder="Reason, e.g. Paystack ref VWALLET-..." style="width:320px" required>
+			</div>
+			<button type="submit" class="btn btn-warning" onclick="return confirm('Manually adjust this school&#39;s wallet balance?');"><i class="fas fa-balance-scale"></i> Apply Adjustment</button>
+		<?php echo form_close(); ?>
+		<?php } ?>
+
 		<div class="table-responsive">
 			<table class="table table-bordered table-condensed table-hover mb-none">
 				<thead>

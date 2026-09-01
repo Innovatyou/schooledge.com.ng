@@ -164,6 +164,52 @@ class Veltrixwallet extends Admin_Controller
         redirect(base_url('veltrixwallet'));
     }
 
+    /**
+     * Superadmin-only manual balance correction, for cases like a Paystack
+     * charge confirmed successful (checked directly against Paystack) that
+     * still isn't reflected here -- e.g. it predates a pending row ever
+     * being recorded, or the reconciliation cron hasn't caught up yet.
+     * Deliberately gated on is_superadmin_loggedin() directly rather than
+     * the 'veltrix_wallet' permission a school's own admin can hold --
+     * a school must never be able to grant itself free wallet balance.
+     * Reuses credit()/debit() (channel 'manual'), the same model methods
+     * the reconciliation cron itself calls, so this is the same trusted
+     * code path Paystack verification uses, just triggered by a human.
+     */
+    public function admin_adjust()
+    {
+        if (!is_superadmin_loggedin()) {
+            access_denied();
+        }
+
+        $this->form_validation->set_rules('branch_id', 'School', 'trim|required|numeric');
+        $this->form_validation->set_rules('type', 'Type', 'trim|required|in_list[credit,debit]');
+        $this->form_validation->set_rules('amount', 'Amount', 'trim|required|numeric|greater_than[0]');
+        $this->form_validation->set_rules('note', 'Reason', 'trim|required');
+        if ($this->form_validation->run() === false) {
+            set_alert('error', strip_tags(validation_errors()));
+            redirect(base_url('veltrixwallet?branch_id=' . (int) $this->input->post('branch_id')));
+        }
+
+        $branchId = (int) $this->input->post('branch_id');
+        $type     = $this->input->post('type');
+        $amount   = round((float) $this->input->post('amount'), 2);
+        $note     = trim($this->input->post('note'));
+        $admin    = $this->session->userdata('name') ?: 'Superadmin';
+        $reference    = 'MANUAL-' . $branchId . '-' . time();
+        $description  = "Manual $type by $admin: $note";
+
+        if ($type === 'credit') {
+            $this->veltrix_wallet_model->credit($branchId, $amount, 'manual', $reference, $description);
+            set_alert('success', 'Wallet credited.');
+        } else {
+            $ok = $this->veltrix_wallet_model->debit($branchId, $amount, 'manual', $reference, $description);
+            set_alert($ok ? 'success' : 'error', $ok ? 'Wallet debited.' : 'Insufficient balance to debit that amount.');
+        }
+
+        redirect(base_url('veltrixwallet?branch_id=' . $branchId));
+    }
+
     private function getPaymentConfig()
     {
         return $this->db->where('branch_id', $this->globalPaymentID)->get('payment_config')->row_array();
