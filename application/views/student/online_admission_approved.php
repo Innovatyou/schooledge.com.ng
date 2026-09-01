@@ -450,7 +450,7 @@ $branchID = $stuDetails['branch_id'];
 						<div class="row mb-lg">
 							<div class="col-md-6 mb-sm">
 								<div class="form-group">
-									<label class="control-label"><?=translate('usename')?> <span class="required">*</span></label>
+									<label class="control-label"><?=translate('username')?> <span class="required">*</span></label>
 									<div class="input-group">
 										<span class="input-group-addon"><i class="far fa-user"></i></span>
 										<input type="email" class="form-control" name="grd_username" id="grd_username" value="<?=set_value('grd_username')?>" />
