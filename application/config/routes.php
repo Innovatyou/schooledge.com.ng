@@ -258,6 +258,12 @@ $route['wallet'] = 'wallet/index';
 // veltrixwallet/topup and veltrixwebhook/paystack already route correctly
 // without an explicit entry, same as every other multi-segment controller.
 $route['veltrixwallet'] = 'veltrixwallet/index';
+// Same bug again - the sidebar links to the bare /schooledge_qr_attendance
+// URL (no method segment), which falls through to the branch-slug catch-all
+// and redirects to the dashboard instead of reaching
+// Schooledge_qr_attendance::index() - this is why the QR scanner page looked
+// like it was "redirecting back to dashboard".
+$route['schooledge_qr_attendance'] = 'schooledge_qr_attendance/index';
 $route['404_override'] = 'errors';
 if (!empty($saas_default) && $saas_default == true) {
 	$route['default_controller'] = 'saas_website/index';
