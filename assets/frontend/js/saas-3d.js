@@ -10,6 +10,42 @@
     var root = document.documentElement;
     root.classList.remove('no-js');
 
+    /* ---------- light / dark theme ----------
+       The initial theme is set before paint by the inline script in _head.php;
+       this wires up the toggle and follows OS changes until the visitor picks one. */
+    var THEME_KEY = 'skoolos-theme';
+    var themeToggles = document.querySelectorAll('.theme-toggle');
+    function savedTheme() {
+        try { return localStorage.getItem(THEME_KEY); } catch (e) { return null; }
+    }
+    function applyTheme(theme, persist) {
+        root.setAttribute('data-theme', theme);
+        themeToggles.forEach(function (btn) {
+            btn.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+            btn.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+        });
+        if (persist) {
+            try { localStorage.setItem(THEME_KEY, theme); } catch (e) {}
+        }
+    }
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light', false);
+    themeToggles.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark', true);
+        });
+    });
+    if (window.matchMedia) {
+        var systemDark = window.matchMedia('(prefers-color-scheme: dark)');
+        var onSystemChange = function (e) {
+            var s = savedTheme();
+            if (s !== 'light' && s !== 'dark') applyTheme(e.matches ? 'dark' : 'light', false);
+        };
+        if (systemDark.addEventListener) systemDark.addEventListener('change', onSystemChange);
+        else if (systemDark.addListener) systemDark.addListener(onSystemChange);
+    }
+    // enable colour transitions only after first paint so the page doesn't fade in
+    requestAnimationFrame(function () { root.classList.add('theme-ready'); });
+
     var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var finePointer = window.matchMedia('(pointer: fine)').matches;
 

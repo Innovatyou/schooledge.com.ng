@@ -7,6 +7,7 @@
     <meta name="author" content="<?php echo $global_config['institute_name'] ?>">
     <title><?php echo $global_config['institute_name'];?></title>
     <link rel="shortcut icon" href="<?php echo base_url('assets/images/favicon.png');?>">
+    <?php $this->load->view('saas_website/_theme_boot'); ?>
     <link href="<?php echo base_url() ?>assets/frontend/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/font-awesome/css/all.min.css'); ?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/select2/css/select2.min.css'); ?>">
@@ -14,33 +15,45 @@
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/style.css'); ?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/dropify/css/dropify.min.css'); ?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/bootstrap-datepicker/css/bootstrap-datepicker.standalone.css'); ?>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap">
+    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-3d.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-3d.css')); ?>">
+    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-pages.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-pages.css')); ?>">
     <script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js'); ?>"></script>
     <style type="text/css">
         .hidden-div {
             display: none;
         }
-        @media (max-width: 549px) {
-            .sr-root {
-                padding: 15px !important;
-            }
-        }
     </style>
 </head>
-<body>
+<body class="x3d skin-pages">
+    <?php $this->load->view('saas_website/_topbar'); ?>
     <div class="sr-root">
         <div class="sr-main">
-            <section class="container">
-                <div class="row">
-                    <div class="col-md-6" style="margin: auto 0;">
-                        <h1>Subscription Fees Payment</h1>
-                        <h4><strong style="color: #5e5e5e;"><?php echo $get_school['name'] . " " . translate('plan'); ?></strong> subscription fees amount</h4>
-                        <span style="font-weight: bold; color: #4d4d4d; font-size: 22px;"><?php echo $global_config['currency_symbol'] .  number_format($get_school['price'] - $get_school['discount'], 2, '.', ','); ?></span>
-                        <div class="pasha-image"> 
-                            <img src="<?=base_url('uploads/app_image/logo.png')?>"/>
+            <section class="container-xl">
+                <div class="row g-4 align-items-stretch">
+                    <div class="col-lg-5">
+                        <div class="pay-summary">
+                            <span class="eyebrow"><span class="pulse"></span> Subscription payment</span>
+                            <h1>Complete your subscription</h1>
+                            <?php // package names often already end in "Plan" ("Premium Plan"); don't print "Plan Plan" ?>
+                            <p class="pay-plan"><?php echo html_escape($get_school['name']) . (preg_match('/plan$/i', trim($get_school['name'])) ? '' : ' ' . translate('plan')); ?></p>
+                            <div class="pay-amount">
+                                <small>Amount due</small>
+                                <strong><?php echo $global_config['currency_symbol'] .  number_format($get_school['price'] - $get_school['discount'], 2, '.', ','); ?></strong>
+                            </div>
+                            <ul class="pay-trust">
+                                <li><i class="fas fa-shield-alt"></i> Payments are processed by trusted gateways</li>
+                                <li><i class="fas fa-receipt"></i> An invoice is issued as soon as you pay</li>
+                                <li><i class="fas fa-headset"></i> Need help? Call <?php echo $global_config['mobileno'] ?></li>
+                            </ul>
+                            <img class="pay-mark" src="<?php echo base_url('assets/frontend/images/skoolos/mark.svg') ?>" alt="" width="128" height="128">
                         </div>
                     </div>
-                    <div class="col-md-6">
-                        <h1>Payer Details</h1>
+                    <div class="col-lg-7">
+                        <div class="pay-card">
+                        <h2>Payer details</h2>
                         <?php echo form_open_multipart('saas_payment/checkout/', array('class' => 'form-horizontal frm-submit' )); ?>
                         <input type="hidden" name="reference_no" value="<?php echo $get_school['reference_no'] ?>">
                     
@@ -153,8 +166,9 @@
                                 ?>
                             <span class="error"></span>
                         </div>
-                        <button type="submit" class="btn btn-block btn-red" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing">Pay Now</button>
+                        <button type="submit" class="btn-glow btn-lg w-100 mt-2" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing"><i class="fas fa-lock"></i> Pay Now</button>
                         <?php echo form_close();?>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -167,6 +181,7 @@
     <script src="<?php echo base_url('assets/vendor/dropify/js/dropify.min.js');?>"></script>
     <script src="<?php echo base_url('assets/vendor/bootstrap-datepicker/js/bootstrap-datepicker.min.js'); ?>"></script>
     <script src="<?php echo base_url('assets/frontend/js/payment.js'); ?>"></script>
+    <script src="<?php echo base_url('assets/frontend/js/saas-3d.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas-3d.js')); ?>"></script>
 <?php
 $alertclass = "";
 if($this->session->flashdata('alert-message-success')){

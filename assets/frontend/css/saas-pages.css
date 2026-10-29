@@ -1,0 +1,95 @@
+/* =========================================================
+   SkoolOS skin for the checkout-style SaaS pages
+   (saas_website/payment.php, saas_website/purchase_complete.php).
+   Loaded after style.css and saas-3d.css, scoped to body.skin-pages
+   so the shared style.css used by tenant school sites is untouched.
+   ========================================================= */
+
+body.skin-pages {
+    min-height: 100vh;
+    background: radial-gradient(900px 420px at 50% -120px, rgba(124, 92, 255, .22), transparent 70%), var(--surface-2);
+}
+:root[data-theme="dark"] body.skin-pages {
+    background: radial-gradient(900px 420px at 50% -120px, rgba(124, 92, 255, .3), transparent 70%), var(--surface-2);
+}
+
+/* ---------- top bar ---------- */
+.flow-bar { position: sticky; top: 0; z-index: 50; padding: 12px 0; background: rgba(11, 15, 31, .92); backdrop-filter: blur(14px); border-bottom: 1px solid rgba(255, 255, 255, .06); }
+.flow-bar .container-xl { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.flow-brand img { display: block; height: 36px; width: auto; }
+.flow-actions { display: flex; align-items: center; gap: 12px; }
+.flow-secure { align-items: center; gap: 8px; padding: 8px 14px; border-radius: 30px; background: rgba(52, 211, 153, .12); color: #6ee7b7; font-size: 12.5px; font-weight: 700; }
+
+/* ---------- page frame (neutralise the legacy full-height flex layout) ---------- */
+.skin-pages .sr-root { display: block; min-height: 0; padding: 48px 0 80px; }
+.skin-pages .sr-root .sr-main { display: block; width: 100% !important; }
+.skin-pages .sr-root h1 { color: inherit; }
+.skin-pages .sr-root h4 { color: var(--muted); }
+
+/* ---------- payment: summary card ---------- */
+.pay-summary { position: relative; height: 100%; padding: 38px 34px; border-radius: 26px; overflow: hidden; isolation: isolate; color: #fff; background: radial-gradient(420px 300px at 100% 0, rgba(124, 92, 255, .55), transparent 70%), linear-gradient(160deg, var(--ink-3), var(--ink)); box-shadow: 0 30px 70px rgba(20, 24, 60, .25); }
+.pay-summary .eyebrow { margin-bottom: 22px; }
+.skin-pages .sr-root .pay-summary h1 { font-size: clamp(28px, 3vw, 38px); font-weight: 800; line-height: 1.12; margin: 0 0 10px; color: #fff; }
+.pay-plan { color: #b8bfdc; font-size: 16px; font-weight: 600; margin: 0 0 26px; }
+.pay-amount { padding: 20px 22px; margin-bottom: 26px; border-radius: 18px; background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .12); }
+.pay-amount small { display: block; color: #9aa3c7; font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.pay-amount strong { display: block; margin-top: 4px; font: 800 clamp(32px, 3.4vw, 42px)/1.1 var(--font-head); background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.pay-trust { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; color: #c8cee8; font-size: 14px; }
+.pay-trust i { width: 22px; color: var(--cyan); }
+.pay-mark { position: absolute; z-index: -1; right: -30px; bottom: -30px; width: 190px; height: 190px; opacity: .14; transform: rotate(-12deg); }
+
+/* ---------- payment: form card ---------- */
+.pay-card { height: 100%; padding: 36px 34px; border-radius: 26px; background: var(--card); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.pay-card h2 { font-size: 22px; font-weight: 700; margin: 0 0 22px; }
+.skin-pages .form-group { margin-bottom: 14px !important; }
+.skin-pages .control-label { display: block; margin-bottom: 6px; font-size: 13.5px; font-weight: 600; color: var(--text); }
+.skin-pages .required { color: var(--rose); }
+.skin-pages .form-control { min-height: 48px; padding: 11px 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface-2); color: var(--text); font-size: 15px; transition: border-color .2s, box-shadow .2s, background .2s; }
+.skin-pages textarea.form-control { min-height: 84px; }
+.skin-pages .form-control::placeholder { color: var(--muted); }
+.skin-pages .form-control:focus { border-color: var(--violet); background: var(--card); color: var(--text); box-shadow: 0 0 0 4px rgba(124, 92, 255, .15); }
+.skin-pages .error { display: block; margin-top: 4px; color: #f05656; font-size: .8rem; }
+/* style.css forces select2 sizes/borders with !important, so these must too */
+.skin-pages .select2-container--default .select2-selection--single { height: 48px !important; border-radius: 12px !important; border: 1px solid var(--line) !important; background: var(--surface-2); }
+.skin-pages .select2-container--default .select2-selection--single .select2-selection__rendered { height: 46px !important; line-height: 46px !important; padding-left: 14px !important; color: var(--text); }
+.skin-pages .select2-container--default .select2-selection--single .select2-selection__arrow { height: 46px !important; right: 8px !important; }
+.skin-pages .select2-container--default.select2-container--open .select2-selection--single { border-color: var(--violet) !important; }
+.skin-pages .select2-dropdown { border-color: var(--line); border-radius: 12px; overflow: hidden; background: var(--card); color: var(--text); }
+.skin-pages .select2-container--default .select2-results__option--highlighted[aria-selected] { background: var(--violet); }
+:root[data-theme="dark"] .skin-pages .select2-container--default .select2-results__option[aria-selected=true] { background: rgba(255, 255, 255, .08); }
+:root[data-theme="dark"] .skin-pages .dropify-wrapper { background: var(--surface-2); border-color: var(--line); color: var(--muted); }
+:root[data-theme="dark"] .skin-pages .alert-info { background: rgba(34, 211, 238, .1); border-color: rgba(34, 211, 238, .25); color: #a5f3fc; }
+
+/* ---------- purchase complete ---------- */
+.flow-head { text-align: center; margin-bottom: 26px; }
+.skin-pages .sr-root .flow-head h1 { font-size: clamp(28px, 3.4vw, 42px); font-weight: 800; margin: 0 0 8px; }
+.flow-head p { color: var(--muted); margin: 0; }
+.skin-pages .alert { max-width: 850px; margin-left: auto; margin-right: auto; border-radius: 16px; border: 1px solid transparent; }
+:root[data-theme="dark"] .skin-pages .alert-success { background: rgba(52, 211, 153, .1); border-color: rgba(52, 211, 153, .25); color: #a7f3d0; }
+:root[data-theme="dark"] .skin-pages .alert-danger { background: rgba(251, 113, 133, .1); border-color: rgba(251, 113, 133, .25); color: #fecdd3; }
+.skin-pages .status-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin: 6px 0 10px; padding: 0; list-style: none; }
+.skin-pages .status-list li { min-width: 170px; padding: 14px 20px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; text-align: center; box-shadow: 0 10px 30px rgba(20, 24, 60, .06); }
+.skin-pages .status-list li span { display: block; margin-top: 4px; color: var(--text); font: 700 16px var(--font-head); letter-spacing: 0; text-transform: none; }
+.skin-pages .status-list li span.text-success { color: #10b981 !important; }
+.skin-pages .status-list li span.text-info { color: #0ea5e9 !important; }
+.skin-pages .status-list li span.text-warning { color: #f59e0b !important; }
+.skin-pages .status-list li span.text-danger { color: #f43f5e !important; }
+
+/* the invoice stays a white "paper" document in both themes (and when printed) */
+.skin-pages .invoice-container { color: #1d2440; border: 1px solid #e7e8f1 !important; border-radius: 22px !important; box-shadow: 0 30px 70px rgba(20, 24, 60, .12) !important; }
+:root[data-theme="dark"] .skin-pages .invoice-container { box-shadow: 0 30px 70px rgba(0, 0, 0, .5) !important; border-color: transparent !important; }
+.skin-pages .invoice-container h3 { font: 800 22px var(--font-head); margin-top: 6px; }
+.skin-pages .invoice-container .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border: 0; border-radius: 12px !important; font-weight: 700; font-size: 14px; color: #fff; background: var(--grad); box-shadow: 0 10px 24px rgba(124, 92, 255, .3); }
+.skin-pages .invoice-container .btn-group { gap: 10px; }
+.skin-pages .invoice-container .btn.btn-1 { color: var(--ink); background: #eef0f7; box-shadow: none; }
+.flow-back { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; color: var(--muted); font-weight: 600; }
+.flow-back:hover { color: var(--violet); background: var(--chip); }
+
+@media (max-width: 991px) {
+    .skin-pages .sr-root { padding: 28px 0 60px; }
+    .pay-summary, .pay-card { padding: 28px 22px; }
+}
+@media (max-width: 480px) {
+    .flow-brand img { height: 30px; }
+    .skin-pages .invoice-container { padding: 26px 18px 34px !important; }
+}

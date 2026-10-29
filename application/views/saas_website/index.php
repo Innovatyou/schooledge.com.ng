@@ -55,19 +55,7 @@ $moduleCount = count($modules);
     <meta property="og:title" content="<?php echo html_escape($getSettings->seo_title); ?>" />
     <meta property="og:description" content="<?php echo html_escape($getSettings->seo_description); ?>" />
     <meta property="og:type" content="website" />
-    <link rel="shortcut icon" type="image/x-icon" href="<?php echo base_url('assets/images/favicon.png');?>" />
-
-    <!-- CSS here -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap">
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/bootstrap.min.css'); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/vendor/font-awesome/css/all.min.css');?>">
-    <link rel="stylesheet" href="<?php echo base_url('assets/vendor/sweetalert/sweetalert-custom.css');?>">
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-3d.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-3d.css')); ?>" />
-
-    <!-- Google Analytics -->
-    <?php echo $getSettings->google_analytics; ?>
+    <?php $this->load->view('saas_website/_head'); ?>
 
     <?php if ($getSettings->pwa_enable == 1) {  ?>
     <!-- Web Application Manifest -->
@@ -92,68 +80,9 @@ $moduleCount = count($modules);
         }
     </script>
     <?php } ?>
-
-    <script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js');?>"></script>
-    <script type="text/javascript">
-        var base_url = '<?php echo base_url(); ?>';
-        var csrfData = <?php echo json_encode(csrf_jquery_token()); ?>;
-        $(function($) {
-            $.ajaxSetup({
-                cache: false,
-                data: csrfData
-            });
-        });
-    </script>
 </head>
 <body class="x3d">
-    <!-- Preloader -->
-    <div class="preloader">
-        <div class="preloader-core"><span></span><span></span><span></span></div>
-    </div>
-
-    <!-- Start Header Area -->
-    <header class="header navbar-area">
-        <div class="container-xl">
-            <nav class="navbar navbar-expand-lg">
-                <a class="navbar-brand" href="<?php echo base_url() ?>">
-                    <img src="<?php echo $logoLight ?>" alt="<?php echo $brand ?>" width="188" height="41">
-                </a>
-                <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent">
-                    <button type="button" class="mobile-menu-close" aria-label="Close menu">
-                        <i class="fas fa-times"></i>
-                    </button>
-                    <ul id="nav" class="navbar-nav mx-auto">
-                        <li class="nav-item"><a href="#home" class="page-scroll active"><?php echo translate('home'); ?></a></li>
-                        <li class="nav-item"><a href="#modules" class="page-scroll">Modules</a></li>
-                        <li class="nav-item"><a href="#features" class="page-scroll"><?php echo translate('features'); ?></a></li>
-                        <li class="nav-item"><a href="#portals" class="page-scroll">Portals</a></li>
-                        <li class="nav-item"><a href="#faq" class="page-scroll"><?php echo translate('faq'); ?></a></li>
-                        <li class="nav-item"><a href="#contact" class="page-scroll"><?php echo translate('contact'); ?></a></li>
-                    </ul>
-                </div>
-                <div class="header-btn">
-                    <a href="<?php echo base_url('saas_website/demo') ?>" class="btn-ghost d-none d-sm-inline-flex"><?php echo translate('live_demo'); ?></a>
-                    <?php if (!is_loggedin()) { ?>
-                    <a href="<?php echo base_url('authentication/index') ?>" class="btn-glow"><?php echo translate('login'); ?></a>
-                    <?php } else { ?>
-                    <a href="<?php echo base_url('dashboard/index') ?>" class="btn-glow"><?php echo translate('dashboard'); ?></a>
-                    <?php } ?>
-                    <button class="navbar-toggler mobile-menu-btn" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                        <span class="toggler-icon"></span>
-                        <span class="toggler-icon"></span>
-                        <span class="toggler-icon"></span>
-                    </button>
-                </div>
-            </nav>
-            <?php if ($this->session->flashdata('website_expired_msg')) { ?>
-            <div class="alert alert-danger alert-dismissible fade show mt-2">
-                <i class="fas fa-exclamation-triangle"></i> <?php echo $getSettings->expired_message; ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-            <?php } ?>
-        </div>
-    </header>
-    <!-- End Header Area -->
+    <?php $this->load->view('saas_website/_header', array('currentPage' => 'home')); ?>
 
     <!-- Start Hero Area -->
     <section id="home" class="hero3d">
@@ -463,85 +392,9 @@ $moduleCount = count($modules);
     </section>
     <!-- End Contact Area -->
 
-    <!-- Start Footer Area -->
-    <footer class="footer3d">
-        <div class="container-xl">
-            <div class="footer-grid">
-                <div class="f-about">
-                    <a href="<?php echo base_url() ?>" class="f-logo"><img src="<?php echo $logoLight ?>" alt="<?php echo $brand ?>" width="220" height="48"></a>
-                    <p><?php echo $getSettings->footer_about; ?></p>
-                    <ul class="social">
-                        <li><a href="<?php echo $global_config['facebook_url'] ?>" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a></li>
-                        <li><a href="<?php echo $global_config['twitter_url'] ?>" aria-label="Twitter"><i class="fab fa-twitter"></i></a></li>
-                        <li><a href="<?php echo $global_config['instagram_url'] ?>" aria-label="Instagram"><i class="fab fa-instagram"></i></a></li>
-                        <li><a href="<?php echo $global_config['linkedin_url'] ?>" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
-                        <li><a href="<?php echo $global_config['youtube_url'] ?>" aria-label="YouTube"><i class="fab fa-youtube"></i></a></li>
-                    </ul>
-                </div>
-                <div class="f-col">
-                    <h4>Product</h4>
-                    <ul>
-                        <li><a href="#modules">Modules</a></li>
-                        <li><a href="#features"><?php echo translate('features'); ?></a></li>
-                        <li><a href="#portals">Portals</a></li>
-                        <li><a href="<?php echo base_url('saas_website/demo') ?>"><?php echo translate('live_demo'); ?></a></li>
-                    </ul>
-                </div>
-                <div class="f-col">
-                    <h4>Company</h4>
-                    <ul>
-                        <li><a href="#faq"><?php echo translate('faq'); ?></a></li>
-                        <li><a href="#contact"><?php echo translate('contact'); ?></a></li>
-                        <?php if ($getSettings->terms_status == 1) { ?>
-                        <li><a href="javascript:void(0)" id="termsFooter"><?php echo translate('terms_&_conditions'); ?></a></li>
-                        <?php } ?>
-                    </ul>
-                </div>
-                <div class="f-col">
-                    <h4><?php echo translate('address'); ?></h4>
-                    <ul class="f-contact">
-                        <li><i class="fas fa-map-marker-alt"></i> <?php echo $global_config['address'] ?></li>
-                        <li><i class="fas fa-phone-alt"></i> <?php echo $global_config['mobileno'] ?></li>
-                        <li><i class="fas fa-envelope"></i> <?php echo $global_config['institute_email'] ?></li>
-                    </ul>
-                </div>
-            </div>
-            <div class="footer-bottom">
-                <span><?php echo $global_config['footer_text']; ?></span>
-                <img src="<?php echo base_url('assets/frontend/images/saas/' . $getSettings->payment_logo); ?>" alt="Payment methods">
-            </div>
-        </div>
-    </footer>
-    <!--/ End Footer Area -->
-
-    <a href="#" class="scroll-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></a>
-
-    <!-- ========================= JS here ========================= -->
-    <script src="<?php echo base_url('assets/frontend/js/bootstrap.min.js'); ?>"></script>
-    <script src="<?php echo base_url('assets/frontend/js/wow.min.js'); ?>"></script>
-    <script src="<?php echo base_url('assets/frontend/js/saas_main.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas_main.js')); ?>"></script>
-    <script src="<?php echo base_url('assets/vendor/sweetalert/sweetalert.min.js');?>"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="<?php echo base_url('assets/frontend/js/saas-3d.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas-3d.js')); ?>"></script>
+    <?php $this->load->view('saas_website/_footer', array('currentPage' => 'home', 'withThree' => true)); ?>
 </body>
 </html>
-
-<?php if ($getSettings->terms_status == 1) { ?>
-<div class="modal fade" id="termsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="termsModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header p-2">
-                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" style="color: #000;"></div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            </div>
-        </div>
-    </div>
-</div>
-<?php } ?>
 <?php
 $alertclass = "";
 if($this->session->flashdata('alert-message-success')){

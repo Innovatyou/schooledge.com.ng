@@ -15,46 +15,29 @@ $expiryDate = $this->saas_model->getPlanExpiryDate($schoolRegDetails['package_id
         <meta name="author" content="<?php echo $global_config['institute_name'] ?>">
         <title><?php echo $global_config['institute_name'];?></title>
         <link rel="shortcut icon" href="<?php echo base_url('assets/images/favicon.png');?>">
+        <?php $this->load->view('saas_website/_theme_boot'); ?>
         <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/bootstrap.min.css') ?>">
         <link rel="stylesheet" href="<?php echo base_url('assets/vendor/font-awesome/css/all.min.css'); ?>">
         <link rel="stylesheet" href="<?php echo base_url('assets/vendor/select2/css/select2.min.css'); ?>">
         <link rel="stylesheet" href="<?php echo base_url('assets/vendor/sweetalert/sweetalert-custom.css');?>">
         <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/style.css'); ?>">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap">
+        <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-3d.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-3d.css')); ?>">
+        <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-pages.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-pages.css')); ?>">
         <script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js'); ?>"></script>
         <style type="text/css">
-            @media (max-width: 549px) {
-                .sr-root {
-                    padding: 15px !important;
-                }
-            }
-            .status-list {
-                margin: 0;
-                padding: 0;
-                list-style: none;
-            }
-            .status-list li {
-                display: inline-block;
-                text-align: center;
-                
-                border: 1px solid #ddd;
-                padding: 9px 14px;
-                border-radius: 4px;
-                font-size: 13px;
-                margin-top: 0.5rem;
-                background-color: #cff4fc;
-            }
-            .status-list li span {
-                font-weight: bold;
-                display: block;
-            }
         </style>
     </head>
-    <body>
-        <div class="sr-root" style="background-color: #f9f9f9">
+    <body class="x3d skin-pages">
+        <?php $this->load->view('saas_website/_topbar'); ?>
+        <div class="sr-root">
             <div class="sr-main">
-                <section class="container">
-                    <div class="pasha-image mb-3">
-                        <a href="<?php echo base_url() ?>"><img src="<?=base_url('uploads/app_image/logo.png')?>" /></a>
+                <section class="container-xl">
+                    <div class="flow-head">
+                        <h1>Your subscription</h1>
+                        <p>Keep this page or download the invoice for your records.</p>
                     </div>
                     <?php
                     if ($schoolRegDetails['status'] == 0) { ?>
@@ -377,13 +360,14 @@ $expiryDate = $this->saas_model->getPlanExpiryDate($schoolRegDetails['package_id
                             <?php } } ?>
                         </div>
                     </div>
-                    <div class="text-center mt-4"><a href="<?php echo base_url() ?>"><i class="fas fa-angle-double-left"></i> Back To Home</a></div>
+                    <div class="text-center mt-4"><a href="<?php echo base_url() ?>" class="flow-back"><i class="fas fa-arrow-left"></i> Back to home</a></div>
                 </section>
             </div>
         </div>
         <script src="<?php echo base_url('assets/frontend/js/bootstrap.min.js'); ?>"></script>
         <script src="<?php echo base_url('assets/vendor/select2/js/select2.full.min.js'); ?>"></script>
         <script src="<?php echo base_url('assets/vendor/sweetalert/sweetalert.min.js');?>"></script>
+        <script src="<?php echo base_url('assets/frontend/js/saas-3d.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas-3d.js')); ?>"></script>
         <?php
         $alertclass = "";
         if($this->session->flashdata('alert-message-success')){
