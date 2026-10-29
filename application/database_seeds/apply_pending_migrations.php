@@ -1754,4 +1754,32 @@ if ($m->affected_rows > 0) {
     echo "743: renamed demo branch to SkoolOS Demo Academy\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 744: demo school ID cards move onto the redesigned starter
+// badges. Only demo branches (branch.is_demo = 1) and the two templates
+// the demo seeder creates are touched; real schools' cards are left alone.
+// Re-running just rewrites the same content.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'card_templete') && columnExists($m, 'branch', 'is_demo')) {
+    require_once __DIR__ . '/../helpers/general_helper.php';
+    $starters = starter_templates();
+    $idTargets = array(
+        'Student ID Card' => $starters['id_card_student'],
+        'Employee ID Card' => $starters['id_card_employee'],
+    );
+    $demoBranches = $m->query("SELECT id FROM branch WHERE is_demo = 1");
+    while ($branch = $demoBranches->fetch_assoc()) {
+        foreach ($idTargets as $cardName => $starter) {
+            $stmt = $m->prepare("UPDATE card_templete SET content = ?, design_style = ?, photo_size = ?, top_space = ?, bottom_space = ?, right_space = ?, left_space = ?
+                WHERE branch_id = ? AND card_type = 1 AND name = ?");
+            $stmt->bind_param('ssiiiiiis', $starter['content'], $starter['design_style'], $starter['photo_size'],
+                $starter['spacing'][0], $starter['spacing'][1], $starter['spacing'][2], $starter['spacing'][3], $branch['id'], $cardName);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                echo "744: redesigned '{$cardName}' for demo branch {$branch['id']}\n";
+            }
+        }
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

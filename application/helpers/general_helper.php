@@ -731,57 +731,68 @@ function psychomotor_rating_scale()
 // tagsList() - nothing here is resolved until a school actually saves it as their own template.
 function starter_templates()
 {
-    $studentIdContent = <<<'HTML'
-<div style="position:relative;width:100%;height:100%;font-family:Arial,sans-serif;">
+    // Portrait lanyard badges (54 x 86 mm). The photo sits in a fixed frame that overlaps
+    // the gradient header; the photo tag's own max-height comes from photo_size (88).
+    $idCard = function ($palette, $badge, $photoTag, $subtitle, $rows, $footerLine) {
+        list($headFrom, $headMid, $headTo, $pillBg, $pillText) = $palette;
+        $rowHtml = '';
+        foreach ($rows as $i => $row) {
+            $rule = $i ? 'border-top:1px solid #E6E8F0;' : '';
+            $rowHtml .= '<tr><td style="padding:2px 7px;line-height:1.35;color:#6B7590;' . $rule . '">' . $row[0] . '</td>'
+                . '<td style="padding:2px 7px;line-height:1.35;text-align:right;font-weight:bold;' . $rule . '">' . $row[1] . '</td></tr>' . "\n";
+        }
+        return <<<HTML
+<div style="position:relative;width:100%;height:100%;font-family:Arial,sans-serif;color:#16233F;">
 <table style="width:100%;height:100%;border-collapse:collapse;">
-<tr><td style="background:#16233F;padding:8px 6px 6px;text-align:center;border-bottom:3px solid #B08D3E;">
-<div style="color:#F4EFE3;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;line-height:1.25;">{institute_name}</div>
+<tr><td style="padding:0;vertical-align:top;">
+<div style="background:{$headFrom};background-image:linear-gradient(135deg,{$headFrom} 0%,{$headMid} 60%,{$headTo} 100%);border-radius:8px 8px 0 0;padding:7px 8px 26px;text-align:center;">
+<div style="color:#FFFFFF;font-size:9.5px;font-weight:bold;letter-spacing:.8px;text-transform:uppercase;line-height:1.25;">{institute_name}</div>
+<div style="display:inline-block;margin-top:3px;padding:1px 8px;border-radius:10px;background:rgba(255,255,255,.18);color:#FFFFFF;font-size:6px;line-height:1.6;font-weight:bold;letter-spacing:1.2px;">{$badge}</div>
+</div>
 </td></tr>
-<tr><td style="text-align:center;padding:10px 0 4px;">{student_photo}</td></tr>
-<tr><td style="text-align:center;padding:3px 8px 0;">
-<div style="font-size:14px;font-weight:bold;color:#16233F;line-height:1.2;">{name}</div>
-<div style="font-size:10px;color:#5B6B84;margin-top:2px;font-weight:600;">{class} &middot; {section}</div>
+<tr><td style="padding:0;text-align:center;vertical-align:top;">
+<div style="display:inline-block;margin-top:-22px;padding:3px;background:#FFFFFF;border-radius:14px;box-shadow:0 6px 14px rgba(22,35,63,.25);line-height:0;">
+<div style="width:64px;height:74px;overflow:hidden;border-radius:11px;background:#EEF1F6;text-align:center;">{$photoTag}</div>
+</div>
+<div style="font-size:12.5px;font-weight:bold;margin-top:4px;line-height:1.2;padding:0 6px;">{name}</div>
+<div style="display:inline-block;margin-top:3px;padding:1px 9px;border-radius:10px;background:{$pillBg};color:{$pillText};font-size:8px;line-height:1.6;font-weight:bold;">{$subtitle}</div>
 </td></tr>
-<tr><td style="padding:10px 12px 0;">
-<table style="width:100%;font-size:9px;color:#16233F;border-collapse:collapse;">
-<tr><td style="padding:2px 0;color:#5B6B84;">Reg. No</td><td style="padding:2px 0;text-align:right;font-weight:bold;">{register_no}</td></tr>
-<tr><td style="padding:2px 0;color:#5B6B84;">D.O.B</td><td style="padding:2px 0;text-align:right;font-weight:bold;">{birthday}</td></tr>
-<tr><td style="padding:2px 0;color:#5B6B84;">Blood Group</td><td style="padding:2px 0;text-align:right;font-weight:bold;">{blood_group}</td></tr>
-</table>
+<tr><td style="padding:6px 8px 0;vertical-align:top;">
+<table style="width:100%;border-collapse:separate;border-spacing:0;background:#F6F7FB;border:1px solid #E6E8F0;border-radius:8px;font-size:8px;">
+{$rowHtml}</table>
 </td></tr>
-<tr><td style="text-align:center;padding:8px 0 6px;">{qr_code}</td></tr>
-<tr><td style="text-align:center;padding:0 6px 10px;border-top:1px solid #E4DFD1;">
-<div style="font-size:7px;color:#5B6B84;padding-top:5px;line-height:1.35;">If found, please return to {institute_name} &middot; {institute_mobile_no}</div>
+<tr><td style="padding:5px 8px 4px;vertical-align:bottom;">
+<table style="width:100%;border-collapse:collapse;"><tr>
+<td style="width:40px;vertical-align:middle;padding:0;"><div style="width:38px;line-height:0;">{qr_code}</div></td>
+<td style="vertical-align:middle;padding:0 0 0 8px;font-size:6.5px;color:#6B7590;line-height:1.35;">
+<div style="font-weight:bold;color:#16233F;font-size:7.5px;">Valid till {expiry_date}</div>
+{$footerLine}
+</td>
+</tr></table>
 </td></tr>
+<tr><td style="height:5px;padding:0;background:{$headTo};background-image:linear-gradient(90deg,{$headFrom},{$headMid},{$headTo});border-radius:0 0 8px 8px;"></td></tr>
 </table>
 </div>
 HTML;
+    };
 
-    $employeeIdContent = <<<'HTML'
-<div style="position:relative;width:100%;height:100%;font-family:Arial,sans-serif;">
-<table style="width:100%;height:100%;border-collapse:collapse;">
-<tr><td style="background:#3A2E12;padding:8px 6px 6px;text-align:center;border-bottom:3px solid #B08D3E;">
-<div style="color:#F4EFE3;font-size:10px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;line-height:1.25;">{institute_name} &middot; Staff</div>
-</td></tr>
-<tr><td style="text-align:center;padding:10px 0 4px;">{staff_photo}</td></tr>
-<tr><td style="text-align:center;padding:3px 8px 0;">
-<div style="font-size:14px;font-weight:bold;color:#16233F;line-height:1.2;">{name}</div>
-<div style="font-size:10px;color:#5B6B84;margin-top:2px;font-weight:600;">{designation}</div>
-</td></tr>
-<tr><td style="padding:10px 12px 0;">
-<table style="width:100%;font-size:9px;color:#16233F;border-collapse:collapse;">
-<tr><td style="padding:2px 0;color:#5B6B84;">Department</td><td style="padding:2px 0;text-align:right;font-weight:bold;">{department}</td></tr>
-<tr><td style="padding:2px 0;color:#5B6B84;">Joined</td><td style="padding:2px 0;text-align:right;font-weight:bold;">{joining_date}</td></tr>
-<tr><td style="padding:2px 0;color:#5B6B84;">Blood Group</td><td style="padding:2px 0;text-align:right;font-weight:bold;">{blood_group}</td></tr>
-</table>
-</td></tr>
-<tr><td style="text-align:center;padding:8px 0 6px;">{qr_code}</td></tr>
-<tr><td style="text-align:center;padding:0 6px 10px;border-top:1px solid #E4DFD1;">
-<div style="font-size:7px;color:#5B6B84;padding-top:5px;line-height:1.35;">Property of {institute_name} &middot; Valid for current session</div>
-</td></tr>
-</table>
-</div>
-HTML;
+    $studentIdContent = $idCard(
+        array('#16233F', '#3B2F8F', '#4F8CFF', '#EFEAFF', '#5B3FD6'),
+        'STUDENT ID CARD',
+        '{student_photo}',
+        '{class} &middot; {section}',
+        array(array('Reg. No', '{register_no}'), array('D.O.B', '{birthday}'), array('Blood Group', '{blood_group}')),
+        'If found, please return to {institute_name} &middot; {institute_mobile_no}'
+    );
+
+    $employeeIdContent = $idCard(
+        array('#2A2108', '#7A5A1C', '#C9A24D', '#FBF3DF', '#8A6416'),
+        'STAFF ID CARD',
+        '{staff_photo}',
+        '{designation}',
+        array(array('Department', '{department}'), array('Joined', '{joining_date}'), array('Blood Group', '{blood_group}')),
+        'Property of {institute_name} &middot; {institute_mobile_no}'
+    );
 
     $admitCardContent = <<<'HTML'
 <div style="position:relative;width:100%;height:100%;font-family:Arial,sans-serif;padding:14px 16px;">
@@ -899,26 +910,26 @@ HTML;
             'applies_to' => 'id_card',
             'user_type' => 1,
             'label' => 'Student ID Card',
-            'description' => 'Portrait badge sized for a standard lanyard holder.',
+            'description' => 'Portrait badge with a framed photo, class pill and QR code.',
             'layout_width' => 54,
             'layout_height' => 86,
             'photo_style' => 1,
-            'photo_size' => 90,
-            'spacing' => array(8, 8, 8, 8),
-            'design_style' => 'premium',
+            'photo_size' => 74,
+            'spacing' => array(6, 6, 6, 6),
+            'design_style' => 'modern',
             'content' => $studentIdContent,
         ),
         'id_card_employee' => array(
             'applies_to' => 'id_card',
             'user_type' => 2,
             'label' => 'Employee ID Card',
-            'description' => 'Same badge system, staff palette, role and department in place of class and section.',
+            'description' => 'Same badge in a gold staff palette, with role and department.',
             'layout_width' => 54,
             'layout_height' => 86,
             'photo_style' => 1,
-            'photo_size' => 90,
-            'spacing' => array(8, 8, 8, 8),
-            'design_style' => 'modern',
+            'photo_size' => 74,
+            'spacing' => array(6, 6, 6, 6),
+            'design_style' => 'premium',
             'content' => $employeeIdContent,
         ),
         'admit_card' => array(
@@ -993,6 +1004,7 @@ function starter_template_demo_values()
         '{register_no}' => 'LU/2024/0142',
         '{roll}' => '14',
         '{birthday}' => '14 Mar 2012',
+        '{expiry_date}' => '31 Jul 2027',
         '{blood_group}' => 'O+',
         '{institute_name}' => 'LANDUP Schools',
         '{institute_address}' => '14 Unity Crescent, Lekki, Lagos',

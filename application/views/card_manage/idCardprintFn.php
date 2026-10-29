@@ -13,6 +13,11 @@
 			<?php } ?>
 			padding: <?=$template['top_space'] . 'px ' . $template['right_space'] . 'px ' . $template['bottom_space'] . 'px ' . $template['left_space'] . 'px'?>;
 			font-family: Arial;
+			/* real card size on screen too (previously only set for print, so the
+			   card shrink-wrapped its contents, e.g. a full-size photo) */
+			width: <?=$template['layout_width']?>mm;
+			height: <?=$template['layout_height']?>mm;
+			max-width: 100%;
 			float: left;
 			margin: 12px;
 		}

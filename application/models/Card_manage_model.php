@@ -199,7 +199,7 @@ class Card_manage_model extends MY_Model
             $field = str_replace($arr, '', $tag);
             if ($roleID == 1) {
                 if ($field == 'student_photo') {
-                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" style="width: auto; max-height:' . $photo_size . '">';
+                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" style="width: auto; max-width: 100%; max-height: ' . (int) $photo_size . 'px;">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
                     if (!empty($templete['logo'])) {
@@ -224,7 +224,7 @@ class Card_manage_model extends MY_Model
                         $params['size'] = 3;
                         $params['data'] = $qrData;
                         $qrCode = $this->ciqrcode->generate($params);
-                        $photo = '<img src="' . base_url($qrCode) . '">';
+                        $photo = '<img src="' . base_url($qrCode) . '" style="max-width: 100%; height: auto;">';
                         $body = str_replace($tag, $photo, $body);
                     }
                 } else if ($field == 'present_address') {
@@ -242,7 +242,7 @@ class Card_manage_model extends MY_Model
 
             if ($roleID == 2) {
                 if ($field == 'staff_photo') {
-                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('staff', $userDetails['photo']) . '" style="width: auto; max-height:' . $photo_size . '">';
+                    $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('staff', $userDetails['photo']) . '" style="width: auto; max-width: 100%; max-height: ' . (int) $photo_size . 'px;">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
                     if (!empty($templete['logo'])) {
@@ -271,7 +271,7 @@ class Card_manage_model extends MY_Model
                         $params['size'] = 3;
                         $params['data'] = $qrData;
                         $qrCode = $this->ciqrcode->generate($params);
-                        $photo = '<img src="' . base_url($qrCode) . '">';
+                        $photo = '<img src="' . base_url($qrCode) . '" style="max-width: 100%; height: auto;">';
                         $body = str_replace($tag, $photo, $body);
                     }
                 } else if ($field == 'gender') {
@@ -324,7 +324,7 @@ class Card_manage_model extends MY_Model
                     $params['size'] = 2;
                     $params['data'] = ucfirst($qr_code) . " - " . $userDetails[$qr_code];
                     $qrCode = $this->ciqrcode->generate($params);
-                    $photo = '<img src="' . base_url($qrCode) . '">';
+                    $photo = '<img src="' . base_url($qrCode) . '" style="max-width: 100%; height: auto;">';
                     $body = str_replace($tag, $photo, $body);
                 }
             } else if ($field == 'present_address') {
