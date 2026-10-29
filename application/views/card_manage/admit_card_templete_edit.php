@@ -84,10 +84,7 @@
 					<div class="form-group">
 						<label class="control-label col-md-3"><?=translate('design_style')?> <span class="required">*</span></label>
 						<div class="col-md-8">
-							<?php
-								echo form_dropdown("design_style", document_template_styles(), document_template_style($templete), "class='form-control' data-width='100%'
-								data-plugin-selectTwo  data-minimum-results-for-search='Infinity'");
-							?>
+							<?php $this->load->view('partials/design_style_picker', array('selected' => document_template_style($templete), 'kind' => 'card')); ?>
 							<span class="error"></span>
 						</div>
 					</div>

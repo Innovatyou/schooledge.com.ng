@@ -2057,7 +2057,13 @@ window.theme = {};
 			$form.find('[name="left_space"]').val(settings.spacing[3]);
 		}
 		if (settings.design_style) {
-			$form.find('[name="design_style"]').val(settings.design_style).trigger('change');
+			// design_style is a radio group (visual style picker); fall back to .val() for a select
+			var $style = $form.find('[name="design_style"]');
+			if ($style.is(':radio')) {
+				$style.filter(function () { return this.value === settings.design_style; }).prop('checked', true).trigger('change');
+			} else {
+				$style.val(settings.design_style).trigger('change');
+			}
 		}
 
 		popupMsg("Template applied - review and adjust as needed, then save.", "success");

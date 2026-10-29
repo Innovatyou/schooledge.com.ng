@@ -2,118 +2,557 @@
  * Print-safe visual presets for admin-configurable document templates
  * (ID cards, admit cards, certificates, marksheets / report cards).
  *
- * Every rule below is scoped under ".document-template.template-modern"
- * or ".document-template.template-premium" so the "classic" preset (and
- * any element outside a document template) is never touched. This keeps
- * previously saved "classic" templates pixel-identical and stops these
- * styles from leaking into Bootstrap tables or the rest of the app.
+ * Each preset below repeats the same rule set with its own palette; to add a
+ * preset, copy one block, change the colours, and register its key in
+ * document_template_style_meta()
+ * (application/helpers/general_helper.php).
+ *
+ * Every rule is scoped under ".document-template.template-<style>" so the
+ * "classic" preset (and anything outside a document template) is never
+ * touched: previously saved classic templates stay pixel-identical.
+ *
+ * Literal colours and descendant selectors only: mPDF (report-card PDFs)
+ * supports neither CSS variables nor the ">" child combinator. Pseudo-element decorations are browser-only.
  */
 
-.document-template.template-modern,
-.document-template.template-premium {
+
+/* ======================== MODERN BLUE ======================== */
+.document-template.template-modern {
     position: relative;
     box-sizing: border-box;
     overflow: hidden;
     isolation: isolate;
     color: #172033;
-    background-color: #fff;
-    border: 1px solid rgba(20, 71, 120, .16);
-    box-shadow: 0 12px 30px rgba(17, 45, 78, .18);
+    border: 1px solid #cfe0f7;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
+}
+.document-template.template-modern.certificate { background-color: #ffffff; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-modern.mark-container { border-top: 6px solid #1877f2; }
+
+.document-template.template-modern > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-modern table { border-collapse: collapse; }
+.document-template.template-modern table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-modern table.table thead tr th,
+.document-template.template-modern table.table tbody tr th,
+.document-template.template-modern table.table thead tr td,
+.document-template.template-modern table.table tbody tr td { border: 1px solid #cfe0f7 !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-modern table.table thead tr th {
+    background-color: #1877f2 !important;
+    color: #ffffff !important;
+    border-color: #1877f2 !important;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 11px;
+    font-weight: bold;
+}
+.document-template.template-modern table.table tbody tr:nth-child(even) td { background-color: #f4f8fe !important; }
+.document-template.template-modern table.table tbody tr.text-weight-semibold td { background-color: #e7f0fd !important; color: #172033; font-weight: bold; }
+.document-template.template-modern table.table tbody tr.text-weight-semibold td:first-child { color: #1877f2; }
+
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-modern table:not(.table) td, .document-template.template-modern table:not(.table) th { border-color: #cfe0f7; }
+.document-template.template-modern table:not(.table) th { background-color: #e7f0fd; color: #1877f2; }
+.document-template.template-modern table:not(.table) td[colspan] { background-color: #f4f8fe; color: #1877f2; }
+
+/* attendance / grading-scale / position panels */
+.document-template.template-modern .marksheet-summary-panel {
+    background-color: #fbfdff;
+    border: 1px solid #cfe0f7;
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-modern .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-modern .marksheet-summary-panel table.table tbody tr th { background-color: #e7f0fd !important; color: #172033; font-weight: bold; }
+.document-template.template-modern .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #1877f2 !important;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
 }
 
-.document-template.template-modern > *,
-.document-template.template-premium > * {
-    position: relative;
-    z-index: 2;
-}
-
-.document-template.template-modern::before,
-.document-template.template-premium::before,
-.document-template.template-modern::after,
-.document-template.template-premium::after {
+/* browser-only corner shapes (mPDF ignores pseudo-elements) */
+.document-template.template-modern::before, .document-template.template-modern::after {
     content: "";
     position: absolute;
     pointer-events: none;
     z-index: 1;
     transform: rotate(-10deg);
-}
-
-.document-template.template-modern::before {
-    width: 55%;
-    height: 34%;
-    right: -18%;
-    top: -16%;
     border-radius: 45%;
-    background: linear-gradient(135deg, rgba(24, 119, 242, .23), rgba(22, 185, 176, .12));
-    box-shadow: 0 18px 0 rgba(24, 119, 242, .06);
 }
+.document-template.template-modern::before { width: 55%; height: 34%; right: -20%; top: -18%; background: linear-gradient(135deg, rgba(24, 119, 242, .16), rgba(22, 185, 176, .12)); }
+.document-template.template-modern::after { width: 48%; height: 24%; left: -20%; bottom: -15%; background: linear-gradient(135deg, rgba(22, 185, 176, .12), rgba(24, 119, 242, .16)); }
+/* keep the decoration faint on dense report cards */
+.document-template.template-modern.mark-container::before, .document-template.template-modern.mark-container::after { opacity: .55; }
 
-.document-template.template-modern::after {
-    width: 48%;
-    height: 24%;
-    left: -19%;
-    bottom: -14%;
-    border-radius: 45%;
-    background: linear-gradient(135deg, rgba(22, 185, 176, .18), rgba(24, 119, 242, .09));
-}
-
+/* ======================== PREMIUM GOLD ======================== */
 .document-template.template-premium {
-    border-color: rgba(173, 127, 32, .5);
-    background-image: radial-gradient(circle at 50% 0%, rgba(212, 174, 82, .1), rgba(212, 174, 82, 0) 60%);
-    box-shadow:
-        0 20px 40px rgba(31, 22, 4, .24),
-        0 2px 0 rgba(212, 174, 82, .55),
-        inset 0 0 0 1px rgba(212, 174, 82, .4),
-        inset 0 0 0 5px rgba(255, 255, 255, .92),
-        inset 0 0 0 6px rgba(173, 127, 32, .3);
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    color: #1a2233;
+    border: 1px solid #e6d6ad;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
 }
+.document-template.template-premium.certificate { background-color: #ffffff; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-premium.mark-container { border-top: 6px solid #d3a641; }
 
-.document-template.template-premium::before {
-    width: 62%;
-    height: 38%;
-    right: -22%;
-    top: -20%;
-    border-radius: 48%;
-    background: linear-gradient(135deg, rgba(18, 39, 69, .2), rgba(211, 166, 65, .24));
-    box-shadow: 0 16px 0 rgba(211, 166, 65, .07);
+.document-template.template-premium > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-premium table { border-collapse: collapse; }
+.document-template.template-premium table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-premium table.table thead tr th,
+.document-template.template-premium table.table tbody tr th,
+.document-template.template-premium table.table thead tr td,
+.document-template.template-premium table.table tbody tr td { border: 1px solid #e6d6ad !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-premium table.table thead tr th {
+    background-color: #122745 !important;
+    color: #f6e7bf !important;
+    border-color: #122745 !important;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 11px;
+    font-weight: bold;
 }
+.document-template.template-premium table.table tbody tr:nth-child(even) td { background-color: #fdfaf2 !important; }
+.document-template.template-premium table.table tbody tr.text-weight-semibold td { background-color: #f7efd9 !important; color: #1a2233; font-weight: bold; }
+.document-template.template-premium table.table tbody tr.text-weight-semibold td:first-child { color: #d3a641; }
 
-.document-template.template-premium::after {
-    width: 55%;
-    height: 28%;
-    left: -22%;
-    bottom: -17%;
-    border-radius: 48%;
-    background: linear-gradient(135deg, rgba(211, 166, 65, .2), rgba(18, 39, 69, .12));
-}
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-premium table:not(.table) td, .document-template.template-premium table:not(.table) th { border-color: #e6d6ad; }
+.document-template.template-premium table:not(.table) th { background-color: #f7efd9; color: #122745; }
+.document-template.template-premium table:not(.table) td[colspan] { background-color: #fdfaf2; color: #122745; }
 
-.document-template.template-modern img,
-.document-template.template-premium img {
-    max-width: 100%;
-}
-
-.document-template.template-modern table,
-.document-template.template-premium table {
-    background-color: rgba(255, 255, 255, .86);
-}
-
-/* Translucent summary panels (marksheet attendance / grading-scale boxes, etc.) */
-.document-template.template-modern .marksheet-summary-panel,
+/* attendance / grading-scale / position panels */
 .document-template.template-premium .marksheet-summary-panel {
-    background: rgba(255, 255, 255, .72);
-    border: 1px solid rgba(20, 71, 120, .14);
+    background-color: #fffdf7;
+    border: 1px solid #e6d6ad;
     border-radius: 8px;
     padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-premium .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-premium .marksheet-summary-panel table.table tbody tr th { background-color: #f7efd9 !important; color: #1a2233; font-weight: bold; }
+.document-template.template-premium .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #122745 !important;
+    color: #f6e7bf !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
 }
 
-.document-template.template-premium .marksheet-summary-panel {
-    border-color: rgba(173, 127, 32, .3);
+/* browser-only corner shapes (mPDF ignores pseudo-elements) */
+.document-template.template-premium::before, .document-template.template-premium::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    transform: rotate(-10deg);
+    border-radius: 45%;
+}
+.document-template.template-premium::before { width: 55%; height: 34%; right: -20%; top: -18%; background: linear-gradient(135deg, rgba(18, 39, 69, .14), rgba(211, 166, 65, .2)); }
+.document-template.template-premium::after { width: 48%; height: 24%; left: -20%; bottom: -15%; background: linear-gradient(135deg, rgba(211, 166, 65, .2), rgba(18, 39, 69, .14)); }
+/* keep the decoration faint on dense report cards */
+.document-template.template-premium.mark-container::before, .document-template.template-premium.mark-container::after { opacity: .55; }
+.document-template.template-premium {
+    border-color: #c9a24d;
+    box-shadow: 0 20px 40px rgba(31, 22, 4, .2), inset 0 0 0 1px rgba(212, 174, 82, .45), inset 0 0 0 5px #ffffff, inset 0 0 0 6px rgba(173, 127, 32, .35);
 }
 
+/* ======================== CLEAN MINIMAL ======================== */
+.document-template.template-minimal {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    color: #111827;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
+}
+.document-template.template-minimal.certificate { background-color: #ffffff; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-minimal.mark-container { border-top: 6px solid #111827; }
+
+.document-template.template-minimal > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-minimal table { border-collapse: collapse; }
+.document-template.template-minimal table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-minimal table.table thead tr th,
+.document-template.template-minimal table.table tbody tr th,
+.document-template.template-minimal table.table thead tr td,
+.document-template.template-minimal table.table tbody tr td { border: 1px solid #e5e7eb !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-minimal table.table thead tr th {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    border-left-color: #ffffff !important;
+    border-right-color: #ffffff !important;
+    border-top-color: #ffffff !important;
+    border-bottom: 2px solid #111827 !important;
+    text-transform: uppercase;
+    letter-spacing: .08em;
+    font-size: 10.5px;
+    font-weight: bold;
+}
+.document-template.template-minimal table.table tbody tr td { border-left-color: #ffffff !important; border-right-color: #ffffff !important; }
+.document-template.template-minimal table.table tbody tr:nth-child(even) td { background-color: #fafafa !important; }
+.document-template.template-minimal table.table tbody tr.text-weight-semibold td { background-color: #f3f4f6 !important; color: #111827; font-weight: bold; }
+.document-template.template-minimal table.table tbody tr.text-weight-semibold td:first-child { color: #111827; }
+
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-minimal table:not(.table) td, .document-template.template-minimal table:not(.table) th { border-color: #e5e7eb; }
+.document-template.template-minimal table:not(.table) th { background-color: #f3f4f6; color: #111827; }
+.document-template.template-minimal table:not(.table) td[colspan] { background-color: #fafafa; color: #111827; }
+
+/* attendance / grading-scale / position panels */
+.document-template.template-minimal .marksheet-summary-panel {
+    background-color: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-minimal .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-minimal .marksheet-summary-panel table.table tbody tr th { background-color: #f3f4f6 !important; color: #111827; font-weight: bold; }
+.document-template.template-minimal .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #ffffff !important;
+    color: #111827 !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
+}
+
+.document-template.template-minimal { box-shadow: none; }
+.document-template.template-minimal.certificate { box-shadow: inset 0 0 0 1px #111827; }
+
+/* ======================== PLAYFUL KIDS ======================== */
+.document-template.template-playful {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    color: #1f1640;
+    border: 1px solid #e4dcff;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
+}
+.document-template.template-playful.certificate { background-color: #ffffff; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-playful.mark-container { border-top: 6px solid #f59e0b; }
+
+.document-template.template-playful > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-playful table { border-collapse: collapse; }
+.document-template.template-playful table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-playful table.table thead tr th,
+.document-template.template-playful table.table tbody tr th,
+.document-template.template-playful table.table thead tr td,
+.document-template.template-playful table.table tbody tr td { border: 1px solid #e4dcff !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-playful table.table thead tr th {
+    background-color: #7c5cff !important;
+    color: #ffffff !important;
+    border-color: #7c5cff !important;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 11px;
+    font-weight: bold;
+}
+.document-template.template-playful table.table tbody tr:nth-child(even) td { background-color: #faf7ff !important; }
+.document-template.template-playful table.table tbody tr.text-weight-semibold td { background-color: #fff4d6 !important; color: #1f1640; font-weight: bold; }
+.document-template.template-playful table.table tbody tr.text-weight-semibold td:first-child { color: #f59e0b; }
+
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-playful table:not(.table) td, .document-template.template-playful table:not(.table) th { border-color: #e4dcff; }
+.document-template.template-playful table:not(.table) th { background-color: #fff4d6; color: #7c5cff; }
+.document-template.template-playful table:not(.table) td[colspan] { background-color: #faf7ff; color: #7c5cff; }
+
+/* attendance / grading-scale / position panels */
+.document-template.template-playful .marksheet-summary-panel {
+    background-color: #fffdf5;
+    border: 1px solid #e4dcff;
+    border-radius: 16px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-playful .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-playful .marksheet-summary-panel table.table tbody tr th { background-color: #fff4d6 !important; color: #1f1640; font-weight: bold; }
+.document-template.template-playful .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #7c5cff !important;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
+}
+
+.document-template.template-playful::before, .document-template.template-playful::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: 50%;
+}
+.document-template.template-playful::before { width: 150px; height: 150px; right: -50px; top: -50px; background: radial-gradient(circle, rgba(251, 191, 36, .35) 0 30%, rgba(124, 92, 255, .18) 31% 60%, transparent 61%); }
+.document-template.template-playful::after { width: 120px; height: 120px; left: -40px; bottom: -40px; background: radial-gradient(circle, rgba(52, 211, 153, .3) 0 35%, rgba(244, 114, 182, .18) 36% 65%, transparent 66%); }
+.document-template.template-playful table.table thead tr th:first-child { border-top-left-radius: 10px; }
+.document-template.template-playful table.table thead tr th:last-child { border-top-right-radius: 10px; }
+.document-template.template-playful { border-radius: 18px; border: 2px solid #e4dcff; }
+.document-template.template-playful.mark-container { border-top: 8px solid #7c5cff; }
+
+/* ======================== ROYAL PURPLE ======================== */
+.document-template.template-royal {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    color: #1e1336;
+    border: 1px solid #ddd0f5;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
+}
+.document-template.template-royal.certificate { background-color: #ffffff; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-royal.mark-container { border-top: 6px solid #7c3aed; }
+
+.document-template.template-royal > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-royal table { border-collapse: collapse; }
+.document-template.template-royal table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-royal table.table thead tr th,
+.document-template.template-royal table.table tbody tr th,
+.document-template.template-royal table.table thead tr td,
+.document-template.template-royal table.table tbody tr td { border: 1px solid #ddd0f5 !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-royal table.table thead tr th {
+    background-color: #4c1d95 !important;
+    color: #ffffff !important;
+    border-color: #4c1d95 !important;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 11px;
+    font-weight: bold;
+}
+.document-template.template-royal table.table tbody tr:nth-child(even) td { background-color: #f8f5fe !important; }
+.document-template.template-royal table.table tbody tr.text-weight-semibold td { background-color: #efe7fd !important; color: #1e1336; font-weight: bold; }
+.document-template.template-royal table.table tbody tr.text-weight-semibold td:first-child { color: #7c3aed; }
+
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-royal table:not(.table) td, .document-template.template-royal table:not(.table) th { border-color: #ddd0f5; }
+.document-template.template-royal table:not(.table) th { background-color: #efe7fd; color: #4c1d95; }
+.document-template.template-royal table:not(.table) td[colspan] { background-color: #f8f5fe; color: #4c1d95; }
+
+/* attendance / grading-scale / position panels */
+.document-template.template-royal .marksheet-summary-panel {
+    background-color: #fcfaff;
+    border: 1px solid #ddd0f5;
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-royal .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-royal .marksheet-summary-panel table.table tbody tr th { background-color: #efe7fd !important; color: #1e1336; font-weight: bold; }
+.document-template.template-royal .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #4c1d95 !important;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
+}
+
+/* browser-only corner shapes (mPDF ignores pseudo-elements) */
+.document-template.template-royal::before, .document-template.template-royal::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    transform: rotate(-10deg);
+    border-radius: 45%;
+}
+.document-template.template-royal::before { width: 55%; height: 34%; right: -20%; top: -18%; background: linear-gradient(135deg, rgba(76, 29, 149, .14), rgba(167, 139, 250, .18)); }
+.document-template.template-royal::after { width: 48%; height: 24%; left: -20%; bottom: -15%; background: linear-gradient(135deg, rgba(167, 139, 250, .18), rgba(76, 29, 149, .14)); }
+/* keep the decoration faint on dense report cards */
+.document-template.template-royal.mark-container::before, .document-template.template-royal.mark-container::after { opacity: .55; }
+.document-template.template-royal {
+    box-shadow: 0 18px 40px rgba(46, 16, 101, .18), inset 0 0 0 4px #ffffff, inset 0 0 0 5px rgba(124, 58, 237, .28);
+}
+
+/* ======================== EMERALD ======================== */
+.document-template.template-emerald {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    color: #0f2a21;
+    border: 1px solid #c9eadb;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
+}
+.document-template.template-emerald.certificate { background-color: #ffffff; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-emerald.mark-container { border-top: 6px solid #059669; }
+
+.document-template.template-emerald > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-emerald table { border-collapse: collapse; }
+.document-template.template-emerald table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-emerald table.table thead tr th,
+.document-template.template-emerald table.table tbody tr th,
+.document-template.template-emerald table.table thead tr td,
+.document-template.template-emerald table.table tbody tr td { border: 1px solid #c9eadb !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-emerald table.table thead tr th {
+    background-color: #047857 !important;
+    color: #ffffff !important;
+    border-color: #047857 !important;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 11px;
+    font-weight: bold;
+}
+.document-template.template-emerald table.table tbody tr:nth-child(even) td { background-color: #f3fbf7 !important; }
+.document-template.template-emerald table.table tbody tr.text-weight-semibold td { background-color: #e3f6ec !important; color: #0f2a21; font-weight: bold; }
+.document-template.template-emerald table.table tbody tr.text-weight-semibold td:first-child { color: #059669; }
+
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-emerald table:not(.table) td, .document-template.template-emerald table:not(.table) th { border-color: #c9eadb; }
+.document-template.template-emerald table:not(.table) th { background-color: #e3f6ec; color: #047857; }
+.document-template.template-emerald table:not(.table) td[colspan] { background-color: #f3fbf7; color: #047857; }
+
+/* attendance / grading-scale / position panels */
+.document-template.template-emerald .marksheet-summary-panel {
+    background-color: #fbfefc;
+    border: 1px solid #c9eadb;
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-emerald .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-emerald .marksheet-summary-panel table.table tbody tr th { background-color: #e3f6ec !important; color: #0f2a21; font-weight: bold; }
+.document-template.template-emerald .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #047857 !important;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
+}
+
+/* browser-only corner shapes (mPDF ignores pseudo-elements) */
+.document-template.template-emerald::before, .document-template.template-emerald::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    transform: rotate(-10deg);
+    border-radius: 45%;
+}
+.document-template.template-emerald::before { width: 55%; height: 34%; right: -20%; top: -18%; background: linear-gradient(135deg, rgba(4, 120, 87, .14), rgba(52, 211, 153, .16)); }
+.document-template.template-emerald::after { width: 48%; height: 24%; left: -20%; bottom: -15%; background: linear-gradient(135deg, rgba(52, 211, 153, .16), rgba(4, 120, 87, .14)); }
+/* keep the decoration faint on dense report cards */
+.document-template.template-emerald.mark-container::before, .document-template.template-emerald.mark-container::after { opacity: .55; }
+
+/* ======================== CRIMSON HERITAGE ======================== */
+.document-template.template-crimson {
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+    isolation: isolate;
+    color: #2a1318;
+    border: 1px solid #ecd3c2;
+    box-shadow: 0 14px 34px rgba(17, 24, 39, .14);
+}
+.document-template.template-crimson.certificate { background-color: #fffdf9; }
+/* report cards keep a transparent body so an uploaded marksheet background still shows */
+.document-template.template-crimson.mark-container { border-top: 6px solid #9f1239; }
+
+.document-template.template-crimson > * { position: relative; z-index: 2; } /* browser-only stacking above the decorations */
+
+/* system tables (Bootstrap .table): heading band, soft zebra rows, tinted totals */
+.document-template.template-crimson table { border-collapse: collapse; }
+.document-template.template-crimson table.table { background-color: #ffffff; margin-bottom: 14px; }
+.document-template.template-crimson table.table thead tr th,
+.document-template.template-crimson table.table tbody tr th,
+.document-template.template-crimson table.table thead tr td,
+.document-template.template-crimson table.table tbody tr td { border: 1px solid #ecd3c2 !important; padding: 7px 9px; vertical-align: middle; }
+.document-template.template-crimson table.table thead tr th {
+    background-color: #9f1239 !important;
+    color: #fff7ea !important;
+    border-color: #9f1239 !important;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    font-size: 11px;
+    font-weight: bold;
+}
+.document-template.template-crimson table.table tbody tr:nth-child(even) td { background-color: #fffaf4 !important; }
+.document-template.template-crimson table.table tbody tr.text-weight-semibold td { background-color: #fbeee2 !important; color: #2a1318; font-weight: bold; }
+.document-template.template-crimson table.table tbody tr.text-weight-semibold td:first-child { color: #9f1239; }
+
+/* school-authored tables inside the template header/footer (e.g. an activities
+   checklist): recolour borders, tint heading cells, and band category rows,
+   which schools write as a single cell spanning the row */
+.document-template.template-crimson table:not(.table) td, .document-template.template-crimson table:not(.table) th { border-color: #ecd3c2; }
+.document-template.template-crimson table:not(.table) th { background-color: #fbeee2; color: #9f1239; }
+.document-template.template-crimson table:not(.table) td[colspan] { background-color: #fffaf4; color: #9f1239; }
+
+/* attendance / grading-scale / position panels */
+.document-template.template-crimson .marksheet-summary-panel {
+    background-color: #fffcf7;
+    border: 1px solid #ecd3c2;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 6px;
+}
+.document-template.template-crimson .marksheet-summary-panel table.table { margin-bottom: 0; }
+.document-template.template-crimson .marksheet-summary-panel table.table tbody tr th { background-color: #fbeee2 !important; color: #2a1318; font-weight: bold; }
+.document-template.template-crimson .marksheet-summary-panel table.table tbody tr:first-child th {
+    background-color: #9f1239 !important;
+    color: #fff7ea !important;
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    font-size: 11px;
+}
+
+/* browser-only corner shapes (mPDF ignores pseudo-elements) */
+.document-template.template-crimson::before, .document-template.template-crimson::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    z-index: 1;
+    transform: rotate(-10deg);
+    border-radius: 45%;
+}
+.document-template.template-crimson::before { width: 55%; height: 34%; right: -20%; top: -18%; background: linear-gradient(135deg, rgba(159, 18, 57, .12), rgba(245, 208, 169, .3)); }
+.document-template.template-crimson::after { width: 48%; height: 24%; left: -20%; bottom: -15%; background: linear-gradient(135deg, rgba(245, 208, 169, .3), rgba(159, 18, 57, .12)); }
+/* keep the decoration faint on dense report cards */
+.document-template.template-crimson.mark-container::before, .document-template.template-crimson.mark-container::after { opacity: .55; }
+.document-template.template-crimson {
+    border: 3px double #b8862f;
+    box-shadow: 0 18px 36px rgba(80, 12, 30, .16), inset 0 0 0 4px #fffdf9, inset 0 0 0 5px rgba(159, 18, 57, .3);
+}
+
+/* ======================== print ======================== */
 @media print {
-    .document-template.template-modern,
-    .document-template.template-premium {
-        box-shadow: none;
+    .document-template:not(.template-classic) {
+        box-shadow: none !important;
+        print-color-adjust: exact !important;
+        -webkit-print-color-adjust: exact !important;
+    }
+    .document-template:not(.template-classic) * {
         print-color-adjust: exact !important;
         -webkit-print-color-adjust: exact !important;
     }

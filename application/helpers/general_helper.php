@@ -660,10 +660,27 @@ function img_reload()
 // list of design_style presets supported by card_templete, certificates_templete and marksheet_template
 function document_template_styles()
 {
+    $styles = array();
+    foreach (document_template_style_meta() as $key => $meta) {
+        $styles[$key] = $meta['label'];
+    }
+    return $styles;
+}
+
+// label, one-line description and swatch colours for each design_style, used by the
+// visual style picker. The visual rules themselves live in assets/css/document-templates.css.
+// Keys are stored in a VARCHAR(20) column, so keep them short.
+function document_template_style_meta()
+{
     return array(
-        'classic' => 'Classic',
-        'modern' => 'Modern 3D',
-        'premium' => 'Premium 3D',
+        'classic' => array('label' => 'Classic', 'desc' => 'Your template exactly as designed, no extra styling.', 'colors' => array('#ffffff', '#333333')),
+        'modern' => array('label' => 'Modern Blue', 'desc' => 'Ocean-blue headers, soft rows and rounded panels.', 'colors' => array('#1877f2', '#16b9b0')),
+        'premium' => array('label' => 'Premium Gold', 'desc' => 'Ink-navy headers with a gold double frame.', 'colors' => array('#122745', '#d3a641')),
+        'minimal' => array('label' => 'Clean Minimal', 'desc' => 'Black and white, hairline rules, lots of air.', 'colors' => array('#111827', '#e5e7eb')),
+        'playful' => array('label' => 'Playful Kids', 'desc' => 'Bright, rounded and friendly. Ideal for nursery.', 'colors' => array('#7c5cff', '#fbbf24')),
+        'royal' => array('label' => 'Royal Purple', 'desc' => 'Deep purple bands with a crest-style top bar.', 'colors' => array('#4c1d95', '#a78bfa')),
+        'emerald' => array('label' => 'Emerald', 'desc' => 'Fresh green headers with a calm mint wash.', 'colors' => array('#047857', '#34d399')),
+        'crimson' => array('label' => 'Crimson Heritage', 'desc' => 'Rich red and cream with a heritage frame.', 'colors' => array('#9f1239', '#f5d0a9')),
     );
 }
 

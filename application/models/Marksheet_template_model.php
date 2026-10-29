@@ -26,7 +26,7 @@ class Marksheet_template_model extends MY_Model
         $arrayLive = array(
             'branch_id' => $this->application_model->get_branch_id(),
             'name' => $data['marksheet_template_name'],
-            'design_style' => in_array($this->input->post('design_style'), array('classic', 'modern', 'premium'), true) ? $this->input->post('design_style') : 'classic',
+            'design_style' => document_template_style($this->input->post('design_style')),
             'available_all_branches' => (is_superadmin_loggedin() && $this->input->post('available_all_branches')) ? 1 : 0,
             'page_layout' => $data['page_layout'],
             'photo_style' => $data['photo_style'],
