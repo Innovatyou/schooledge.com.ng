@@ -102,7 +102,9 @@ class Home_model extends MY_Model
         $this->db->where('login_credential.active', 1);
         $this->db->where('staff_department.branch_id', $branch_id);
         $this->db->group_by('staff_department.id');
-        $this->db->order_by('staff.id', 'asc');
+        // order by each department's first teacher; a bare staff.id isn't allowed
+        // alongside GROUP BY under MySQL's ONLY_FULL_GROUP_BY (crashed the Teachers page)
+        $this->db->order_by('MIN(staff.id)', 'asc', false);
         $result = $this->db->get()->result_array();
         return $result;
     }
