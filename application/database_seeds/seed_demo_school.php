@@ -780,6 +780,12 @@ foreach ($transportAssignSample as $i => $sr) {
 echo "Created transport route with " . count($stoppagePointIds) . " stoppages, assigned " . count($transportAssignSample) . " students.\n";
 
 // ---------------------------------------------------------------------
+// Public school website (Frontend CMS) on the Aurora 3D template
+// ---------------------------------------------------------------------
+require_once __DIR__ . '/demo_website_content.php';
+echo seed_demo_website($m, $branchId) . "\n";
+
+// ---------------------------------------------------------------------
 // Featured demo credentials (shown on the public demo page)
 // ---------------------------------------------------------------------
 $demoTeacherEmail = $teacherEmails[$teacherIds[0]];

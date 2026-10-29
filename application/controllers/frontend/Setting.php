@@ -88,6 +88,7 @@ class Setting extends Admin_Controller
                     'border_radius' => $this->input->post('border_radius'),
 
                     'online_admission' => $this->input->post('online_admission'),
+                    'theme' => website_theme($this->input->post('theme')),
                     'captcha_status' => $this->input->post('captcha_status'),
                     'recaptcha_site_key' => $this->input->post('recaptcha_site_key'),
                     'recaptcha_secret_key' => $this->input->post('recaptcha_secret_key'),

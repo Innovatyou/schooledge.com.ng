@@ -1,4 +1,9 @@
-﻿<!DOCTYPE html>
+﻿<?php
+// public-site template (front_cms_setting.theme); see website_themes()
+$siteTheme = website_theme($cms_setting);
+$siteThemeMeta = website_themes()[$siteTheme];
+?>
+<!DOCTYPE html>
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
@@ -26,8 +31,13 @@
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/glightbox.min.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/style.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/theme-modern.css?v=' . version_combine()); ?>">
+		<?php if ($siteTheme === 'classic') { ?>
 		<?php if ($this->router->fetch_class() === 'home' && in_array($this->router->fetch_method(), array('index', 'home'))) { ?>
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/landing-modern.css?v=' . version_combine()); ?>">
+		<?php } ?>
+		<?php } else { ?>
+		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=<?php echo $siteThemeMeta['font']; ?>&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
+		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/site-themes.css?v=' . filemtime(FCPATH . 'assets/frontend/css/site-themes.css')); ?>">
 		<?php } ?>
 		<script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js'); ?>"></script>
 		<!-- If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF -->
@@ -89,7 +99,7 @@
 			document.documentElement.style.setProperty('--thm-radius', '<?php echo $cms_setting["border_radius"] ?>');
 		</script>
 	</head>
-	<body>
+	<body class="site-theme-<?php echo $siteTheme; ?>">
 		<!-- Preloader -->
 		<div class="loader-container">
 			<div class="lds-dual-ring"></div>
@@ -97,5 +107,8 @@
 		<?php $this->load->view('home/layout/header'); ?>
 		<?php echo $main_contents; ?>
 		<?php $this->load->view('home/layout/footer'); ?>
+		<?php if ($siteTheme !== 'classic') { ?>
+		<script src="<?php echo base_url('assets/frontend/js/site-themes.js?v=' . filemtime(FCPATH . 'assets/frontend/js/site-themes.js')); ?>"></script>
+		<?php } ?>
 	</body>
 </html>

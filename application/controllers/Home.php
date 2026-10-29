@@ -42,7 +42,21 @@ class Home extends Frontend_Controller
         $this->data['cta_box'] = $this->home_model->getCmsHome('cta', $branchID);
         $this->data['statistics'] = $this->home_model->getCmsHome('statistics', $branchID);
         $this->data['page_data'] = $this->home_model->get('front_cms_home_seo', array('branch_id' => $branchID), true);
-        $this->data['main_contents'] = $this->load->view('home/index', $this->data, true);
+
+        // 'classic' keeps the original home page; the 3D templates share one
+        // section-based home page (home/themes/home) with a per-template hero
+        $theme = website_theme($this->data['cms_setting']);
+        if ($theme === 'classic') {
+            $homeView = 'home/index';
+        } else {
+            $homeView = 'home/themes/home';
+            $this->data['site_theme'] = $theme;
+            $this->data['home_teachers'] = array_slice($this->home_model->get_teacher_list('', $branchID), 0, 4);
+            $this->data['home_news'] = $this->home_model->getLatestNewsList($branchID, array('limit' => 3));
+            $this->data['home_events'] = $this->home_model->getLatestEventList($branchID, array('limit' => 3));
+            $this->data['home_gallery'] = array_slice($this->home_model->getGalleryList($branchID), 0, 6);
+        }
+        $this->data['main_contents'] = $this->load->view($homeView, $this->data, true);
         $this->load->view('home/layout/index', $this->data);
     }
 

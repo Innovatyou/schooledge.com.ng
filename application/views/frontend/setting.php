@@ -152,6 +152,14 @@
 					</div>
 
 
+					<div class="form-group">
+						<label class="col-md-3 control-label">Website Template</label>
+						<div class="col-md-8">
+							<?php $this->load->view('frontend/website_theme_picker', array('selected' => website_theme($setting))); ?>
+							<p class="help-block mt-sm">Every template uses your primary colour below, plus your logo, pages and content. Switching templates never deletes anything.</p>
+						</div>
+					</div>
+
 					<div class="row theme_option">
 						<label class="col-md-3 control-label">Theme <span class="required">*</span></label>
 						<div class="col-md-6">

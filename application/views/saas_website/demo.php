@@ -83,6 +83,16 @@ $included = array(
                 </div>
                 <?php } ?>
             </div>
+            <?php if (!empty($demoWebsiteUrl)) { ?>
+            <a class="site-card reveal" href="<?php echo $demoWebsiteUrl ?>" target="_blank" rel="noopener">
+                <span class="site-card-icon"><i class="fas fa-globe-africa"></i></span>
+                <span class="site-card-copy">
+                    <b>Visit the demo school's public website</b>
+                    <small>Every school gets its own website with news, events, a gallery and online admission, on a choice of 3D templates.</small>
+                </span>
+                <span class="site-card-go">Open website <i class="fas fa-external-link-alt"></i></span>
+            </a>
+            <?php } ?>
             <p class="demo-note reveal"><i class="fas fa-shield-alt"></i> This is a shared, read-only demo that is reset periodically. Please don't enter real personal information.</p>
         </div>
     </section>

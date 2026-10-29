@@ -1782,4 +1782,18 @@ if (tableExists($m, 'card_templete') && columnExists($m, 'branch', 'is_demo')) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 745: public website for the demo school. Writes a complete
+// school website (Aurora 3D template, news, events, gallery, FAQ, pages)
+// for the demo branch the seeder creates. Re-running rebuilds it fresh,
+// which also rolls the demo events forward to the current term.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'front_cms_setting') && columnExists($m, 'branch', 'is_demo')) {
+    require_once __DIR__ . '/demo_website_content.php';
+    $demoSites = $m->query("SELECT id FROM branch WHERE is_demo = 1 AND name = 'SkoolOS Demo Academy'");
+    while ($demoSite = $demoSites->fetch_assoc()) {
+        echo "745: " . seed_demo_website($m, $demoSite['id']) . "\n";
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

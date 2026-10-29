@@ -684,6 +684,28 @@ function document_template_style_meta()
     );
 }
 
+// public school-website templates, stored in front_cms_setting.theme. 'classic' is the
+// original site design and the fallback for empty/unknown values (older rows hold
+// leftovers like 'red'), so no school's site changes until it picks a template.
+// Every template is coloured by the school's own primary colour (--thm-primary).
+function website_themes()
+{
+    return array(
+        'classic' => array('label' => 'Classic', 'desc' => 'The original website design.', 'colors' => array('#ffffff', '#577fee'), 'font' => ''),
+        'aurora' => array('label' => 'Aurora 3D', 'desc' => 'Dark, glassy and futuristic with a floating 3D photo stack.', 'colors' => array('#0b0f1f', '#7c5cff'), 'font' => 'Sora:wght@600;700;800'),
+        'campus' => array('label' => 'Campus Light', 'desc' => 'Bright and photo-led with layered 3D image cards.', 'colors' => array('#f6f8fc', '#2563eb'), 'font' => 'Outfit:wght@500;600;700;800'),
+        'prism' => array('label' => 'Prism Kids', 'desc' => 'Colourful, bubbly and playful. Made for nursery and primary.', 'colors' => array('#fff7ed', '#f97316'), 'font' => 'Fredoka:wght@500;600;700'),
+        'heritage' => array('label' => 'Heritage', 'desc' => 'Elegant serif type, deep navy and gold, framed in a 3D arch.', 'colors' => array('#0f1e3d', '#c9a24d'), 'font' => 'Playfair+Display:wght@600;700;800'),
+    );
+}
+
+// whitelist a stored theme value (or a front_cms_setting row) to a known template key
+function website_theme($setting = '')
+{
+    $theme = is_array($setting) ? (isset($setting['theme']) ? $setting['theme'] : '') : $setting;
+    return array_key_exists($theme, website_themes()) ? $theme : 'classic';
+}
+
 // resolve a template row (or raw value) to a safe, whitelisted design_style
 // falls back to 'classic' when the migration hasn't run yet or the value is missing/invalid
 function document_template_style($template = '')

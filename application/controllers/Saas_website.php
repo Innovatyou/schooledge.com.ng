@@ -41,6 +41,14 @@ class Saas_website extends MY_Controller
 
         $branch = $this->db->where('name', 'SkoolOS Demo Academy')->get('branch')->row();
         $this->data['demoBranch'] = $branch;
+        // the demo school's public website (seeded by demo_website_content.php), if it has one
+        $this->data['demoWebsiteUrl'] = null;
+        if ($branch) {
+            $site = $this->db->select('url_alias')->where(array('branch_id' => $branch->id, 'cms_active' => 1))->get('front_cms_setting')->row();
+            if ($site) {
+                $this->data['demoWebsiteUrl'] = base_url($site->url_alias);
+            }
+        }
         $this->data['demoAdmin'] = null;
         $this->data['demoTeacher'] = null;
         $this->data['demoStudent'] = null;
