@@ -598,3 +598,16 @@
 .se-modern .headers-line {
   font-weight: 700;
 }
+
+/* Sticky menu: custom.js keeps a spacer the menu's height while it is fixed
+   (so the page doesn't jump) and plays animate.css fadeInDown once when the
+   menu first sticks; 1s felt sluggish, so speed it up. */
+.stricky-spacer { display: block; }
+/* A child's top margin used to collapse through the menu: it showed as a blank
+   strip above the menu and vanished once the menu became position:fixed, so
+   the page jumped. flow-root keeps that margin inside the menu either way. */
+.stricky { display: flow-root; }
+.stricky.stricky-fixed.fadeInDown { animation-duration: .45s; }
+@media (prefers-reduced-motion: reduce) {
+  .stricky.stricky-fixed.fadeInDown { animation: none; }
+}

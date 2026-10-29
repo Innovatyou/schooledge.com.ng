@@ -150,7 +150,7 @@ if ($config['frontend_enable_chat'] == 1) {
 <script src="<?php echo base_url('assets/vendor/sweetalert/sweetalert.min.js');?>"></script>
 <script src="<?php echo base_url('assets/frontend/js/glightbox.min.js');?>"></script>
 <script src="<?php echo base_url('assets/frontend/js/jquery.marquee.min.js');?>"></script>
-<script src="<?php echo base_url('assets/frontend/js/custom.js?v=' . version_combine()); ?>"></script>
+<script src="<?php echo base_url('assets/frontend/js/custom.js?v=' . filemtime(FCPATH . 'assets/frontend/js/custom.js')); ?>"></script>
 
 <?php
 $alertclass = "";

@@ -30,7 +30,7 @@ $siteThemeMeta = website_themes()[$siteTheme];
 		<link rel="stylesheet" href="<?php echo base_url('assets/vendor/bootstrap-fileupload/bootstrap-fileupload.min.css'); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/glightbox.min.css?v=' . version_combine()); ?>">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/style.css?v=' . version_combine()); ?>">
-		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/theme-modern.css?v=' . version_combine()); ?>">
+		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/theme-modern.css?v=' . filemtime(FCPATH . 'assets/frontend/css/theme-modern.css')); ?>">
 		<?php if ($siteTheme === 'classic') { ?>
 		<?php if ($this->router->fetch_class() === 'home' && in_array($this->router->fetch_method(), array('index', 'home'))) { ?>
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/landing-modern.css?v=' . version_combine()); ?>">

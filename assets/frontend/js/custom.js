@@ -141,19 +141,56 @@
     });
 
     // Header Sticky
-    $(window).on('scroll', function() {
-        if ($(window).width() > 991) {
-            var header = document.getElementById('strickyMenu');
-            var sticky = header.offsetTop;
-            if (window.pageYOffset > sticky) {
-                $('.stricky').removeClass('fadeIn animated');
-                $('.stricky').addClass('stricky-fixed fadeInDown animated');
-            } else {
-                $('.stricky').removeClass('stricky-fixed fadeInDown animated');
-                $('.stricky').addClass('slideIn animated');
+    // A spacer holds the menu's height while it is fixed, so the page doesn't jump up;
+    // the switch point is measured only while the menu is in normal flow (once fixed its
+    // offsetTop reads 0), and classes change only when the state actually flips.
+    (function () {
+        var header = document.getElementById('strickyMenu');
+        if (!header) return;
+        var $header = $(header);
+        var spacer = document.createElement('div');
+        spacer.className = 'stricky-spacer';
+        header.parentNode.insertBefore(spacer, header);
+        var startAt = 0, fixed = false, ticking = false;
+
+        function measure() {
+            if (!fixed) {
+                startAt = $header.offset().top;
             }
         }
-    });
+        function setFixed(on) {
+            if (on === fixed) return;
+            if (on) {
+                spacer.style.height = $header.outerHeight(true) + 'px';
+                $header.addClass('stricky-fixed fadeInDown animated');
+            } else {
+                $header.removeClass('stricky-fixed fadeInDown animated');
+                spacer.style.height = '';
+            }
+            fixed = on;
+        }
+        function update() {
+            ticking = false;
+            setFixed(window.innerWidth > 991 && window.pageYOffset > startAt);
+        }
+        function requestUpdate() {
+            if (!ticking) {
+                ticking = true;
+                window.requestAnimationFrame(update);
+            }
+        }
+
+        measure();
+        update();
+        $(window).on('scroll', requestUpdate);
+        $(window).on('resize load', function () {
+            if (fixed) {
+                spacer.style.height = $header.outerHeight(true) + 'px';
+            }
+            measure();
+            requestUpdate();
+        });
+    })();
 
     // Scroll To Top
     $(window).on('scroll', function() {
