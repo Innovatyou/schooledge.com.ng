@@ -6,7 +6,7 @@
 		<div class="alert alert-info">
 			<h3 class="mb-none"><?=translate('balance')?>: <b><?=currencyFormat($wallet['balance'])?></b></h3>
 		</div>
-		<p class="text-muted">To top up this wallet, pay through the SchoolEdge mobile app or pay the school directly - the office will credit it here once received.</p>
+		<p class="text-muted">To top up this wallet, pay through the SkoolOS mobile app or pay the school directly - the office will credit it here once received.</p>
 
 		<h5 class="chart-title mb-xs mt-lg"><?=translate('wallet_transactions')?></h5>
 		<div class="table-responsive">

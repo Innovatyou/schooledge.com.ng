@@ -1,10 +1,10 @@
 {
-    "name": "School Edge",
-    "short_name": "School",
+    "name": "SkoolOS",
+    "short_name": "SkoolOS",
     "scope": "/",
     "start_url": "/",
     "display": "standalone",
-    "theme_color": "#036533",
+    "theme_color": "#0b0f1f",
     "background_color": "#ffffff",
     "orientation": "portrait",
     "status_bar": "black",

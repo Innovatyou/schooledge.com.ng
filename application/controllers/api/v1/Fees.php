@@ -316,7 +316,7 @@ class Fees extends Api_Controller
     {
         $this->output->set_content_type('text/html')->set_output(
             '<html><body style="font-family:sans-serif;text-align:center;padding:48px;">'
-            . '<h2>Payment received</h2><p>You can close this window and return to the SchoolEdge app.</p></body></html>'
+            . '<h2>Payment received</h2><p>You can close this window and return to the SkoolOS app.</p></body></html>'
         );
     }
 

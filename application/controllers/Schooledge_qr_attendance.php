@@ -12,7 +12,7 @@ class Schooledge_qr_attendance extends Admin_Controller
     public function index()
     {
         $this->data['branch_id'] = $this->branchId(false);
-        $this->data['title'] = 'SchoolEdge QR Attendance';
+        $this->data['title'] = 'SkoolOS QR Attendance';
         $this->data['sub_page'] = 'schooledge_qr_attendance/index';
         $this->data['main_menu'] = 'attendance';
         $this->load->view('layout/index', $this->data);

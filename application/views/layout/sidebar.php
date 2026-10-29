@@ -1180,7 +1180,7 @@
                             </li>
                             <?php } } if(get_permission('employee_attendance', 'is_add')) { ?>
                             <li class="<?php if ($sub_page == 'schooledge_qr_attendance/index') echo 'nav-active';?>">
-                                <a href="<?=base_url('schooledge_qr_attendance')?>"><span><i class="fas fa-qrcode"></i> SchoolEdge QR Scanner</span></a>
+                                <a href="<?=base_url('schooledge_qr_attendance')?>"><span><i class="fas fa-qrcode"></i> SkoolOS QR Scanner</span></a>
                             </li>
                             <?php if(get_permission('employee_attendance', 'is_add')) { ?>
                             <li class="<?php if ($sub_page == 'attendance/employees_entries') echo 'nav-active';?>">

@@ -1,7 +1,7 @@
 <?php
 /**
- * Demo school seeder for SchoolEdge (schooledge.ng).
- * Safely re-runnable: deletes and recreates the "SchoolEdge Demo Academy" branch and all its data.
+ * Demo school seeder for SkoolOS (schooledge.ng).
+ * Safely re-runnable: deletes and recreates the "SkoolOS Demo Academy" branch and all its data.
  * Powers the public demo page at Saas_website::demo() (base_url('saas_website/demo')).
  *
  * Run from the command line: php application/database_seeds/seed_demo_school.php
@@ -133,7 +133,7 @@ $subjectIds = [];
 foreach ($subjectDefs as $s) {
     list($name, $code) = $s;
     $m->query("INSERT INTO subject (name, subject_code, subject_type, subject_author, branch_id)
-        VALUES ('" . esc($m, $name) . "', '$code', 'Theory', 'SchoolEdge Demo', $branchId)");
+        VALUES ('" . esc($m, $name) . "', '$code', 'Theory', 'SkoolOS Demo', $branchId)");
     $subjectIds[$name] = $m->insert_id;
 }
 echo "Created " . count($subjectIds) . " subjects.\n";
@@ -572,7 +572,7 @@ foreach ($bookDefs as $b) {
     $price = 500 + mt_rand(0, 2000);
     $purchaseDate = randomDate(0, 2);
     $m->query("INSERT INTO book (title, author, isbn_no, category_id, publisher, edition, purchase_date, description, price, total_stock, issued_copies, branch_id)
-        VALUES ('" . esc($m, $title) . "', '" . esc($m, $author) . "', '$isbn', $catId, 'SchoolEdge Press', '1st', '$purchaseDate', '', $price, $stock, 0, $branchId)");
+        VALUES ('" . esc($m, $title) . "', '" . esc($m, $author) . "', '$isbn', $catId, 'SkoolOS Press', '1st', '$purchaseDate', '', $price, $stock, 0, $branchId)");
     $bookIds[] = $m->insert_id;
 }
 echo "Created " . count($bookIds) . " library books.\n";

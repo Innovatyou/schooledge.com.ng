@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="128" height="128" role="img" aria-label="SkoolOS">
+  <title>SkoolOS</title>
+  <defs>
+    <linearGradient id="gm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7C5CFF"/>
+      <stop offset=".5" stop-color="#4F8CFF"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <linearGradient id="tm" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#7C5CFF"/>
+      <stop offset=".5" stop-color="#4F8CFF"/>
+      <stop offset="1" stop-color="#22D3EE"/>
+    </linearGradient>
+    <radialGradient id="hlm" cx=".3" cy=".18" r=".9">
+      <stop offset="0" stop-color="#fff" stop-opacity=".35"/>
+      <stop offset=".55" stop-color="#fff" stop-opacity="0"/>
+    </radialGradient>
+    <clipPath id="frontm"><rect x="0" y="66" width="128" height="80"/></clipPath>
+  </defs>
+  <g transform="translate(0 0) scale(1.00000)">
+    <rect width="128" height="128" rx="34" fill="url(#gm)"/>
+    <rect width="128" height="128" rx="34" fill="url(#hlm)"/>
+    <g transform="rotate(-24 64 66)">
+      <ellipse cx="64" cy="66" rx="47" ry="16.5" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="5.5"/>
+    </g>
+    <circle cx="64" cy="66" r="23" fill="#fff"/>
+    <path d="M64 51.5 83 59.5 64 67.5 45 59.5Z" fill="#3B2FB0"/>
+    <path d="M52.5 63.6v7.2c0 3.4 5.2 6.2 11.5 6.2s11.5-2.8 11.5-6.2v-7.2L64 68.4Z" fill="#3B2FB0"/>
+    <path d="M80.5 61v9.5" stroke="#3B2FB0" stroke-width="2.4" stroke-linecap="round"/>
+    <circle cx="80.5" cy="72" r="2.6" fill="#FBBF24"/>
+    <g transform="rotate(-24 64 66)" clip-path="url(#frontm)">
+      <ellipse cx="64" cy="66" rx="47" ry="16.5" fill="none" stroke="#fff" stroke-width="5.5"/>
+    </g>
+    <circle cx="101.97" cy="60.22" r="8.5" fill="#FBBF24" stroke="#fff" stroke-width="3"/>
+  </g>
+</svg>

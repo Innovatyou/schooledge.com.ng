@@ -713,7 +713,7 @@ $config['search_index'] = array(
         'permission' => array('student_attendance', 'is_add'),
     ),
     array(
-        'label' => 'SchoolEdge QR Scanner', // literal string, not a translate() call
+        'label' => 'SkoolOS QR Scanner', // literal string, not a translate() call
         'url'   => 'schooledge_qr_attendance',
         'section' => 'attendance',
         'permission' => array('employee_attendance', 'is_add'),

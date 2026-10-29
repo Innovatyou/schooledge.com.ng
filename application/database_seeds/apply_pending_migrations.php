@@ -1706,4 +1706,52 @@ foreach ($veltrixColumns as $name => $definition) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 743: rebrand School Edge -> SkoolOS in user-visible content
+// (landing-page settings, FAQ, SaaS email templates, institute name, demo
+// branch). Technical identifiers and lowercase domains are untouched -
+// REPLACE() is case-sensitive. Re-running is a no-op.
+// ---------------------------------------------------------------------
+$rebrandPairs = array(
+    'SchoolEdge.com.ng' => 'SkoolOS',
+    'School Edge'       => 'SkoolOS',
+    'SchoolEdge'        => 'SkoolOS',
+    'Review the pricing section or contact the SkoolOS team' => 'Contact the SkoolOS team',
+    'Select the registration option on the website and follow the steps to create your school account. You can also contact the SkoolOS team for help with setup.' => 'Request a demo from our website or contact the SkoolOS team, and we will set up your school account with you.',
+    'Register your school on SkoolOS or contact the SkoolOS team' => 'Contact the SkoolOS team',
+);
+$rebrandTargets = array(
+    'saas_settings'        => array('seo_title', 'seo_keyword', 'seo_description', 'slider_title', 'slider_description', 'feature_title', 'feature_description', 'price_plan_description', 'faq_title', 'faq_description', 'contact_title', 'contact_description', 'footer_about', 'expired_message', 'agree_checkbox_text'),
+    'saas_cms_faq_list'    => array('title', 'description'),
+    'saas_email_templates' => array('subject', 'template_body'),
+    'global_settings'      => array('institute_name', 'footer_text'),
+);
+foreach ($rebrandTargets as $table => $columns) {
+    if (!tableExists($m, $table)) {
+        continue;
+    }
+    foreach ($columns as $column) {
+        if (!columnExists($m, $table, $column)) {
+            continue;
+        }
+        foreach ($rebrandPairs as $from => $to) {
+            $stmt = $m->prepare("UPDATE `$table` SET `$column` = REPLACE(`$column`, ?, ?) WHERE `$column` LIKE ?");
+            $like = '%' . $from . '%';
+            $stmt->bind_param('sss', $from, $to, $like);
+            $stmt->execute();
+            if ($stmt->affected_rows > 0) {
+                echo "743: rebranded {$stmt->affected_rows} row(s) in $table.$column\n";
+            }
+        }
+    }
+}
+if (tableExists($m, 'saas_settings')) {
+    $m->query("UPDATE saas_settings SET button_text_1 = \"<i class='fas fa-calendar-check'></i> Request a Demo\", button_url_1 = '#contact' WHERE button_url_1 = '#pricing'");
+    $m->query("UPDATE saas_settings SET button_text_2 = \"<i class='fas fa-th-large'></i> Explore Modules\", button_url_2 = '#modules' WHERE button_url_2 = '#pricing'");
+}
+$m->query("UPDATE branch SET name = 'SkoolOS Demo Academy' WHERE name = 'SchoolEdge Demo Academy'");
+if ($m->affected_rows > 0) {
+    echo "743: renamed demo branch to SkoolOS Demo Academy\n";
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

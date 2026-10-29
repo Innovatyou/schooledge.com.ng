@@ -1,4 +1,48 @@
-﻿<!DOCTYPE html>
+﻿<?php
+$brand = $global_config['institute_name'];
+$currency_symbol = $global_config['currency_symbol'];
+// The marketing site always shows the product brand, not a tenant school's logo
+$logoLight = base_url('assets/frontend/images/skoolos/logo-light.svg');
+$logoMark = base_url('assets/frontend/images/skoolos/mark.svg');
+
+// Highlight the last two words of the CMS hero title (plain-text titles only)
+$heroTitle = $getSettings->slider_title;
+if ($heroTitle === strip_tags($heroTitle)) {
+    $words = preg_split('/\s+/', trim($heroTitle));
+    if (count($words) > 3) {
+        $tail = array_splice($words, -2);
+        $heroTitle = html_escape(implode(' ', $words)) . ' <span class="grad-text">' . html_escape(implode(' ', $tail)) . '</span>';
+    }
+}
+
+// Icon + one-line pitch per module prefix; unknown modules fall back to a generic tile
+$moduleMeta = array(
+    'alumni'             => array('fa-user-graduate', 'Stay connected with past students and reunions.'),
+    'attachments_book'   => array('fa-paperclip', 'Share notes, syllabi and files class by class.'),
+    'attendance'         => array('fa-clipboard-check', 'Daily, subject-wise and QR attendance in seconds.'),
+    'bulk_sms_and_email' => array('fa-paper-plane', 'Reach every parent by SMS and email at once.'),
+    'card_management'    => array('fa-id-card', 'Design and print ID cards and admit cards.'),
+    'certificate'        => array('fa-certificate', 'Generate certificates and testimonials instantly.'),
+    'custom_domain'      => array('fa-globe-africa', 'Run the portal on your own school domain.'),
+    'events'             => array('fa-calendar-alt', 'Plan and publish the school calendar.'),
+    'homework'           => array('fa-book-open', 'Set, collect and grade homework online.'),
+    'hostel'             => array('fa-bed', 'Rooms, bed allocation and boarding fees.'),
+    'human_resource'     => array('fa-users-cog', 'Staff records, leave and payroll.'),
+    'inventory'          => array('fa-boxes', 'Track stores, stock and suppliers.'),
+    'library'            => array('fa-book', 'Catalogue, issue and return books.'),
+    'live_class'         => array('fa-video', 'Teach live classes from anywhere.'),
+    'multi_class'        => array('fa-layer-group', 'Enrol one student in several classes.'),
+    'office_accounting'  => array('fa-calculator', 'Income, expenses and school ledgers.'),
+    'online_exam'        => array('fa-laptop-code', 'CBT exams with automatic marking.'),
+    'reception'          => array('fa-concierge-bell', 'Visitors, enquiries, calls and complaints.'),
+    'student_accounting' => array('fa-wallet', 'Fee invoices, online payment and receipts.'),
+    'transport'          => array('fa-bus', 'Routes, vehicles and transport fees.'),
+    'two_fa'             => array('fa-shield-alt', 'Two-factor login protects every account.'),
+    'website'            => array('fa-desktop', 'A ready-made public website for your school.'),
+);
+$moduleCount = count($modules);
+?>
+<!DOCTYPE html>
 <html class="no-js" lang="en">
 <head>
     <meta charset="utf-8" />
@@ -6,70 +50,48 @@
     <title><?php echo $getSettings->seo_title; ?></title>
     <meta name="keyword" content="<?php echo $getSettings->seo_keyword; ?>" />
     <meta name="description" content="<?php echo $getSettings->seo_description; ?>" />
-    <meta name="author" content="<?php echo $global_config['institute_name'] ?>">
+    <meta name="author" content="<?php echo $brand ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:title" content="<?php echo html_escape($getSettings->seo_title); ?>" />
+    <meta property="og:description" content="<?php echo html_escape($getSettings->seo_description); ?>" />
+    <meta property="og:type" content="website" />
     <link rel="shortcut icon" type="image/x-icon" href="<?php echo base_url('assets/images/favicon.png');?>" />
 
     <!-- CSS here -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Sora:wght@500;600;700;800&display=swap">
     <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/bootstrap.min.css'); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/LineIcons.2.0.css'); ?>" />
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/font-awesome/css/all.min.css');?>">
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/animate.css'); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/tiny-slider.css'); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/glightbox.min.css'); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/vendor/select2/css/select2.min.css');?>">
     <link rel="stylesheet" href="<?php echo base_url('assets/vendor/sweetalert/sweetalert-custom.css');?>">
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas_main.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas_main.css')); ?>" />
-    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-modern.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-modern.css')); ?>" />
+    <link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/saas-3d.css?v=' . filemtime(FCPATH . 'assets/frontend/css/saas-3d.css')); ?>" />
 
-    <!-- Google Analytics --> 
+    <!-- Google Analytics -->
     <?php echo $getSettings->google_analytics; ?>
 
     <?php if ($getSettings->pwa_enable == 1) {  ?>
     <!-- Web Application Manifest -->
     <link rel="manifest" href="./manifest.json">
-    <!-- Chrome for Android theme color -->
-    <meta name="theme-color" content="#6e8fd4">
-    
-    <!-- Add to homescreen for Chrome on Android -->
+    <meta name="theme-color" content="#0b0f1f">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Ramom School">
+    <meta name="application-name" content="<?php echo $brand ?>">
     <link rel="icon" sizes="512x512" href="<?php echo base_url('uploads/appIcons/icon-512x512.png')?>">
-    
-    <!-- Add to homescreen for Safari on iOS -->
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black">
-    <meta name="apple-mobile-web-app-title" content="Ramom School">
+    <meta name="apple-mobile-web-app-title" content="<?php echo $brand ?>">
     <link rel="apple-touch-icon" href="<?php echo base_url('uploads/appIcons/icon-512x512.png')?>">
 
     <script type="text/javascript">
-        // Initialize the service worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('/serviceworker.js', {
                 scope: '/'
             }).then(function (registration) {
-                // Registration was successful
-                // console.log('Service Worker registered successfully: ', registration.scope);
             }, function (err) {
-                // registration failed :(
                 console.log('Service Worker registration failed: ', err);
             });
         }
     </script>
     <?php } ?>
-
-    <!-- Theme Color Options -->
-    <script type="text/javascript">
-        document.documentElement.style.setProperty('--thm-primary', '<?php echo $getSettings->primary_color ?>');
-        document.documentElement.style.setProperty('--thm-header-text', '<?php echo $getSettings->heading_text_color ?>');
-        document.documentElement.style.setProperty('--thm-text', '<?php echo $getSettings->text_color ?>');
-        document.documentElement.style.setProperty('--thm-menu-bg', '<?php echo $getSettings->menu_bg_color ?>');
-        document.documentElement.style.setProperty('--thm-menu-color', '<?php echo $getSettings->menu_text_color ?>');
-        document.documentElement.style.setProperty('--thm-footer-bg', '<?php echo $getSettings->footer_bg_color ?>');
-        document.documentElement.style.setProperty('--thm-footer-text', '<?php echo $getSettings->footer_text_color ?>');
-        document.documentElement.style.setProperty('--thm-copyright-bg-color', '<?php echo $getSettings->copyright_bg_color ?>');
-        document.documentElement.style.setProperty('--thm-copyright-text-color', '<?php echo $getSettings->copyright_text_color ?>');
-    </script>
 
     <script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js');?>"></script>
     <script type="text/javascript">
@@ -83,599 +105,433 @@
         });
     </script>
 </head>
-<body>
+<body class="x3d">
     <!-- Preloader -->
     <div class="preloader">
-        <div class="preloader-inner">
-            <div class="preloader-icon">
-                <span></span>
-                <span></span>
-            </div>
-        </div>
+        <div class="preloader-core"><span></span><span></span><span></span></div>
     </div>
-    <!-- /End Preloader -->
 
     <!-- Start Header Area -->
     <header class="header navbar-area">
-        <div class="container-md">
-            <div class="row align-items-center">
-                <div class="col-lg-12">
-                    <div class="nav-inner">
-                        <!-- Start Navbar -->
-                        <nav class="navbar navbar-expand-lg">
-                            <a class="navbar-brand" href="<?php echo base_url() ?>">
-                                <img src="<?=$this->application_model->getBranchImage(get_loggedin_branch_id(), 'logo-small')?>" alt="Logo">
-                            </a>
-                            <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent">
-                                <button type="button" class="mobile-menu-close" aria-label="Close menu">
-                                    <i class="fas fa-times"></i>
-                                </button>
-                                <ul id="nav" class="navbar-nav ms-auto">
-                                    <li class="nav-item">
-                                        <a href="#home" class="page-scroll active" aria-label="Toggle navigation"><?php echo translate('home'); ?></a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="#features" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('features'); ?></a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="#pricing" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('pricing'); ?></a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="<?php echo base_url('saas_website/demo') ?>" aria-label="Toggle navigation"><?php echo translate('live_demo'); ?></a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="#faq" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('faq'); ?></a>
-                                    </li>
-                                    <li class="nav-item">
-                                        <a href="#contact" class="page-scroll" aria-label="Toggle navigation"><?php echo translate('contact'); ?></a>
-                                    </li>
-                                </ul>
-                            </div>
-                            <!-- navbar collapse -->
-                            <div class="header-btn">
-                            <div class="button add-list-button">
-                                <?php if (!is_loggedin()) { ?>
-                                <a href="<?php echo base_url('authentication/index') ?>" class="btn"><?php echo translate('login'); ?></a>
-                                <?php } else { ?>
-                                    <a href="<?php echo base_url('dashboard/index') ?>" class="btn"><?php echo translate('dashboard'); ?></a>
-                                <?php } ?>
-                            </div>
-                            <button class="navbar-toggler mobile-menu-btn" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-                                <span class="toggler-icon"></span>
-                                <span class="toggler-icon"></span>
-                                <span class="toggler-icon"></span>
-                            </button>
-                            </div>
-                        </nav>
-                        <!-- End Navbar -->
-                    <?php if ($this->session->flashdata('website_expired_msg')) { ?>
-                    <div class="alert alert-danger alert-dismissible fade show mt-2">
-                        <i class="fas fa-exclamation-triangle"></i> <?php echo $getSettings->expired_message; ?>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                    <?php } ?>
-                    </div>
+        <div class="container-xl">
+            <nav class="navbar navbar-expand-lg">
+                <a class="navbar-brand" href="<?php echo base_url() ?>">
+                    <img src="<?php echo $logoLight ?>" alt="<?php echo $brand ?>" width="188" height="41">
+                </a>
+                <div class="collapse navbar-collapse sub-menu-bar" id="navbarSupportedContent">
+                    <button type="button" class="mobile-menu-close" aria-label="Close menu">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <ul id="nav" class="navbar-nav mx-auto">
+                        <li class="nav-item"><a href="#home" class="page-scroll active"><?php echo translate('home'); ?></a></li>
+                        <li class="nav-item"><a href="#modules" class="page-scroll">Modules</a></li>
+                        <li class="nav-item"><a href="#features" class="page-scroll"><?php echo translate('features'); ?></a></li>
+                        <li class="nav-item"><a href="#portals" class="page-scroll">Portals</a></li>
+                        <li class="nav-item"><a href="#faq" class="page-scroll"><?php echo translate('faq'); ?></a></li>
+                        <li class="nav-item"><a href="#contact" class="page-scroll"><?php echo translate('contact'); ?></a></li>
+                    </ul>
                 </div>
+                <div class="header-btn">
+                    <a href="<?php echo base_url('saas_website/demo') ?>" class="btn-ghost d-none d-sm-inline-flex"><?php echo translate('live_demo'); ?></a>
+                    <?php if (!is_loggedin()) { ?>
+                    <a href="<?php echo base_url('authentication/index') ?>" class="btn-glow"><?php echo translate('login'); ?></a>
+                    <?php } else { ?>
+                    <a href="<?php echo base_url('dashboard/index') ?>" class="btn-glow"><?php echo translate('dashboard'); ?></a>
+                    <?php } ?>
+                    <button class="navbar-toggler mobile-menu-btn" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                        <span class="toggler-icon"></span>
+                    </button>
+                </div>
+            </nav>
+            <?php if ($this->session->flashdata('website_expired_msg')) { ?>
+            <div class="alert alert-danger alert-dismissible fade show mt-2">
+                <i class="fas fa-exclamation-triangle"></i> <?php echo $getSettings->expired_message; ?>
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-            <!-- row -->
+            <?php } ?>
         </div>
-        <!-- container -->
     </header>
     <!-- End Header Area -->
 
-    <!-- Start Slider Area -->
-    <section id="home" class="hero-area" style="background-image: url(<?php echo base_url('assets/frontend/images/saas/' . $getSettings->slider_bg_image) ?>);">
-        <div class="container">
-            <div class="row align-items-center">
-                <div class="col-lg-5 col-md-12 col-12">
-                    <div class="hero-content">
-                        <h1 class="wow fadeInLeft" data-wow-delay=".4s"><?php echo $getSettings->slider_title; ?></h1>
-                        <p class="wow fadeInLeft" data-wow-delay=".6s"><?php echo $getSettings->slider_description; ?></p>
-                        <div class="button wow fadeInLeft" data-wow-delay=".8s">
-                        <?php if (!empty($getSettings->button_text_1)) { 
-                            echo '<a href="' .  $getSettings->button_url_1 . '" class="btn">' . $getSettings->button_text_1 . '</a>';
-                        }
-                        if (!empty($getSettings->button_text_2)) {
-                             echo '<a href="' . $getSettings->button_url_2 . '" class="btn btn-alt">' . $getSettings->button_text_2 . '</a>';
-                        }
-                        ?>
-                        <a href="<?php echo base_url('saas_website/demo') ?>" class="btn btn-alt"><?php echo translate('try_live_demo'); ?></a>
+    <!-- Start Hero Area -->
+    <section id="home" class="hero3d">
+        <canvas id="heroCanvas" aria-hidden="true"></canvas>
+        <div class="hero-fallback" aria-hidden="true"></div>
+        <div class="hero-grid" aria-hidden="true"></div>
+        <div class="container-xl hero-inner">
+            <div class="hero-copy">
+                <span class="eyebrow reveal"><span class="pulse"></span> The all-in-one school operating system</span>
+                <h1 class="reveal"><?php echo $heroTitle; ?></h1>
+                <p class="lead reveal"><?php echo $getSettings->slider_description; ?></p>
+                <div class="hero-cta reveal">
+                    <?php if (!empty($getSettings->button_text_1)) {
+                        echo '<a href="' . $getSettings->button_url_1 . '" class="btn-glow btn-lg">' . $getSettings->button_text_1 . ' <i class="fas fa-arrow-right"></i></a>';
+                    }
+                    if (!empty($getSettings->button_text_2)) {
+                        echo '<a href="' . $getSettings->button_url_2 . '" class="btn-ghost btn-lg">' . $getSettings->button_text_2 . '</a>';
+                    }
+                    ?>
+                    <a href="<?php echo base_url('saas_website/demo') ?>" class="btn-ghost btn-lg"><i class="fas fa-play-circle"></i> <?php echo translate('try_live_demo'); ?></a>
+                </div>
+                <ul class="hero-proof reveal">
+                    <li><i class="fas fa-check"></i> No installation, runs in the browser</li>
+                    <li><i class="fas fa-check"></i> Admin, teacher, parent &amp; student portals</li>
+                    <li><i class="fas fa-check"></i> Online fee payment built in</li>
+                </ul>
+            </div>
+
+            <!-- floating glass cards orbiting the 3D core (illustrative dashboard preview) -->
+            <div class="hero-float" aria-hidden="true">
+                <div class="glass-card gc-1" data-depth="0.6">
+                    <div class="gc-icon gc-mint"><i class="fas fa-qrcode"></i></div>
+                    <div><small>Attendance today</small><strong>96.4%</strong></div>
+                    <div class="gc-spark"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+                </div>
+                <div class="glass-card gc-2" data-depth="1">
+                    <div class="gc-icon gc-violet"><i class="fas fa-wallet"></i></div>
+                    <div><small>Fees collected this term</small><strong><?php echo $currency_symbol ?>4.28m</strong></div>
+                </div>
+                <div class="glass-card gc-3" data-depth="0.8">
+                    <div class="gc-icon gc-amber"><i class="fas fa-laptop-code"></i></div>
+                    <div><small>CBT exam in progress</small><strong>JSS 2 &middot; Maths</strong></div>
+                    <div class="gc-bar"><span style="width:68%"></span></div>
+                </div>
+                <div class="glass-card gc-4" data-depth="1.2">
+                    <div class="gc-icon gc-cyan"><i class="fas fa-bell"></i></div>
+                    <div><small>Parents notified</small><strong>1,240 SMS sent</strong></div>
+                </div>
+            </div>
+        </div>
+        <a href="#modules" class="scroll-cue page-scroll" aria-label="Scroll to modules"><span></span></a>
+    </section>
+    <!-- End Hero Area -->
+
+    <!-- Start Stats Strip -->
+    <section class="stats-strip">
+        <div class="container-xl">
+            <div class="stats-grid">
+                <div class="stat reveal"><strong data-count="<?php echo $moduleCount ?>">0</strong><span>Integrated modules</span></div>
+                <div class="stat reveal"><strong data-count="4">0</strong><span>Role-based portals</span></div>
+                <div class="stat reveal"><strong data-count="100" data-suffix="%">0</strong><span>Cloud: nothing to install</span></div>
+                <div class="stat reveal"><strong data-count="24" data-suffix="/7">0</strong><span>Access on web &amp; mobile</span></div>
+            </div>
+        </div>
+        <div class="marquee" aria-hidden="true">
+            <div class="marquee-track">
+                <?php for ($loop = 0; $loop < 2; $loop++) {
+                    foreach ($modules as $module) {
+                        $meta = isset($moduleMeta[$module->prefix]) ? $moduleMeta[$module->prefix] : array('fa-cube', '');
+                        echo '<span><i class="fas ' . $meta[0] . '"></i>' . html_escape($module->name) . '</span>';
+                    }
+                } ?>
+            </div>
+        </div>
+    </section>
+
+    <!-- Start Modules Orbit -->
+    <section id="modules" class="modules3d">
+        <div class="container-xl">
+            <div class="solar-grid">
+                <div class="solar-copy">
+                    <span class="tag">Modules</span>
+                    <h2 class="reveal">Every department. <span class="grad-text">One connected core.</span></h2>
+                    <p class="reveal"><?php echo $moduleCount ?> modules orbit a single <?php echo $brand ?> core and share one database, so admissions, fees, results and messaging always stay in sync. Hover or tap any module to explore it.</p>
+                    <div class="solar-detail glass reveal" id="solarDetail" aria-live="polite">
+                        <div class="sd-icon"><i class="fas fa-cube" id="sdIcon"></i></div>
+                        <div class="sd-body">
+                            <small id="sdCount">01 / <?php echo str_pad($moduleCount, 2, '0', STR_PAD_LEFT) ?></small>
+                            <h4 id="sdName">&nbsp;</h4>
+                            <p id="sdDesc">&nbsp;</p>
                         </div>
                     </div>
+                    <a href="#contact" class="btn-glow btn-lg page-scroll solar-cta reveal"><i class="fas fa-calendar-check"></i> Request a Demo</a>
                 </div>
-                <div class="col-lg-7 col-md-12 col-12">
-                    <div class="hero-image wow fadeInRight" data-wow-delay=".4s">
-                        <img src="<?php echo base_url('assets/frontend/images/saas/' . $getSettings->slider_image) ?>" alt="#">
-                    <?php if ($getSettings->overly_image_status == 1) { ?>
-                        <img class="overly" src="<?php echo base_url('assets/frontend/images/saas/' . $getSettings->overly_image) ?>" alt="#">
-                    <?php } ?>
+                <div class="solar-wrap">
+                    <div class="solar" id="solar">
+                        <div class="solar-plane" id="solarPlane">
+                            <div class="solar-ring" data-ring="0"></div>
+                            <div class="solar-ring" data-ring="1"></div>
+                            <div class="solar-ring" data-ring="2"></div>
+                        </div>
+                        <div class="solar-core" aria-hidden="true">
+                            <span class="core-pulse"></span><span class="core-pulse"></span>
+                            <img src="<?php echo $logoMark ?>" alt="" width="128" height="128">
+                        </div>
+                        <?php
+                        $ringSizes = array(5, 8);
+                        foreach ($modules as $i => $module) {
+                            $meta = isset($moduleMeta[$module->prefix]) ? $moduleMeta[$module->prefix] : array('fa-cube', 'Included with ' . $brand . '.');
+                            $ring = $i < $ringSizes[0] ? 0 : ($i < $ringSizes[0] + $ringSizes[1] ? 1 : 2);
+                            ?>
+                        <button type="button" class="planet ring-<?php echo $ring ?>" data-ring="<?php echo $ring ?>" data-icon="<?php echo $meta[0] ?>" data-name="<?php echo html_escape($module->name) ?>" data-desc="<?php echo html_escape($meta[1]) ?>" aria-label="<?php echo html_escape($module->name) ?>">
+                            <i class="fas <?php echo $meta[0] ?>"></i>
+                            <span class="planet-label"><?php echo html_escape($module->name) ?></span>
+                        </button>
+                        <?php } ?>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <!-- End Slider Area -->
+    <!-- End Modules Orbit -->
 
     <!-- Start Features Area -->
-    <section id="features" class="features section" style="background-image: url(<?php echo base_url('assets/frontend/images/saas/features-bg.png') ?>)">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-title">
-                        <h3 class="wow zoomIn" data-wow-delay=".2s"><?php echo translate('features'); ?></h3>
-                        <h2 class="wow fadeInUp" data-wow-delay=".4s"><?php echo $getSettings->feature_title; ?></h2>
-                        <p class="wow fadeInUp" data-wow-delay=".6s"><?php echo $getSettings->feature_description; ?></p>
-                    </div>
-                </div>
+    <section id="features" class="features3d section">
+        <div class="container-xl">
+            <div class="section-head center">
+                <span class="tag"><?php echo translate('features'); ?></span>
+                <h2 class="reveal"><?php echo $getSettings->feature_title; ?></h2>
+                <p class="reveal"><?php echo $getSettings->feature_description; ?></p>
             </div>
-            <div class="row">
-                <?php
-                $delaycount = .2;
-                $count = 0;
-                foreach ($featureslist as $key => $feature) {
-                    ?>
-                <div class="col-lg-4 col-md-6 col-12">
-                    <!-- Start Single Feature -->
-                    <div class="single-feature wow fadeInUp" data-wow-delay="<?php echo $delaycount ?>s">
-                        <i class="<?php echo $feature->icon; ?>"></i>
-                        <h3><?php echo $feature->title; ?></h3>
-                        <p><?php echo $feature->description; ?></p>
-                    </div>
-                    <!-- End Single Feature -->
+            <div class="feature-grid">
+                <?php foreach ($featureslist as $key => $feature) { ?>
+                <div class="tilt-card feature-card reveal" style="--i:<?php echo $key % 3 ?>">
+                    <div class="tilt-glare"></div>
+                    <div class="feature-icon"><i class="<?php echo $feature->icon; ?>"></i></div>
+                    <h3><?php echo $feature->title; ?></h3>
+                    <p><?php echo $feature->description; ?></p>
                 </div>
-                <?php
-                    if ($count < 2) {
-                        $count++;
-                        $delaycount += .2;
-                    } else {
-                        $count = 0;
-                        $delaycount = .2;
-                    } 
-                } ?>
-                </div>
+                <?php } ?>
             </div>
         </div>
     </section>
     <!-- End Features Area -->
 
-    <!-- Start Pricing Table Area -->
-    <section id="pricing" class="pricing-table section">
-        <div class="container">
-            <div class="row">
-                <div class="col-12">
-                    <div class="section-title">
-                        <h3 class="wow zoomIn" data-wow-delay=".2s"><?php echo translate('pricing'); ?></h3>
-                        <h2 class="wow fadeInUp" data-wow-delay=".4s"><?php echo $getSettings->price_plan_title; ?></h2>
-                        <p class="wow fadeInUp" data-wow-delay=".6s"><?php echo $getSettings->price_plan_description; ?></p>
+    <!-- Start Portals -->
+    <section id="portals" class="portals section">
+        <div class="container-xl">
+            <div class="portals-grid">
+                <div class="portals-copy">
+                    <span class="tag">Built for everyone</span>
+                    <h2 class="reveal">One login, <span class="grad-text">four tailored portals.</span></h2>
+                    <p class="reveal">Each person sees exactly what they need. Admins run the school, teachers teach, and parents and students stay informed from any device.</p>
+                    <div class="portal-tabs" role="tablist">
+                        <button class="portal-tab active" role="tab" aria-selected="true" data-portal="0"><i class="fas fa-user-tie"></i><span><b>Admin</b><small>Run the whole school</small></span></button>
+                        <button class="portal-tab" role="tab" aria-selected="false" data-portal="1"><i class="fas fa-chalkboard-teacher"></i><span><b>Teacher</b><small>Teach, mark and report</small></span></button>
+                        <button class="portal-tab" role="tab" aria-selected="false" data-portal="2"><i class="fas fa-user-friends"></i><span><b>Parent</b><small>Pay fees and track progress</small></span></button>
+                        <button class="portal-tab" role="tab" aria-selected="false" data-portal="3"><i class="fas fa-user-graduate"></i><span><b>Student</b><small>Learn, test and submit</small></span></button>
                     </div>
                 </div>
-            </div>
-            <div class="row">
-                <?php 
-                $delaycount = .2;
-                $count = 0;
-                $currency_symbol = $global_config['currency_symbol'];
-                foreach ($getPackageList as $key => $value) {
-                 ?>
-                <div class="col-md-6 col-xl-4 col-xxl-3 pp-plans-container wow fadeInUp" data-wow-delay="<?php echo $delaycount ?>s">
-                    <div class="pp-plans<?php echo $value->recommended == 1 ? ' pxp-is-featured' : '' ?>">
-                        <div class="pp-plans-top">
-                        <?php if ($value->recommended == 1) { ?>
-                            <div class="pp-plans-featured-label">Recommended</div>
-                        <?php } ?>
-                            <div class="pp-plans-title">
-                                <?php echo $value->name; ?>
+                <div class="device-wrap" aria-hidden="true">
+                    <div class="device" id="portalDevice">
+                        <div class="device-bar"><i></i><i></i><i></i><span id="portalUrl">admin dashboard</span></div>
+                        <div class="device-screen">
+                            <div class="portal-view active">
+                                <div class="pv-kpis"><div><small>Students</small><b>1,284</b></div><div><small>Fees paid</small><b>82%</b></div><div><small>Staff</small><b>76</b></div></div>
+                                <div class="pv-chart"><i style="--h:45%"></i><i style="--h:62%"></i><i style="--h:54%"></i><i style="--h:78%"></i><i style="--h:70%"></i><i style="--h:88%"></i><i style="--h:94%"></i></div>
+                                <ul class="pv-list"><li><span class="dot ok"></span>Second term results published<em>Today</em></li><li><span class="dot"></span>14 new admission applications<em>2h</em></li><li><span class="dot warn"></span>Payroll ready for approval<em>1d</em></li></ul>
                             </div>
-                            <div class="pp-plans-price">
-                                <div class="pxp-plans-price-monthly">
-
-
-                        <?php if ($value->discount == 0) { ?>
-                                <?php echo $currency_symbol . number_format($value->price, 0, '.', ',') ?><span>/ <?php echo ($value->period_value == 0 ? '' : $value->period_value) . " " . $getPeriodType[$value->period_type] ?></span>
-                        <?php } else { ?>
-                            <div class="discount">
-                                <?php echo $currency_symbol . number_format($value->price, 0, '.', ',') ?>
+                            <div class="portal-view">
+                                <div class="pv-kpis"><div><small>My classes</small><b>5</b></div><div><small>Present</small><b>38/40</b></div><div><small>To mark</small><b>12</b></div></div>
+                                <ul class="pv-list"><li><span class="dot ok"></span>QR attendance: JSS 2A<em>08:02</em></li><li><span class="dot"></span>Upload CA scores: Mathematics<em>Due Fri</em></li><li><span class="dot"></span>Live class: Algebra revision<em>11:00</em></li><li><span class="dot warn"></span>Homework submissions: 12 pending<em>Today</em></li></ul>
                             </div>
-                            <?php echo $currency_symbol . number_format(($value->price - $value->discount), 0, '.', ','); ?><span>/ <?php echo ($value->period_value == 0 ? '' : $value->period_value) . " " . $getPeriodType[$value->period_type]?> </span>
-                        <?php } ?>
-                                </div>
+                            <div class="portal-view">
+                                <div class="pv-kpis"><div><small>Balance</small><b><?php echo $currency_symbol ?>45,000</b></div><div><small>Attendance</small><b>97%</b></div><div><small>Average</small><b>74.5</b></div></div>
+                                <div class="pv-pay"><span>Second term school fees</span><button tabindex="-1">Pay now</button></div>
+                                <ul class="pv-list"><li><span class="dot ok"></span>Report card available<em>New</em></li><li><span class="dot"></span>PTA meeting: Saturday 10am<em>Event</em></li></ul>
                             </div>
-                            <div class="pp-plans-list">
-                                <ul class="list-unstyled pricing-feature-list">
-                                    <li><i class="lni lni-user"></i>Student Limit : <?php echo $value->student_limit ?></li>
-                                    <li><i class="lni lni-user"></i>Parents Limit : <?php echo $value->parents_limit ?></li>
-                                    <li><i class="lni lni-user"></i>Staff Limit : <?php echo $value->staff_limit ?></li>
-                                    <li><i class="lni lni-user"></i>Teacher Limit : <?php echo $value->teacher_limit ?></li>
-                                    <?php
-                                    if (empty($value->permission) || $value->permission == 'null' ) {
-                                        $permissions = [];
-                                    } else {
-                                        $permissions = json_decode($value->permission, true);
-                                    }
-                                    $this->db->select('*');
-                                    $this->db->from('permission_modules');
-                                    $this->db->where('permission_modules.in_module', 1);
-                                    $this->db->order_by('permission_modules.prefix', 'asc');
-                                    $modules = $this->db->get()->result();
-                                    foreach ($modules as $key => $value2) {
-                                        ?>
-                                        <li><i class="<?php echo (in_array($value2->id, $permissions) ? 'lni lni-checkmark' : 'lni lni-close'); ?>"></i> <?php echo $value2->name ?></li>
-                                    <?php } ?>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="pp-plans-bottom">
-                            <div class="pp-plans-cta button">
-                                <?php if (is_admin_loggedin()) {
-                                    ?>
-                                    <a class="btn plans-purchase" href="<?php echo base_url('subscription/renew?id=' . $value->id) ?>"> <?php echo translate('renew'); ?></a>
-                                <?php } else { ?>
-                                    <button class="btn plans-purchase" data-id="<?php echo $value->id ?>" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing"> <?php echo $getSettings->price_plan_button; ?></button>
-                                <?php } ?>
+                            <div class="portal-view">
+                                <div class="pv-kpis"><div><small>Next exam</small><b>Biology</b></div><div><small>Homework</small><b>3</b></div><div><small>Position</small><b>4th</b></div></div>
+                                <div class="pv-cbt"><small>CBT &middot; Question 7 of 40</small><b>Which organelle produces energy for the cell?</b><span>Mitochondria</span><span>Ribosome</span></div>
+                                <ul class="pv-list"><li><span class="dot ok"></span>English essay submitted<em>Done</em></li></ul>
                             </div>
                         </div>
                     </div>
+                    <div class="device-shadow"></div>
                 </div>
-            <?php 
-                if ($count < 3) {
-                    $count++;
-                    $delaycount += .2;
-                } else {
-                    $count = 0;
-                    $delaycount = .2;
-                } 
-        } ?>
             </div>
         </div>
-        <div class="bg-ring-right"></div>
     </section>
-    <!--/ End Pricing Table Area -->
+    <!-- End Portals -->
+
+    <!-- Start Steps -->
+    <section class="steps section">
+        <div class="container-xl">
+            <div class="section-head center">
+                <span class="tag">Get started</span>
+                <h2 class="reveal">Live in three steps</h2>
+                <p class="reveal">No servers, no installation, no IT team required.</p>
+            </div>
+            <div class="steps-grid">
+                <div class="step reveal"><span class="step-no">01</span><i class="fas fa-calendar-check"></i><h4>Book a demo</h4><p>Tell us about your school and we will walk you through <?php echo $brand ?> with your own workflows.</p></div>
+                <div class="step reveal"><span class="step-no">02</span><i class="fas fa-school"></i><h4>We set you up</h4><p>We create your school account with your logo, classes, sessions and grading system.</p></div>
+                <div class="step reveal"><span class="step-no">03</span><i class="fas fa-rocket"></i><h4>Go live</h4><p>Import students, invite staff and parents, and start collecting fees online.</p></div>
+            </div>
+        </div>
+    </section>
+    <!-- End Steps -->
+
+
+    <!-- Start Demo CTA -->
+    <section class="demo-cta">
+        <div class="container-xl">
+            <div class="demo-panel reveal">
+                <canvas id="ctaCanvas" aria-hidden="true"></canvas>
+                <div class="demo-copy">
+                    <h2>See <?php echo $brand ?> running with real school data</h2>
+                    <p>Log in to our demo school as an admin, teacher, parent or student. No sign-up needed.</p>
+                </div>
+                <a href="<?php echo base_url('saas_website/demo') ?>" class="btn-light btn-lg"><i class="fas fa-play-circle"></i> <?php echo translate('try_live_demo'); ?></a>
+            </div>
+        </div>
+    </section>
 
     <!-- Start Faq Area -->
-    <section class="faq section" id="faq">
-        <div class=container>
-            <div class=row>
-                <div class=col-12>
-                    <div class=section-title>
-                        <h3 class="wow zoomIn" data-wow-delay=.2s><?php echo translate('faq'); ?></h3>
-                        <h2 class="wow fadeInUp" data-wow-delay=.4s><?php echo $getSettings->faq_title; ?></h2>
-                        <p class="wow fadeInUp" data-wow-delay=.6s><?php echo $getSettings->faq_description; ?></p>
-                    </div>
-                </div>
+    <section class="faq3d section" id="faq">
+        <div class="container-xl">
+            <div class="section-head center">
+                <span class="tag"><?php echo translate('faq'); ?></span>
+                <h2 class="reveal"><?php echo $getSettings->faq_title; ?></h2>
+                <p class="reveal"><?php echo $getSettings->faq_description; ?></p>
             </div>
-            <div class=row>
-                <div class=col-12>
-                    <div class=accordion id=accordionExample>
-                        <?php
-                        $count = 1;
-                        foreach ($faqs as $key => $faq) {
-                            ?>
-                        <div class="accordion-item">
-                            <h2 class="accordion-header" id="heading<?php echo $key ?>">
-                                <button class="accordion-button collapsed" type=button data-bs-toggle=collapse data-bs-target="#faq<?php echo $key ?>" aria-expanded="<?php echo $key == 0 ? 'true' : ''; ?>" aria-controls=collapseOne>
-                                    <span class=title><span class="serial"><?php echo $count++; ?></span><?php echo $faq->title; ?></span><i class="lni lni-plus"></i>
-                                </button>
-                            </h2>
-                            <div id="faq<?php echo $key ?>" class="accordion-collapse collapse" aria-labelledby="heading<?php echo $key ?>" data-bs-parent="#accordionExample">
-                                <div class="accordion-body"><?php echo $faq->description; ?></div>
-                            </div>
-                        </div>
-                    <?php } ?>
+            <div class="accordion" id="accordionExample">
+                <?php
+                $count = 1;
+                foreach ($faqs as $key => $faq) {
+                    ?>
+                <div class="accordion-item reveal">
+                    <h2 class="accordion-header" id="heading<?php echo $key ?>">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq<?php echo $key ?>" aria-expanded="false" aria-controls="faq<?php echo $key ?>">
+                            <span class="serial"><?php echo str_pad($count++, 2, '0', STR_PAD_LEFT); ?></span><span class="title"><?php echo $faq->title; ?></span><i class="fas fa-plus"></i>
+                        </button>
+                    </h2>
+                    <div id="faq<?php echo $key ?>" class="accordion-collapse collapse" aria-labelledby="heading<?php echo $key ?>" data-bs-parent="#accordionExample">
+                        <div class="accordion-body"><?php echo $faq->description; ?></div>
                     </div>
                 </div>
+                <?php } ?>
             </div>
         </div>
     </section>
     <!-- End faq Area -->
 
     <!-- Start Contact Area -->
-    <section class="section call-action" id="contact">
-        <div class="container">
-            <div class="row">
-                <div class="col-lg-5 col-md-12 col-12">
-                    <div class="contact-form">
-                        <?php echo form_open('saas_website/send_email', array('class' => 'contact-frm')); ?>
-                        <h3 class="mb-5"><?php echo $getSettings->contact_title; ?></h3>
-                        <?php if($this->session->flashdata('msg_success')): ?>
-                        <div class="alert alert-success">
-                            <i class="icon-text-ml far fa-check-circle"></i> <?php echo $this->session->flashdata('msg_success'); ?>
-                        </div>
-                        <?php endif; ?>
-                        <?php if($this->session->flashdata('msg_error')): ?>
-                        <div class="alert alert-danger">
-                            <?php echo $this->session->flashdata('msg_error'); ?>
-                        </div>
-                        <?php endif; ?>
-                        <div class="form-group wow fadeInUp" data-wow-delay=".2s">
+    <section class="contact3d section" id="contact">
+        <div class="container-xl">
+            <div class="contact-grid">
+                <div class="contact-info">
+                    <span class="tag">Request a demo</span>
+                    <h2 class="reveal"><?php echo $getSettings->contact_description; ?></h2>
+                    <div class="contact-items">
+                        <div class="contact-item reveal"><i class="fas fa-phone-alt"></i><div><small><?php echo translate('phone'); ?></small><p><?php echo $global_config['mobileno'] ?></p></div></div>
+                        <div class="contact-item reveal"><i class="fas fa-envelope"></i><div><small><?php echo translate('email'); ?></small><p><?php echo $global_config['institute_email'] ?></p></div></div>
+                        <div class="contact-item reveal"><i class="fas fa-map-marker-alt"></i><div><small><?php echo translate('address'); ?></small><p><?php echo $global_config['address'] ?></p></div></div>
+                    </div>
+                </div>
+                <div class="contact-form glass reveal">
+                    <?php echo form_open('saas_website/send_email', array('class' => 'contact-frm')); ?>
+                    <h3><?php echo $getSettings->contact_title; ?></h3>
+                    <?php if($this->session->flashdata('msg_success')): ?>
+                    <div class="alert alert-success">
+                        <i class="far fa-check-circle"></i> <?php echo $this->session->flashdata('msg_success'); ?>
+                    </div>
+                    <?php endif; ?>
+                    <?php if($this->session->flashdata('msg_error')): ?>
+                    <div class="alert alert-danger"><?php echo $this->session->flashdata('msg_error'); ?></div>
+                    <?php endif; ?>
+                    <div class="row g-3">
+                        <div class="col-sm-6 form-group">
                             <input type="text" class="form-control" name="name" autocomplete="off" placeholder="Name *" value="">
                             <span class="error"></span>
                         </div>
-                        <div class="form-group wow fadeInUp" data-wow-delay=".2s">
+                        <div class="col-sm-6 form-group">
                             <input type="text" class="form-control" name="email" autocomplete="off" placeholder="Email *" value="">
                             <span class="error"></span>
                         </div>
-                        <div class="form-group wow fadeInUp" data-wow-delay=".4s">
+                        <div class="col-sm-6 form-group">
                             <input type="text" class="form-control" name="mobile" autocomplete="off" placeholder="Mobile *" value="">
                             <span class="error"></span>
                         </div>
-                        <div class="form-group wow fadeInUp" data-wow-delay=".4s">
-                            <input type="text" class="form-control" name="subject" autocomplete="off"  placeholder="Subject  *" value="">
+                        <div class="col-sm-6 form-group">
+                            <input type="text" class="form-control" name="subject" autocomplete="off" placeholder="Subject *" value="">
                             <span class="error"></span>
                         </div>
-                        <div class="form-group wow fadeInUp" data-wow-delay=".6s">
-                            <textarea type="text" rows="5" class="form-control alert_settings" placeholder="Type Message *" name="message"></textarea>
+                        <div class="col-12 form-group">
+                            <textarea rows="4" class="form-control" placeholder="Type Message *" name="message"></textarea>
                             <span class="error"></span>
                         </div>
-                        <div class="button wow fadeInUp" data-wow-delay=".8s">
-                            <button class="btn btn-alt" type="submit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing"><i class="fas fa-envelope"></i> <?php echo $getSettings->contact_button; ?></button>
-                        </div>
-                        <?php echo form_close(); ?>
-                    </div>
-                </div>
-                <div class="col-lg-7 col-md-12 col-12">
-                    <h2 class="contact-title wow fadeInUp" data-wow-delay=".2s"><?php echo $getSettings->contact_description; ?></h2>
-                    <div class="contact-item-wrapper">
-                        <div class="row">
-                            <div class="col-12 col-md-6 col-xl-12">
-                                <div class="contact-item wow fadeInUp" data-wow-delay=".4s">
-                                    <div class="contact-icon">
-                                        <i class="lni lni-phone"></i>
-                                    </div>
-                                    <div class="contact-content">
-                                        <h4><?php echo translate('phone'); ?></h4>
-                                        <p><?php echo $global_config['mobileno'] ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-12">
-                                <div class="contact-item wow fadeInUp" data-wow-delay=".6s">
-                                    <div class="contact-icon">
-                                        <i class="lni lni-envelope"></i>
-                                    </div>
-                                    <div class="contact-content">
-                                        <h4><?php echo translate('email'); ?></h4>
-                                        <p><?php echo $global_config['institute_email'] ?></p>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6 col-xl-12">
-                                <div class="contact-item wow fadeInUp" data-wow-delay=".8s">
-                                    <div class="contact-icon">
-                                        <i class="lni lni-map-marker"></i>
-                                    </div>
-                                    <div class="contact-content">
-                                        <h4><?php echo translate('address'); ?></h4>
-                                        <p><?php echo $global_config['address'] ?></p>
-                                    </div>
-                                </div>
-                            </div>
+                        <div class="col-12">
+                            <button class="btn-glow w-100" type="submit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing"><i class="fas fa-paper-plane"></i> <?php echo $getSettings->contact_button; ?></button>
                         </div>
                     </div>
+                    <?php echo form_close(); ?>
                 </div>
             </div>
         </div>
     </section>
-    <!-- End Call To Action Area -->
+    <!-- End Contact Area -->
 
     <!-- Start Footer Area -->
-    <footer class="footer">
-        <!-- Start Footer Top -->
-        <div class="footer-top">
-            <div class="container mb-5">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4 col-12">
-                        <!-- Single Widget -->
-                        <div class="single-footer f-about">
-                            <div class="logo">
-                                <a href="<?php echo base_url() ?>">
-                                    <img src="<?=$this->application_model->getBranchImage(get_loggedin_branch_id(), 'logo-small')?>" alt="#">
-                                </a>
-                            </div>
-                            <p><?php echo $getSettings->footer_about; ?></p>
-                        </div>
-                        <!-- End Single Widget -->
-                    </div>
-                    <div class="col-lg-8 col-md-8 col-12">
-                        <div class="row">
-                            <div class="col-lg-4 col-md-6 col-12">
-                                <!-- Single Widget -->
-                                <div class="single-footer f-link">
-                                    <h3>Quick Link</h3>
-                                    <ul>
-                                        <li><a href="#home" class="page-scroll active" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('home'); ?></a></li>
-                                        <li><a href="#features" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('features'); ?></a></li>
-                                        <li><a href="#pricing" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('pricing'); ?></a></li>
-                                        <li><a href="<?php echo base_url('saas_website/demo') ?>" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('live_demo'); ?></a></li>
-                                        <li><a href="#faq" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('faq'); ?></a></li>
-                                        <li><a href="#contact" class="page-scroll" aria-label="Toggle navigation"><i class="fas fa-angle-right"></i> <?php echo translate('contact'); ?></a></li>
-                                        <?php if ($getSettings->terms_status == 1) { ?>
-                                        <a href="javascript:void(0)" id="termsFooter"><i class="fas fa-angle-right"></i> <?php echo translate('terms_&_conditions'); ?></a>
-                                        <?php } ?>
-                                    </ul>
-                                </div>
-                                <!-- End Single Widget -->
-                            </div>
-                            <div class="col-lg-4 col-md-6 col-12">
-                                <!-- Single Widget -->
-                                <div class="single-footer f-link address">
-                                    <h3>Address</h3>
-                                    <ul>
-                                        <li class="clearfix"><i class="lni lni-map-marker"></i> <div style="margin-left: 47px;"><?php echo $global_config['address'] ?></div></li>
-                                        <li class="clearfix"><i class="lni lni-phone"></i> <?php echo $global_config['mobileno'] ?></li>
-                                        <li class="clearfix"><i class="lni lni-envelope"></i> <?php echo $global_config['institute_email'] ?></li>
-                                    </ul>
-                                </div>
-                                <!-- End Single Widget -->
-                            </div>
-                            <div class="col-lg-4 col-md-6 col-12">
-                                <!-- Single Widget -->
-                                <div class="single-footer f-link">
-                                    <h3>Social Link</h3>
-                                    <ul class="social">
-                                        <li><a href="<?php echo $global_config['facebook_url'] ?>"><i class="lni lni-facebook-filled"></i></a></li>
-                                        <li><a href="<?php echo $global_config['twitter_url'] ?>"><i class="lni lni-twitter-original"></i></a></li>
-                                        <li><a href="<?php echo $global_config['instagram_url'] ?>"><i class="lni lni-instagram"></i></a></li>
-                                        <li><a href="<?php echo $global_config['linkedin_url'] ?>"><i class="lni lni-linkedin-original"></i></a></li>
-                                        <li><a href="<?php echo $global_config['youtube_url'] ?>"><i class="lni lni-youtube"></i></a></li>
-                                        <li><a href="<?php echo $global_config['google_plus_url'] ?>"><i class="lni lni-google"></i></a></li>
-                                    </ul>
-                                </div>
-                                <!-- End Single Widget -->
-                            </div>
-                        </div>
-                    </div>
+    <footer class="footer3d">
+        <div class="container-xl">
+            <div class="footer-grid">
+                <div class="f-about">
+                    <a href="<?php echo base_url() ?>" class="f-logo"><img src="<?php echo $logoLight ?>" alt="<?php echo $brand ?>" width="220" height="48"></a>
+                    <p><?php echo $getSettings->footer_about; ?></p>
+                    <ul class="social">
+                        <li><a href="<?php echo $global_config['facebook_url'] ?>" aria-label="Facebook"><i class="fab fa-facebook-f"></i></a></li>
+                        <li><a href="<?php echo $global_config['twitter_url'] ?>" aria-label="Twitter"><i class="fab fa-twitter"></i></a></li>
+                        <li><a href="<?php echo $global_config['instagram_url'] ?>" aria-label="Instagram"><i class="fab fa-instagram"></i></a></li>
+                        <li><a href="<?php echo $global_config['linkedin_url'] ?>" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a></li>
+                        <li><a href="<?php echo $global_config['youtube_url'] ?>" aria-label="YouTube"><i class="fab fa-youtube"></i></a></li>
+                    </ul>
+                </div>
+                <div class="f-col">
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#modules">Modules</a></li>
+                        <li><a href="#features"><?php echo translate('features'); ?></a></li>
+                        <li><a href="#portals">Portals</a></li>
+                        <li><a href="<?php echo base_url('saas_website/demo') ?>"><?php echo translate('live_demo'); ?></a></li>
+                    </ul>
+                </div>
+                <div class="f-col">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#faq"><?php echo translate('faq'); ?></a></li>
+                        <li><a href="#contact"><?php echo translate('contact'); ?></a></li>
+                        <?php if ($getSettings->terms_status == 1) { ?>
+                        <li><a href="javascript:void(0)" id="termsFooter"><?php echo translate('terms_&_conditions'); ?></a></li>
+                        <?php } ?>
+                    </ul>
+                </div>
+                <div class="f-col">
+                    <h4><?php echo translate('address'); ?></h4>
+                    <ul class="f-contact">
+                        <li><i class="fas fa-map-marker-alt"></i> <?php echo $global_config['address'] ?></li>
+                        <li><i class="fas fa-phone-alt"></i> <?php echo $global_config['mobileno'] ?></li>
+                        <li><i class="fas fa-envelope"></i> <?php echo $global_config['institute_email'] ?></li>
+                    </ul>
                 </div>
             </div>
-            <div class="footer-copyright">
-                <div class="container d-flex justify-content-between align-items-center">
-                    <div class="copyright-text">
-                        <div class="footer-copyright__content">
-                            <span><?php echo $global_config['footer_text']; ?></span>
-                        </div>
-                    </div>
-                    <div class="payment-logo">
-                        <img src="<?php echo base_url('assets/frontend/images/saas/' . $getSettings->payment_logo); ?>" alt="">
-                    </div>
-                </div>
+            <div class="footer-bottom">
+                <span><?php echo $global_config['footer_text']; ?></span>
+                <img src="<?php echo base_url('assets/frontend/images/saas/' . $getSettings->payment_logo); ?>" alt="Payment methods">
             </div>
-
         </div>
-        <!--/ End Footer Top -->
     </footer>
     <!--/ End Footer Area -->
 
-    <!-- ========================= scroll-top ========================= -->
-    <a href="#" class="scroll-top">
-        <i class="lni lni-chevron-up"></i>
-    </a>
+    <a href="#" class="scroll-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></a>
 
     <!-- ========================= JS here ========================= -->
     <script src="<?php echo base_url('assets/frontend/js/bootstrap.min.js'); ?>"></script>
     <script src="<?php echo base_url('assets/frontend/js/wow.min.js'); ?>"></script>
-    <script src="<?php echo base_url('assets/frontend/js/tiny-slider.js'); ?>"></script>
-    <script src="<?php echo base_url('assets/frontend/js/glightbox.min.js'); ?>"></script>
     <script src="<?php echo base_url('assets/frontend/js/saas_main.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas_main.js')); ?>"></script>
-    <script src="<?php echo base_url('assets/vendor/select2/js/select2.full.min.js');?>"></script>
     <script src="<?php echo base_url('assets/vendor/sweetalert/sweetalert.min.js');?>"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="<?php echo base_url('assets/frontend/js/saas-3d.js?v=' . filemtime(FCPATH . 'assets/frontend/js/saas-3d.js')); ?>"></script>
 </body>
 </html>
 
-<!-- Modal -->
-<div class="modal fade" id="regModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="exampleModalLabel">School Subscription</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <?php echo form_open_multipart('saas_website/register', array('class' => 'school-reg frm-submit-data')); ?>
-                <input type="hidden" name="package_id" value="" id="packageID">
-                <section class="card pg-fw mb-4 mt-2">
-                    <div class="card-body">
-                        <h5 class="chart-title mb-xs">Plan Summary</h5>
-                        <div class="mt-2">
-                            <ul class="sp-summary" id="summary">
-                            </ul>
-                        </div>
-                    </div>
-                </section>
-                <div class="row">
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label for="school_name">School Name *</label>
-                            <input id="school_name" name="school_name" type="text" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="school_address">School Address *</label>
-                            <input id="school_address" name="school_address" type="text" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="photo">School Logo</label>
-                            <input class="form-control" type="file" accept="image/*" id="photo" name="logo_file">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="school_info">Message</label>
-                            <textarea name="message" id="message" rows="5" class="form-control"></textarea>
-                        </div>
-                    </div>
-                    <div class="col-lg-6">
-                        <div class="form-group">
-                            <label for="admin_name">Admin Name *</label>
-                            <input id="admin_name" name="admin_name" type="text" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="gender">Gender *</label>
-                            <select class="form-select" id="gender" name="gender" data-minimum-results-for-search='Infinity'>
-                                <option value="">Select a gender</option>
-                                <option value="1">Male</option>
-                                <option value="2">Female</option>
-                            </select>
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin_phone">Contact Number *</label>
-                            <input id="admin_phone" name="admin_phone" type="tel" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin_email">Contact Email *</label>
-                            <input name="admin_email" type="text" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin_password">Admin Login Username *</label>
-                            <input name="admin_username" type="text" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin_password">Admin Login Password *</label>
-                            <input name="admin_password" type="password" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                        <div class="form-group">
-                            <label for="admin_password">Retype Password *</label>
-                            <input name="retype_admin_password" type="password" class="form-control" autocomplete="off">
-                            <span class="error"></span>
-                        </div>
-                    <?php if ($getSettings->terms_status == 1) { ?>
-                        <div class="form-group">
-                            <div class="checkbox-replace">
-                                <label class="i-checks"><input type="checkbox" name="terms_cb"><i></i> <?php echo $getSettings->agree_checkbox_text ?></label>
-                            </div>
-                            <span class="error"></span>
-                        </div>
-                    <?php } ?>
-
-                    <?php if ($getSettings->captcha_status == 1): ?>
-                        <div class="form-group">
-                            <?php echo $recaptcha['widget']; echo $recaptcha['script']; ?>
-                            <span class="error"></span>
-                        </div>
-                    <?php endif; ?>
-                    <div class="pp-plans-bottom">
-                            <div class="pp-plans-cta button">
-                                <button class="btn mb-4" data-id="1" type="submit" data-loading-text="<i class='fas fa-spinner fa-spin'></i> Processing"> Register & Payment</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <?php echo form_close(); ?>
-            </div>
-        </div>
-    </div>
-</div>
-
 <?php if ($getSettings->terms_status == 1) { ?>
-<div class="modal fade" id="termsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="exampleModalLabel" aria-hidden="true">
+<div class="modal fade" id="termsModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false" aria-labelledby="termsModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen modal-dialog-scrollable">
         <div class="modal-content">
             <div class="modal-header p-2">
-                <h5 class="modal-title" id="exampleModalLabel">Terms and Conditions</h5>
+                <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body" style="color: #000;"></div>
@@ -710,62 +566,3 @@ if($alertclass != ''):
         })
     </script>
 <?php endif; ?>
-<script type="text/javascript">
-    $("#gender").select2({
-        width: "100%"
-    });
-
-    $("form.frm-submit-data").each(function(i, el) {
-        var $this = $(el);
-        $this.on('submit', function(e) {
-            e.preventDefault();
-            var btn = $this.find('[type="submit"]');
-            $.ajax({
-                url: $(this).attr('action'),
-                type: "POST",
-                data: new FormData(this),
-                dataType: "json",
-                contentType: false,
-                processData: false,
-                cache: false,
-                beforeSend: function() {
-                    btn.button('loading');
-                },
-                success: function(data) {
-                    console.log(data);
-                    $('.error').html("");
-                    if (data.status == "fail") {
-                        $.each(data.error, function(index, value) {
-                            $this.find("[name='" + index + "']").parents('.form-group').find('.error').html(value);
-                        });
-                    } else {
-                        if (data.url) {
-                            window.location.href = data.url;
-                        } else if (data.status == "access_denied") {
-                            window.location.href = base_url + "dashboard";
-                        } else if (data.status == "error") {
-                            $('#regModal').modal('hide');
-                            swal({
-                                title: data.title,
-                                text: data.message,
-                                buttonsStyling: false,
-                                showCloseButton: true,
-                                focusConfirm: false,
-                                confirmButtonClass: "btn swal2-btn-default",
-                                type: "error"
-                            });
-                        } else {
-                            location.reload(true);
-                        }
-                    }
-                },
-                complete: function() {
-                    btn.button('reset');
-                },
-                error: function() {
-                    btn.button('reset');
-                }
-            });
-        });
-    });
-</script>

@@ -23,18 +23,14 @@ class Saas_website extends MY_Controller
 
     public function index()
     {
+        // The landing page no longer lists plans or hosts the self-registration
+        // modal (schools now come in through "Request a demo"), so plan data and
+        // the registration reCAPTCHA aren't loaded here. register() and
+        // getPlanDetails() are left intact for any existing direct links.
         $this->data['getSettings'] = $this->saas_model->getSettings();
-        if ($this->data['getSettings']->captcha_status == 1) {
-            $this->load->library('recaptcha', array('site_key' => $this->data['getSettings']->recaptcha_site_key, 'secret_key' => $this->data['getSettings']->recaptcha_secret_key));
-            $this->data['recaptcha'] = array(
-                'widget' => $this->recaptcha->getWidget(),
-                'script' => $this->recaptcha->getScriptTag(),
-            );
-        }
         $this->data['featureslist'] = $this->saas_model->getFeaturesList();
         $this->data['faqs'] = $this->saas_model->getFAQList();
-        $this->data['getPeriodType'] = $this->saas_model->getPeriodTypeWebsite();
-        $this->data['getPackageList'] = $this->saas_model->getPackageListWebsite();
+        $this->data['modules'] = $this->db->where('in_module', 1)->order_by('prefix', 'asc')->get('permission_modules')->result();
         $this->load->view('saas_website/index', $this->data);
     }
 
@@ -43,7 +39,7 @@ class Saas_website extends MY_Controller
         $this->data['getSettings'] = $this->saas_model->getSettings();
         $this->data['demoPassword'] = 'Demo@2026';
 
-        $branch = $this->db->where('name', 'SchoolEdge Demo Academy')->get('branch')->row();
+        $branch = $this->db->where('name', 'SkoolOS Demo Academy')->get('branch')->row();
         $this->data['demoBranch'] = $branch;
         $this->data['demoAdmin'] = null;
         $this->data['demoTeacher'] = null;
