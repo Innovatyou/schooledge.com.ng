@@ -205,3 +205,6 @@ body:has(.whatsapp-popup) .gd-fab { bottom: 112px; }
 .gd-drawer .tone-amber { --tone: #f59e0b; --tone-2: #fbbf24; }
 .gd-drawer .tone-rose { --tone: #f43f5e; --tone-2: #fb7185; }
 .gd-drawer .tone-slate { --tone: #475569; --tone-2: #94a3b8; }
+
+/* keep the floating Guide button from covering the last bit of a page */
+body:has(.gd-fab) .content-body { padding-bottom: 96px; }

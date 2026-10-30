@@ -157,10 +157,21 @@
                 }]
             });
             if (opts.legend === false) chart.setOption({ legend: { show: false } });
-            window.addEventListener('resize', function () { chart.resize(); });
-            document.querySelectorAll('.sidebar-toggle').forEach(function (b) {
-                b.addEventListener('click', function () { setTimeout(function () { chart.resize(); }, 350); });
-            });
+            // ECharts keeps the size it was drawn at, so follow the card whenever it
+            // changes: window resizes, the sidebar collapsing, the grid stacking on phones
+            var fit = function () { chart.resize(); };
+            if ('ResizeObserver' in window) {
+                var raf = 0;
+                new ResizeObserver(function () {
+                    cancelAnimationFrame(raf);
+                    raf = requestAnimationFrame(fit);
+                }).observe(el);
+            } else {
+                window.addEventListener('resize', fit);
+                document.querySelectorAll('.sidebar-toggle').forEach(function (b) {
+                    b.addEventListener('click', function () { setTimeout(fit, 350); });
+                });
+            }
             return chart;
         }
     };

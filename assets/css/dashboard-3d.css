@@ -186,8 +186,9 @@ html.dark .d3 {
 
 /* ---------- responsive ---------- */
 @media (max-width: 1199px) {
-    .d3-span-3, .d3-span-4, .d3-span-5 { grid-column: span 6; }
-    .d3-span-7, .d3-span-8, .d3-span-9 { grid-column: span 12; }
+    /* side cards would sit at half width next to an empty column, so stack them */
+    .d3-span-3 { grid-column: span 6; }
+    .d3-span-4, .d3-span-5, .d3-span-7, .d3-span-8, .d3-span-9 { grid-column: span 12; }
 }
 @media (max-width: 991px) {
     .d3-hero { grid-template-columns: 1fr; }
@@ -214,3 +215,8 @@ html.dark .d3 {
     .d3-hero::before, .d3-float, .d3-orb { animation: none; }
     .d3-stack, .d3-avatar { transform: none; }
 }
+
+/* charts never spill out of their card */
+.d3-card, .d3-card-body { min-width: 0; }
+.d3-chart { width: 100%; max-width: 100%; overflow: hidden; }
+.d3-chart > div, .d3-chart canvas { max-width: 100%; }
