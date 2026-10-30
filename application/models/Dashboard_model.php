@@ -259,4 +259,136 @@ class Dashboard_model extends CI_Model
         );
         return empty($codes[$lang]) ? '' : $codes[$lang];
     }
+    /* ---------- 3D dashboard: per-person panels ---------- */
+
+    // a teacher's (or a class's) periods for today, in time order
+    public function getTodayClasses($where = array())
+    {
+        $this->db->select('t.time_start,t.time_end,t.class_room,t.break,c.name as class_name,se.name as section_name,sub.name as subject_name,st.name as teacher_name');
+        $this->db->from('timetable_class as t');
+        $this->db->join('class as c', 'c.id = t.class_id', 'left');
+        $this->db->join('section as se', 'se.id = t.section_id', 'left');
+        $this->db->join('subject as sub', 'sub.id = t.subject_id', 'left');
+        $this->db->join('staff as st', 'st.id = t.teacher_id', 'left');
+        $this->db->where('t.day', strtolower(date('l')));
+        $this->db->where('t.session_id', get_session_id());
+        foreach ($where as $field => $value) {
+            $this->db->where('t.' . $field, $value);
+        }
+        $this->db->order_by('t.time_start', 'asc');
+        return $this->db->get()->result();
+    }
+
+    // classes, subjects, students and homework a teacher looks after this session
+    public function getTeacherSummary($staffID)
+    {
+        $sessionID = get_session_id();
+        $mine = "SELECT class_id, section_id FROM subject_assign WHERE teacher_id = ? AND session_id = ?
+            UNION SELECT class_id, section_id FROM teacher_allocation WHERE teacher_id = ? AND session_id = ?";
+        $classes = $this->db->query("SELECT COUNT(*) AS n FROM ($mine) AS x", array($staffID, $sessionID, $staffID, $sessionID))->row()->n;
+        $students = $this->db->query("SELECT COUNT(DISTINCT e.student_id) AS n FROM enroll e
+            INNER JOIN ($mine) AS x ON x.class_id = e.class_id AND x.section_id = e.section_id
+            WHERE e.session_id = ?", array($staffID, $sessionID, $staffID, $sessionID, $sessionID))->row()->n;
+        $subjects = $this->db->query("SELECT COUNT(DISTINCT subject_id) AS n FROM subject_assign WHERE teacher_id = ? AND session_id = ?", array($staffID, $sessionID))->row()->n;
+        $homework = $this->db->query("SELECT COUNT(*) AS n, IFNULL(SUM(evaluation_date IS NULL AND date_of_submission < CURDATE()), 0) AS to_mark
+            FROM homework WHERE created_by = ? AND session_id = ?", array($staffID, $sessionID))->row();
+        return array(
+            'classes' => (int) $classes,
+            'subjects' => (int) $subjects,
+            'students' => (int) $students,
+            'homework' => (int) $homework->n,
+            'to_mark' => (int) $homework->to_mark,
+        );
+    }
+
+    // a student's enrolment this session with class and section names
+    public function getStudentEnroll($studentID)
+    {
+        $this->db->select('e.id as enroll_id,e.class_id,e.section_id,e.roll,s.first_name,s.last_name,s.photo,s.register_no,c.name as class_name,se.name as section_name');
+        $this->db->from('enroll as e');
+        $this->db->join('student as s', 's.id = e.student_id', 'inner');
+        $this->db->join('class as c', 'c.id = e.class_id', 'left');
+        $this->db->join('section as se', 'se.id = e.section_id', 'left');
+        $this->db->where(array('e.student_id' => $studentID, 'e.session_id' => get_session_id()));
+        return $this->db->get()->row();
+    }
+
+    // present / absent / late totals plus the last ten months that have records
+    public function getAttendanceSummary($enrollID)
+    {
+        $rows = $this->db->query("SELECT DATE_FORMAT(date, '%Y-%m') AS ym, SUM(status = 'P') AS p, SUM(status = 'A') AS a, SUM(status = 'L') AS l
+            FROM student_attendance WHERE enroll_id = ? GROUP BY ym ORDER BY ym DESC LIMIT 10", array($enrollID))->result();
+        $out = array('labels' => array(), 'present' => array(), 'absent' => array(), 'late' => array(), 'p' => 0, 'a' => 0, 'l' => 0);
+        foreach (array_reverse($rows) as $r) {
+            $out['labels'][] = date('M Y', strtotime($r->ym . '-01'));
+            $out['present'][] = (int) $r->p;
+            $out['absent'][] = (int) $r->a;
+            $out['late'][] = (int) $r->l;
+            $out['p'] += $r->p;
+            $out['a'] += $r->a;
+            $out['l'] += $r->l;
+        }
+        $total = $out['p'] + $out['a'] + $out['l'];
+        $out['rate'] = $total ? (int) round(($out['p'] + $out['l']) / $total * 100) : null;
+        return $out;
+    }
+
+    // the whole session's fees for one student (not just this calendar year)
+    public function getStudentFeeTotals($studentID)
+    {
+        $row = $this->db->query("SELECT IFNULL(SUM(gd.amount), 0) AS total,
+                IFNULL(SUM((SELECT IFNULL(SUM(h.amount + h.discount), 0) FROM fee_payment_history h WHERE h.allocation_id = fa.id AND h.type_id = gd.fee_type_id)), 0) AS paid
+            FROM fee_allocation fa INNER JOIN fee_groups_details gd ON gd.fee_groups_id = fa.group_id
+            WHERE fa.student_id = ? AND fa.session_id = ?", array($studentID, get_session_id()))->row();
+        $total = (float) $row->total;
+        $paid = min($total, (float) $row->paid);
+        return array('total' => $total, 'paid' => $paid, 'due' => $total - $paid, 'rate' => $total > 0 ? (int) round($paid / $total * 100) : null);
+    }
+
+    // homework for a class that is still open (due today or later)
+    public function getOpenHomework($classID, $sectionID, $limit = 5)
+    {
+        $this->db->select('h.id,h.date_of_submission,sub.name as subject_name');
+        $this->db->from('homework as h');
+        $this->db->join('subject as sub', 'sub.id = h.subject_id', 'left');
+        $this->db->where(array('h.class_id' => $classID, 'h.section_id' => $sectionID, 'h.session_id' => get_session_id()));
+        $this->db->where('h.date_of_submission >=', date('Y-m-d'));
+        $this->db->order_by('h.date_of_submission', 'asc');
+        $this->db->limit($limit);
+        return $this->db->get()->result();
+    }
+
+    // next exam papers for a class
+    public function getUpcomingExams($classID, $sectionID, $limit = 4)
+    {
+        $this->db->select('te.exam_date,te.time_start,sub.name as subject_name,ex.name as exam_name');
+        $this->db->from('timetable_exam as te');
+        $this->db->join('subject as sub', 'sub.id = te.subject_id', 'left');
+        $this->db->join('exam as ex', 'ex.id = te.exam_id', 'left');
+        $this->db->where(array('te.class_id' => $classID, 'te.section_id' => $sectionID, 'te.session_id' => get_session_id()));
+        $this->db->where('te.exam_date >=', date('Y-m-d'));
+        $this->db->order_by('te.exam_date', 'asc');
+        $this->db->limit($limit);
+        return $this->db->get()->result();
+    }
+
+    // books a student has out right now
+    public function getBooksOut($studentID)
+    {
+        return $this->db->where(array('user_id' => $studentID, 'role_id' => 7, 'status' => 1))->count_all_results('book_issues');
+    }
+
+    // events from today to 30 days ahead
+    public function getUpcomingEvents($branchID = '', $limit = 4)
+    {
+        $this->db->select('id,title,start_date,end_date');
+        $this->db->where('start_date >=', date('Y-m-d'));
+        $this->db->where('start_date <=', date('Y-m-d', strtotime('+30 days')));
+        if (!empty($branchID)) {
+            $this->db->where('branch_id', $branchID);
+        }
+        $this->db->order_by('start_date', 'asc');
+        $this->db->limit($limit);
+        return $this->db->get('event')->result();
+    }
 }

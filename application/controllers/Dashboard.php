@@ -19,7 +19,7 @@ class Dashboard extends Dashboard_Controller
         parent::__construct();
         $this->load->model('dashboard_model');
     }
-    
+
     public function index()
     {
         if (is_student_loggedin() || is_parent_loggedin()) {
@@ -34,10 +34,14 @@ class Dashboard extends Dashboard_Controller
                 } else {
                     $this->data['title'] = translate('welcome_to') . " " . $this->session->userdata('name');
                 }
+                $this->data['children'] = $this->myChildren();
             }
             $schoolID = get_loggedin_branch_id();
             $this->data['student_id'] = $studentID;
             $this->data['school_id'] = $schoolID;
+            if (!empty($studentID)) {
+                $this->studentPanels($studentID, $schoolID);
+            }
             $this->data['sub_page'] = 'userrole/dashboard';
         } else {
             if (is_superadmin_loggedin()) {
@@ -59,9 +63,9 @@ class Dashboard extends Dashboard_Controller
                 $this->data['fees_summary'] = $this->dashboard_model->annualFeessummaryCharts($schoolID);
             } else {
                 $this->data['fees_summary'] = array(
-                    'total_fee' => 0,
-                    'total_paid' => 0,
-                    'total_due' => 0,
+                    'total_fee' => array_fill(0, 12, 0),
+                    'total_paid' => array_fill(0, 12, 0),
+                    'total_due' => array_fill(0, 12, 0),
                 );
             }
             $this->data['student_by_class'] = $this->dashboard_model->getStudentByClass($schoolID);
@@ -71,6 +75,13 @@ class Dashboard extends Dashboard_Controller
             $this->data['get_voucher'] = $this->dashboard_model->getVoucher($schoolID);
             $this->data['get_transport_route'] = $this->dashboard_model->get_transport_route($schoolID);
             $this->data['get_total_student'] = $this->dashboard_model->get_total_student($schoolID);
+            $this->data['upcoming_events'] = $this->dashboard_model->getUpcomingEvents($schoolID);
+            // teachers get their own day on top of whatever widgets their role allows
+            if (loggedin_role_id() == 3) {
+                $staffID = get_loggedin_user_id();
+                $this->data['teacher_summary'] = $this->dashboard_model->getTeacherSummary($staffID);
+                $this->data['today_classes'] = $this->dashboard_model->getTodayClasses(array('teacher_id' => $staffID));
+            }
             $this->data['sub_page'] = 'dashboard/index';
         }
         $language = 'en';
@@ -79,7 +90,7 @@ class Dashboard extends Dashboard_Controller
             'vendor/echarts/echarts.common.min.js',
             'vendor/moment/moment.js',
             'vendor/fullcalendar/fullcalendar.js',
-        ); 
+        );
         if ($this->session->userdata('set_lang') != 'english') {
             $language = $this->dashboard_model->languageShortCodes($this->session->userdata('set_lang'));
             $jsArray[] = "vendor/fullcalendar/locale/$language.js";
@@ -93,5 +104,36 @@ class Dashboard extends Dashboard_Controller
         $this->data['language'] = $language;
         $this->data['main_menu'] = 'dashboard';
         $this->load->view('layout/index', $this->data);
+    }
+
+    // everything a student (or a parent looking at one child) sees
+    private function studentPanels($studentID, $schoolID)
+    {
+        $enroll = $this->dashboard_model->getStudentEnroll($studentID);
+        $this->data['enroll'] = $enroll;
+        $this->data['fees_summary'] = $this->dashboard_model->annualFeessummaryCharts($schoolID, $studentID);
+        $this->data['fee_totals'] = $this->dashboard_model->getStudentFeeTotals($studentID);
+        $this->data['books_out'] = $this->dashboard_model->getBooksOut($studentID);
+        $this->data['upcoming_events'] = $this->dashboard_model->getUpcomingEvents($schoolID);
+        if (!empty($enroll)) {
+            $this->data['attendance'] = $this->dashboard_model->getAttendanceSummary($enroll->enroll_id);
+            $this->data['today_classes'] = $this->dashboard_model->getTodayClasses(array('class_id' => $enroll->class_id, 'section_id' => $enroll->section_id));
+            $this->data['open_homework'] = $this->dashboard_model->getOpenHomework($enroll->class_id, $enroll->section_id);
+            $this->data['upcoming_exams'] = $this->dashboard_model->getUpcomingExams($enroll->class_id, $enroll->section_id);
+        }
+    }
+
+    // a parent's children enrolled this session
+    private function myChildren()
+    {
+        $this->db->select('s.id,s.first_name,s.last_name,s.photo,s.register_no,s.birthday,e.id as enroll_id,e.roll,c.name as class_name,se.name as section_name');
+        $this->db->from('enroll as e');
+        $this->db->join('student as s', 'e.student_id = s.id', 'inner');
+        $this->db->join('class as c', 'e.class_id = c.id', 'left');
+        $this->db->join('section as se', 'e.section_id = se.id', 'left');
+        $this->db->where('s.parent_id', get_loggedin_user_id());
+        $this->db->where('e.session_id', get_session_id());
+        $this->db->order_by('e.id');
+        return $this->db->get()->result();
     }
 }
