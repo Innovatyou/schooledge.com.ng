@@ -3,15 +3,12 @@
 <!-- html header -->
 <?php $this->load->view('layout/header.php');?>
 
-<!-- <body class="loading-overlay-showing" data-loading-overlay> -->
-<?php if ($global_config['preloader_backend'] == 1) { ?>
+<?php $loader = panel_loader(get_loggedin_branch_id()); ?>
+<?php if ($loader) { ?>
 <body class="loading-overlay-showing" data-loading-overlay>
-	<!-- page preloader -->
-	<div class="loading-overlay dark">
-		<div class="ring-loader">
-			Loading <span></span>
-		</div>
-	</div>
+	<!-- page preloader: the school's own 3D loading animation (Frontend > Sign-in Page) -->
+	<?php $this->load->view('layout/loader', array('loader' => $loader)); ?>
+	<script>setTimeout(function () { document.body.classList.remove('loading-overlay-showing'); }, 8000);</script>
 <?php } else { ?>
 <body>
 <?php } ?>

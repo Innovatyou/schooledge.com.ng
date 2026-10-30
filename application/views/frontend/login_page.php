@@ -83,6 +83,10 @@ foreach ($this->app_lib->getSelectList('branch') as $id => $name) {
 	.lp-preview[data-layout=poster] .pv-card { box-shadow: none; padding: 0; background: transparent; width: 78%; }
 	.lp-preview[data-layout=poster] .pv-perks { grid-template-columns: 1fr 1fr; }
 	html.dark .lp-opt .lp-cap { color: #c9cee0; }
+	.lp-loader-block { padding-top: 18px; border-top: 1px solid rgba(130, 140, 170, .2); }
+	.lp-loaders { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+	.lp-loaders .lp-opt .sk-loader { border-radius: 0; }
+	.lp-ldr-off { display: grid; place-items: center; height: 150px; color: #8a91a8; font-size: 26px; background: repeating-linear-gradient(45deg, rgba(130,140,170,.1) 0 10px, transparent 10px 20px); }
 </style>
 
 <div class="row">
@@ -230,6 +234,37 @@ foreach ($this->app_lib->getSelectList('branch') as $id => $name) {
 						</div>
 					</div>
 				</div>
+
+				<?php
+				$loaderSample = array('text' => $setting['loader_text'], 'accent' => $setting['accent'], 'accent2' => login_page_accent_pair($setting['accent']), 'logo' => $school_logo);
+				?>
+				<div class="lp-block lp-loader-block">
+					<h5>Loading animation</h5>
+					<p class="text-muted" style="font-size: 12.5px; margin: -4px 0 12px;">Plays while pages in the panel load, built from your logo and accent colour.</p>
+					<div class="lp-loaders" data-group="loader">
+						<label class="lp-opt<?php echo $setting['loader_style'] === '' ? ' is-active' : ''; ?>">
+							<input type="radio" name="loader_style" value=""<?php echo $setting['loader_style'] === '' ? ' checked' : ''; ?>>
+							<?php $this->load->view('layout/loader', array('loader' => $loaderSample + array('style' => 'orbit'), 'preview' => true)); ?>
+							<span class="lp-cap"><b>Default</b>Your logo in orbit. Used until you pick another.</span>
+						</label>
+						<?php foreach (login_loader_styles() as $key => $meta) { $on = $setting['loader_style'] === $key; ?>
+						<label class="lp-opt<?php echo $on ? ' is-active' : ''; ?>">
+							<input type="radio" name="loader_style" value="<?php echo $key; ?>"<?php echo $on ? ' checked' : ''; ?>>
+							<?php $this->load->view('layout/loader', array('loader' => $loaderSample + array('style' => $key), 'preview' => true)); ?>
+							<span class="lp-cap"><b><?php echo $meta['label']; ?></b><?php echo $meta['desc']; ?></span>
+						</label>
+						<?php } ?>
+						<label class="lp-opt<?php echo $setting['loader_style'] === 'off' ? ' is-active' : ''; ?>">
+							<input type="radio" name="loader_style" value="off"<?php echo $setting['loader_style'] === 'off' ? ' checked' : ''; ?>>
+							<span class="lp-ldr-off"><i class="fas fa-ban"></i></span>
+							<span class="lp-cap"><b>Off</b>Pages open with no loading screen.</span>
+						</label>
+					</div>
+					<div class="form-group mt-md" style="max-width: 420px;">
+						<label class="control-label">Loading text</label>
+						<input type="text" class="form-control" name="loader_text" id="lpLoaderText" maxlength="60" value="<?php echo html_escape($setting['loader_text']); ?>" placeholder="Loading">
+					</div>
+				</div>
 			</div>
 			<footer class="panel-footer">
 				<div class="row">
@@ -286,6 +321,12 @@ foreach ($this->app_lib->getSelectList('branch') as $id => $name) {
 		var perks = document.getElementById('lpShowPerks').checked ? document.getElementById('lpPerks').value.split('\n').filter(function (p) { return p.trim(); }).slice(0, 4) : [];
 		pv.querySelector('.pv-perks').innerHTML = perks.map(function (p) { return '<li>' + esc(p.trim()) + '</li>'; }).join('');
 		document.querySelector('.lp-wrap').style.setProperty('--lp-accent', accent);
+		document.querySelectorAll('.lp-loaders .sk-loader').forEach(function (l) {
+			l.style.setProperty('--ld-a', accent);
+			l.style.setProperty('--ld-b', lighter(accent));
+		});
+		var lt = document.getElementById('lpLoaderText').value.trim() || 'Loading';
+		document.querySelectorAll('.lp-loaders [data-ldr-text]').forEach(function (t) { t.textContent = lt; });
 	}
 
 	form.addEventListener('change', function (e) {

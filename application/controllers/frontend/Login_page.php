@@ -65,6 +65,12 @@ class Login_page extends Admin_Controller
             'show_perks' => $this->input->post('show_perks') ? 1 : 0,
             'updated_at' => date('Y-m-d H:i:s'),
         );
+        // page-loading animation (migration 747)
+        if ($this->db->field_exists('loader_style', 'login_page_setting')) {
+            $loader = (string) $this->input->post('loader_style');
+            $data['loader_style'] = ($loader === 'off' || array_key_exists($loader, login_loader_styles())) ? $loader : '';
+            $data['loader_text'] = mb_substr(trim((string) $this->input->post('loader_text', true)), 0, 60);
+        }
 
         // background: an upload wins, otherwise the picked preset / current photo / none
         $choice = (string) $this->input->post('bg_choice');

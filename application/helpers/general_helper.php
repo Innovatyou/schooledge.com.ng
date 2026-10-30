@@ -735,6 +735,8 @@ function login_page_setting($branchID = 0)
         'tagline' => 'Results, fees, attendance and messages, all in one place.',
         'perks' => "Report cards and results\nFees and online payments\nAttendance and parent alerts",
         'show_perks' => 1,
+        'loader_style' => '',
+        'loader_text' => '',
     );
     $ci = &get_instance();
     if (!$ci->db->table_exists('login_page_setting')) {
@@ -750,12 +752,48 @@ function login_page_setting($branchID = 0)
         $setting['accent'] = $defaults['accent'];
     }
     $setting['overlay'] = max(0, min(90, (int) $setting['overlay']));
+    if ($setting['loader_style'] !== '' && $setting['loader_style'] !== 'off' && !array_key_exists($setting['loader_style'], login_loader_styles())) {
+        $setting['loader_style'] = '';
+    }
     $setting['bg_url'] = '';
     if ($setting['bg_image'] !== '' && basename($setting['bg_image']) === $setting['bg_image'] && is_file(FCPATH . 'uploads/login_image/' . $setting['bg_image'])) {
         $setting['bg_url'] = base_url('uploads/login_image/' . $setting['bg_image']);
     }
     $setting['perk_list'] = array_slice(array_values(array_filter(array_map('trim', explode("\n", $setting['perks'])), 'strlen')), 0, 4);
     return $setting;
+}
+
+// 3D page-loading animations a school can pick (login_page_setting.loader_style).
+// '' is the default (the school's logo in orbit), 'off' never shows a loader.
+function login_loader_styles()
+{
+    return array(
+        'orbit' => array('label' => 'Orbit', 'desc' => 'Your logo with rings circling it in 3D.'),
+        'flip' => array('label' => 'Flip card', 'desc' => 'Your logo on a card that flips over and over.'),
+        'cube' => array('label' => 'Cube', 'desc' => 'Your logo on every face of a turning cube.'),
+        'pulse' => array('label' => 'Pulse', 'desc' => 'Your logo floating on soft ripples.'),
+    );
+}
+
+// The loading animation the panel shows for a school: null when it is switched off.
+function panel_loader($branchID = 0)
+{
+    $lp = login_page_setting((int) $branchID);
+    $style = $lp['loader_style'];
+    if ($style === '') {
+        $style = 'orbit'; // every school gets its own logo animation unless it turns it off
+    }
+    if ($style === 'off') {
+        return null;
+    }
+    $ci = &get_instance();
+    return array(
+        'style' => $style,
+        'text' => $lp['loader_text'],
+        'accent' => $lp['accent'],
+        'accent2' => login_page_accent_pair($lp['accent']),
+        'logo' => $ci->application_model->getBranchImage($branchID ?: '', 'logo'),
+    );
 }
 
 // lighter partner shade of a #rrggbb accent, for two-stop gradients

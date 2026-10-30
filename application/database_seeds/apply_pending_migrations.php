@@ -1838,4 +1838,43 @@ if (columnExists($m, 'branch', 'is_demo')) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 747: app store links for the Mobile App page, and each
+// school's 3D loading animation on login_page_setting.
+// ---------------------------------------------------------------------
+foreach (array(
+    'play_store_url' => "VARCHAR(255) NOT NULL DEFAULT ''",
+    'app_store_url' => "VARCHAR(255) NOT NULL DEFAULT ''",
+    'show_apk' => 'TINYINT(1) NOT NULL DEFAULT 1',
+) as $col => $type) {
+    if (!columnExists($m, 'global_settings', $col)) {
+        $m->query("ALTER TABLE `global_settings` ADD `$col` $type");
+        echo "747: added global_settings.$col\n";
+    }
+}
+if (tableExists($m, 'login_page_setting')) {
+    if (!columnExists($m, 'login_page_setting', 'loader_style')) {
+        $m->query("ALTER TABLE `login_page_setting` ADD `loader_style` VARCHAR(20) NOT NULL DEFAULT '' AFTER `show_perks`");
+        echo "747: added login_page_setting.loader_style\n";
+    }
+    if (!columnExists($m, 'login_page_setting', 'loader_text')) {
+        $m->query("ALTER TABLE `login_page_setting` ADD `loader_text` VARCHAR(60) NOT NULL DEFAULT '' AFTER `loader_style`");
+        echo "747: added login_page_setting.loader_text\n";
+    }
+}
+
+// ---------------------------------------------------------------------
+// Migration 748: keep the demo school in the current academic session.
+// When the platform moves to a new session, the demo's students, classes,
+// exams and fees move with it. Does nothing if it is already current, so
+// re-run this script after starting a new session.
+// ---------------------------------------------------------------------
+if (columnExists($m, 'branch', 'is_demo')) {
+    require_once __DIR__ . '/demo_session_sync.php';
+    $demoSites = $m->query("SELECT id FROM branch WHERE is_demo = 1 AND name = 'SkoolOS Demo Academy'");
+    while ($demoSite = $demoSites->fetch_assoc()) {
+        echo "748: " . sync_demo_session($m, $demoSite['id']) . "\n";
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";
