@@ -45,6 +45,11 @@
                             <i class="fas fa-question-circle"></i><span><?=translate('user_guide')?></span>
                         </a>
                     </li>
+                    <li class="<?php if ($main_menu == 'mobile_app') echo 'nav-active'; ?>">
+                        <a href="<?=base_url('mobile_app')?>">
+                            <i class="fas fa-mobile-alt"></i><span><?=translate('mobile_app')?></span>
+                        </a>
+                    </li>
 <?php if (is_student_loggedin()) { ?>
                     <!-- student profile -->
                     <li class="<?php if ($main_menu == 'profile') echo 'nav-active'; ?>">
