@@ -60,7 +60,8 @@ $hero = array(
 	'btn1' => $lead['btn1'] ? $lead['btn1'] : ($admissionOpen ? array('Apply for admission', $siteUrl('admission')) : array('Contact us', $siteUrl('contact'))),
 	'btn2' => $lead['btn2'] ? $lead['btn2'] : array('About our school', $siteUrl('about')),
 	'photos' => $heroPhotos,
-	'counters' => website_section_on($cms_setting, 'hero_stats') ? $counters : array(),
+	// banner numbers only when switched on, and never a row of zeros
+	'counters' => website_section_on($cms_setting, 'hero_stats') && array_sum(array_column($counters, 'value')) > 0 ? $counters : array(),
 	'admission' => $admissionOpen,
 	'phone' => $cms_setting['mobile_no'],
 	'url' => $siteUrl,

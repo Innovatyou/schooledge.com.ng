@@ -718,14 +718,15 @@ function website_sections()
     );
 }
 
-// is a website section switched on for this school? (everything shows until a school hides it)
+// is a website section switched on for this school? Until a school saves its own
+// choice, everything shows except the numbers in the welcome banner.
 function website_section_on($setting, $key)
 {
     static $cache = array();
     $raw = is_array($setting) && isset($setting['hidden_sections']) ? (string) $setting['hidden_sections'] : '';
     if (!isset($cache[$raw])) {
         $list = json_decode($raw, true);
-        $cache[$raw] = is_array($list) ? $list : array();
+        $cache[$raw] = is_array($list) ? $list : array('hero_stats');
     }
     return !in_array($key, $cache[$raw], true);
 }
