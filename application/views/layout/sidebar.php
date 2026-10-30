@@ -1138,7 +1138,7 @@
                                     </li>
                                     <?php } if(get_permission('transport_assign', 'is_view')) { ?>
                                     <li class="<?php if ($sub_page == 'transport/assign' || $sub_page == 'transport/assign_edit') echo 'nav-active';?>">
-                                        <a href="<?=base_url('transport/assign')?>">
+                                        <a href="<?=base_url('transport/vehicle_assign')?>">
                                             <span><?=translate('assign_vehicle')?></span>
                                         </a>
                                     </li>
