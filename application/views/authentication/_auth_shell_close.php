@@ -1,5 +1,6 @@
 				<p class="sk-card-foot"><?php echo $global_config['footer_text']; ?></p>
 			</div>
+			</div>
 			<a class="sk-powered" href="https://schooledge.com.ng" target="_blank" rel="noopener">
 				<img src="<?php echo base_url('assets/frontend/images/skoolos/mark.svg'); ?>" alt="" width="18" height="18"> Powered by <b>SkoolOS</b>
 			</a>
@@ -25,6 +26,33 @@
 				label();
 			});
 			requestAnimationFrame(function () { root.classList.add('sk-ready'); });
+
+			// 3D: the card leans toward the pointer and the scene drifts the other way
+			var still = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+			var fine = window.matchMedia && window.matchMedia('(pointer: fine)').matches;
+			if (!still && fine) {
+				var card = document.querySelector('.sk-card');
+				var glare = document.querySelector('.sk-card-glare');
+				var body = document.body;
+				var raf = 0, px = 0, py = 0;
+				document.addEventListener('mousemove', function (e) {
+					px = e.clientX / window.innerWidth - 0.5;
+					py = e.clientY / window.innerHeight - 0.5;
+					if (raf) return;
+					raf = requestAnimationFrame(function () {
+						raf = 0;
+						body.style.setProperty('--px', px.toFixed(3));
+						body.style.setProperty('--py', py.toFixed(3));
+						var r = card.getBoundingClientRect();
+						var cx = (window.innerWidth * (px + 0.5) - r.left) / r.width - 0.5;
+						var cy = (window.innerHeight * (py + 0.5) - r.top) / r.height - 0.5;
+						var near = Math.abs(cx) < 0.9 && Math.abs(cy) < 0.9;
+						card.style.transform = near ? 'rotateY(' + (cx * 7).toFixed(2) + 'deg) rotateX(' + (-cy * 7).toFixed(2) + 'deg)' : '';
+						glare.style.opacity = near ? '1' : '0';
+						glare.style.background = 'radial-gradient(420px circle at ' + ((cx + 0.5) * 100).toFixed(1) + '% ' + ((cy + 0.5) * 100).toFixed(1) + '%, rgba(255,255,255,.16), transparent 45%)';
+					});
+				});
+			}
 
 			// show / hide password
 			document.querySelectorAll('.sk-reveal').forEach(function (btn) {

@@ -706,6 +706,68 @@ function website_theme($setting = '')
     return array_key_exists($theme, website_themes()) ? $theme : 'classic';
 }
 
+// Sign-in page layouts a school can pick (login_page_setting.layout).
+function login_page_layouts()
+{
+    return array(
+        'split' => array('label' => '3D Split', 'desc' => 'Brand showcase with orbit rings on one side, the form on the other.'),
+        'glass' => array('label' => 'Glass Photo', 'desc' => 'Your photo fills the screen behind a floating glass card.'),
+        'poster' => array('label' => 'Poster', 'desc' => 'Big welcome headline over your photo, the form docked to the side.'),
+    );
+}
+
+// Background photos every school can pick without uploading one (all in uploads/login_image/).
+function login_page_presets()
+{
+    return array('slider_1.jpg', 'slider_2.jpg', 'slider_3.jpg');
+}
+
+// Sign-in page settings for a school, merged over the defaults. Pass 0 (or
+// nothing) for the platform's own sign-in page. Works before migration 746 runs.
+function login_page_setting($branchID = 0)
+{
+    $defaults = array(
+        'layout' => 'split',
+        'bg_image' => '',
+        'overlay' => 55,
+        'accent' => '#7c5cff',
+        'headline' => '',
+        'tagline' => 'Results, fees, attendance and messages, all in one place.',
+        'perks' => "Report cards and results\nFees and online payments\nAttendance and parent alerts",
+        'show_perks' => 1,
+    );
+    $ci = &get_instance();
+    if (!$ci->db->table_exists('login_page_setting')) {
+        $row = array();
+    } else {
+        $row = $ci->db->get_where('login_page_setting', array('branch_id' => (int) $branchID))->row_array();
+    }
+    $setting = array_merge($defaults, array_intersect_key((array) $row, $defaults));
+    if (!array_key_exists($setting['layout'], login_page_layouts())) {
+        $setting['layout'] = 'split';
+    }
+    if (!preg_match('/^#[0-9a-fA-F]{6}$/', $setting['accent'])) {
+        $setting['accent'] = $defaults['accent'];
+    }
+    $setting['overlay'] = max(0, min(90, (int) $setting['overlay']));
+    $setting['bg_url'] = '';
+    if ($setting['bg_image'] !== '' && basename($setting['bg_image']) === $setting['bg_image'] && is_file(FCPATH . 'uploads/login_image/' . $setting['bg_image'])) {
+        $setting['bg_url'] = base_url('uploads/login_image/' . $setting['bg_image']);
+    }
+    $setting['perk_list'] = array_slice(array_values(array_filter(array_map('trim', explode("\n", $setting['perks'])), 'strlen')), 0, 4);
+    return $setting;
+}
+
+// lighter partner shade of a #rrggbb accent, for two-stop gradients
+function login_page_accent_pair($hex)
+{
+    $rgb = array_map('hexdec', str_split(ltrim($hex, '#'), 2));
+    foreach ($rgb as &$c) {
+        $c = (int) round($c + (255 - $c) * 0.35);
+    }
+    return vsprintf('#%02x%02x%02x', $rgb);
+}
+
 // resolve a template row (or raw value) to a safe, whitelisted design_style
 // falls back to 'classic' when the migration hasn't run yet or the value is missing/invalid
 function document_template_style($template = '')

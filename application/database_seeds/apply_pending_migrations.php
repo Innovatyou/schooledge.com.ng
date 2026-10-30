@@ -1796,4 +1796,46 @@ if (tableExists($m, 'front_cms_setting') && columnExists($m, 'branch', 'is_demo'
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 746: per-school sign-in page settings (layout, background
+// photo, accent colour, copy). branch_id 0 is the platform sign-in page.
+// The demo school gets the Glass Photo layout.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'login_page_setting')) {
+    $m->query("CREATE TABLE `login_page_setting` (
+        `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+        `branch_id` INT NOT NULL,
+        `layout` VARCHAR(20) NOT NULL DEFAULT 'split',
+        `bg_image` VARCHAR(255) NOT NULL DEFAULT '',
+        `overlay` TINYINT UNSIGNED NOT NULL DEFAULT 55,
+        `accent` VARCHAR(7) NOT NULL DEFAULT '#7c5cff',
+        `headline` VARCHAR(150) NOT NULL DEFAULT '',
+        `tagline` VARCHAR(255) NOT NULL DEFAULT '',
+        `perks` TEXT NULL,
+        `show_perks` TINYINT(1) NOT NULL DEFAULT 1,
+        `updated_at` DATETIME NULL,
+        PRIMARY KEY (`id`),
+        UNIQUE KEY `uq_login_page_branch` (`branch_id`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "746: created login_page_setting\n";
+}
+if (columnExists($m, 'branch', 'is_demo')) {
+    $m->query("UPDATE branch SET school_name = 'SkoolOS Demo Academy' WHERE is_demo = 1 AND school_name = 'SchoolEdge Demo Academy'");
+    if ($m->affected_rows > 0) {
+        echo "746: fixed the demo school's display name
+";
+    }
+    $demoSites = $m->query("SELECT id FROM branch WHERE is_demo = 1 AND name = 'SkoolOS Demo Academy'");
+    while ($demoSite = $demoSites->fetch_assoc()) {
+        $stmt = $m->prepare("INSERT IGNORE INTO login_page_setting (branch_id, layout, bg_image, overlay, accent, headline, tagline, perks, show_perks, updated_at)
+            VALUES (?, 'glass', 'demo-signin.jpg', 45, '#7c5cff', 'Welcome back to SkoolOS Demo Academy', 'Sign in to see results, fees, attendance and messages.', ?, 1, NOW())");
+        $perks = "Report cards and results\nFees and online payments\nAttendance and parent alerts";
+        $stmt->bind_param('is', $demoSite['id'], $perks);
+        $stmt->execute();
+        if ($stmt->affected_rows > 0) {
+            echo "746: demo sign-in page set up for branch {$demoSite['id']}\n";
+        }
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

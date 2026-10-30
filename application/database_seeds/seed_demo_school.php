@@ -17,7 +17,7 @@ $dbConfig = $db['default'];
 $m = new mysqli($dbConfig['hostname'], $dbConfig['username'], $dbConfig['password'], $dbConfig['database']);
 $m->set_charset('utf8');
 
-$BRANCH_NAME = 'SchoolEdge Demo Academy';
+$BRANCH_NAME = 'SkoolOS Demo Academy';
 $SESSION_ID = 4; // confirmed active session, school_year "2025-2026"
 $SCHOOL_YEAR = '2025-2026';
 $DEMO_PASSWORD = 'Demo@2026';
@@ -62,6 +62,9 @@ function resetDemoBranch($m, $branchName)
         $m->query("DELETE FROM `$t` WHERE branch_id = $branchId");
     }
     $m->query("DELETE FROM sections_allocation WHERE class_id IN (SELECT id FROM class WHERE branch_id = $branchId)");
+    if ($m->query("SHOW TABLES LIKE 'login_page_setting'")->num_rows) {
+        $m->query("DELETE FROM login_page_setting WHERE branch_id = $branchId");
+    }
     foreach (['class', 'section', 'student_category', 'staff_department', 'staff_designation', 'card_templete', 'certificates_templete', 'marksheet_template'] as $t) {
         $m->query("DELETE FROM `$t` WHERE branch_id = $branchId");
     }
@@ -71,6 +74,7 @@ function resetDemoBranch($m, $branchName)
     $m->query("DELETE FROM branch WHERE id = $branchId");
     echo "Reset complete.\n";
 }
+resetDemoBranch($m, 'SchoolEdge Demo Academy'); // the pre-rebrand name
 resetDemoBranch($m, $BRANCH_NAME);
 
 // ---------------------------------------------------------------------
@@ -784,6 +788,16 @@ echo "Created transport route with " . count($stoppagePointIds) . " stoppages, a
 // ---------------------------------------------------------------------
 require_once __DIR__ . '/demo_website_content.php';
 echo seed_demo_website($m, $branchId) . "\n";
+
+// sign-in page on the Glass Photo layout (Frontend > Sign-in Page)
+if ($m->query("SHOW TABLES LIKE 'login_page_setting'")->num_rows) {
+    $stmt = $m->prepare("INSERT INTO login_page_setting (branch_id, layout, bg_image, overlay, accent, headline, tagline, perks, show_perks, updated_at)
+        VALUES (?, 'glass', 'demo-signin.jpg', 45, '#7c5cff', 'Welcome back to SkoolOS Demo Academy', 'Sign in to see results, fees, attendance and messages.', ?, 1, NOW())");
+    $perks = "Report cards and results\nFees and online payments\nAttendance and parent alerts";
+    $stmt->bind_param('is', $branchId, $perks);
+    $stmt->execute();
+    echo "Demo sign-in page ready.\n";
+}
 
 // ---------------------------------------------------------------------
 // Featured demo credentials (shown on the public demo page)

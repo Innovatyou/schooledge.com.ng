@@ -165,6 +165,11 @@
                                     <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('setting'); ?></span>
                                 </a>
                             </li>
+                            <li class="<?php if ($sub_page == 'frontend/login_page') echo 'nav-active'; ?>">
+                                <a href="<?php echo base_url('frontend/login_page'); ?>">
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?php echo translate('sign_in_page'); ?></span>
+                                </a>
+                            </li>
                        <?php } if(get_permission('frontend_menu', 'is_view')){ ?>
                             <li class="<?php if ($sub_page == 'frontend/menu' || $sub_page == 'frontend/menu_edit') echo 'nav-active'; ?>">
                                 <a href="<?php echo base_url('frontend/menu'); ?>">
