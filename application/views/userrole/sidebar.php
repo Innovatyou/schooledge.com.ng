@@ -38,7 +38,14 @@
                             <?php endif; ?>
                         </ul>
                     </li>
-<?php } if (is_student_loggedin()) { ?>
+<?php } ?>
+                    <!-- guides -->
+                    <li class="<?php if ($main_menu == 'userguide') echo 'nav-active'; ?>">
+                        <a href="<?=base_url('userguide')?>">
+                            <i class="fas fa-question-circle"></i><span><?=translate('user_guide')?></span>
+                        </a>
+                    </li>
+<?php if (is_student_loggedin()) { ?>
                     <!-- student profile -->
                     <li class="<?php if ($main_menu == 'profile') echo 'nav-active'; ?>">
                         <a href="<?=base_url('profile')?>">

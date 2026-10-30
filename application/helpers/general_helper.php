@@ -768,6 +768,96 @@ function login_page_accent_pair($hex)
     return vsprintf('#%02x%02x%02x', $rgb);
 }
 
+// Who a guide is written for: student, parent, teacher, super (platform owner) or school (other staff).
+function guide_audience()
+{
+    if (is_student_loggedin()) {
+        return 'student';
+    }
+    if (is_parent_loggedin()) {
+        return 'parent';
+    }
+    if (is_superadmin_loggedin()) {
+        return 'super';
+    }
+    return loggedin_role_id() == 3 ? 'teacher' : 'school';
+}
+
+// The guides (config/module_guides.php) this viewer can use, each with 'block' set to
+// the steps written for them. Staff only get guides for modules they can open.
+function module_guides()
+{
+    static $visible = null;
+    if ($visible !== null) {
+        return $visible;
+    }
+    $all = require APPPATH . 'config/module_guides.php';
+    $audience = guide_audience();
+    $visible = array();
+    foreach ($all as $key => $guide) {
+        if (!empty($guide['module']) && !moduleIsEnabled($guide['module'])) {
+            continue;
+        }
+        $allowed = empty($guide['perms']);
+        foreach ($guide['perms'] as $perm) {
+            if ($allowed) break;
+            $allowed = get_permission($perm, 'is_view');
+        }
+        $block = null;
+        if ($audience === 'super') {
+            $block = isset($guide['super']) ? $guide['super'] : (isset($guide['school']) ? $guide['school'] : null);
+        } elseif ($audience === 'student' || $audience === 'parent') {
+            $block = isset($guide[$audience]) ? $guide[$audience] : null;
+        } elseif ($audience === 'teacher' && isset($guide['teacher'])) {
+            $block = $guide['teacher'];
+        } elseif (isset($guide['school']) && $allowed) {
+            // other staff, and teachers who were given extra modules
+            $block = $guide['school'];
+        }
+        if ($block === null) {
+            continue;
+        }
+        $guide['key'] = $key;
+        $guide['block'] = $block + array('steps' => array(), 'tips' => array(), 'faq' => array());
+        $visible[$key] = $guide;
+    }
+    return $visible;
+}
+
+// The guide that explains a page: the longest 'match' path the URI starts with.
+function guide_for_uri($uri)
+{
+    $uri = trim(strtolower($uri), '/');
+    $best = null;
+    $bestLen = -1;
+    foreach (module_guides() as $guide) {
+        foreach ($guide['match'] as $path) {
+            if (($uri === $path || strpos($uri, $path . '/') === 0) && strlen($path) > $bestLen) {
+                $best = $guide;
+                $bestLen = strlen($path);
+            }
+        }
+    }
+    return $best;
+}
+
+// colour family for a guide group (matches the .tone-* classes in dashboard-3d.css)
+function guide_group_tone($group)
+{
+    $tones = array(
+        'Getting started' => 'violet',
+        'Academics' => 'blue',
+        'Students & parents' => 'cyan',
+        'Exams & results' => 'amber',
+        'Finance' => 'mint',
+        'Staff & HR' => 'rose',
+        'Communication' => 'violet',
+        'Facilities' => 'slate',
+        'Website & branding' => 'cyan',
+    );
+    return isset($tones[$group]) ? $tones[$group] : 'violet';
+}
+
 // resolve a template row (or raw value) to a safe, whitelisted design_style
 // falls back to 'classic' when the migration hasn't run yet or the value is missing/invalid
 function document_template_style($template = '')

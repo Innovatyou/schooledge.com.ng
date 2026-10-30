@@ -1,235 +1,107 @@
-<section class="panel">
-	<div class="panel-body">
-		<h3 class="mt-0"><?=translate('user_guide')?></h3>
-		<p class="text-muted">
-			<?php if (is_superadmin_loggedin()) { ?>
-				A quick reference for running the platform: manage schools, subscriptions and system-wide settings from here, or open a school's own dashboard to see things from an administrator's point of view.
-			<?php } else { ?>
-				A quick reference for the everyday tasks of running your school on this system &mdash; admissions, academics, attendance, exams, fees and communication.
+<?php
+// Guide Center: every guide this viewer can use, grouped, searchable, with the
+// school's setup checklist on top for admins.
+$audienceLabel = array('school' => 'your school team', 'teacher' => 'teachers', 'student' => 'students', 'parent' => 'parents', 'super' => 'platform admins');
+$groups = array();
+foreach ($guides as $g) {
+	$groups[$g['group']][] = $g;
+}
+$doneCount = count(array_filter($checklist, function ($c) { return $c['done']; }));
+$setupPct = $checklist ? (int) round($doneCount / count($checklist) * 100) : 0;
+?>
+<?php $this->load->view('dashboard/_d3_assets'); ?>
+<link rel="stylesheet" href="<?php echo base_url('assets/css/guides.css?v=' . filemtime(FCPATH . 'assets/css/guides.css')); ?>">
+<script src="<?php echo base_url('assets/js/guides.js?v=' . filemtime(FCPATH . 'assets/js/guides.js')); ?>"></script>
+
+<div class="d3 gd gd-center">
+	<section class="d3-hero d3-reveal">
+		<div class="d3-hero-copy">
+			<span class="d3-eyebrow"><i class="fas fa-life-ring"></i> Guide Center</span>
+			<h1>Learn <span>SkoolOS</span>, one module at a time</h1>
+			<p class="d3-hero-meta">
+				<span><i class="fas fa-book-open"></i> <?php echo count($guides); ?> step-by-step guides</span>
+				<span><i class="fas fa-user-check"></i> Written for <?php echo $audienceLabel[$audience]; ?></span>
+			</p>
+			<label class="gd-search">
+				<span class="sr-only">Search the guides</span>
+				<i class="fas fa-search"></i>
+				<input type="search" id="gdSearch" placeholder="Search guides, e.g. report card, fees, homework" autocomplete="off">
+				<kbd>/</kbd>
+			</label>
+		</div>
+		<div class="d3-hero-art" aria-hidden="true">
+			<div class="gd-book">
+				<div class="gd-page is-done"><b><span>&#10003;</span> Create classes</b><i></i><i></i></div>
+				<div class="gd-page is-done"><b><span>&#10003;</span> Admit students</b><i></i><i></i></div>
+				<div class="gd-page"><b><span>3</span> Enter exam marks</b><i></i><i></i></div>
+			</div>
+		</div>
+	</section>
+
+	<?php if ($checklist) { ?>
+	<section class="gd-setup d3-reveal" aria-label="School setup checklist">
+		<div class="gd-setup-head">
+			<div class="d3-ring tone-mint" style="--p: <?php echo $setupPct; ?>; width: 150px; height: 150px;">
+				<svg viewBox="0 0 120 120"><circle class="trk" cx="60" cy="60" r="50"/><circle class="bar" cx="60" cy="60" r="50" pathLength="100"/></svg>
+				<div class="d3-ring-val"><b data-count="<?php echo $setupPct; ?>" data-suffix="%">0%</b><small>set up</small></div>
+			</div>
+			<h2><?php echo $doneCount === count($checklist) ? 'Your school is ready' : 'Set up your school'; ?></h2>
+			<p><?php echo $doneCount; ?> of <?php echo count($checklist); ?> done. Ticks update as you go.</p>
+		</div>
+		<ul class="gd-steps">
+			<?php foreach ($checklist as $item) { ?>
+			<li class="<?php echo $item['done'] ? 'is-done' : ''; ?>">
+				<span class="gd-tick" aria-hidden="true"><i class="fas fa-check"></i></span>
+				<span class="gd-what">
+					<b><?php echo $item['label']; ?><span class="sr-only"><?php echo $item['done'] ? ' (done)' : ' (to do)'; ?></span></b>
+					<small><?php echo $item['hint']; ?></small>
+				</span>
+				<span class="gd-links">
+					<?php if ($item['guide']) { ?>
+					<a class="gd-icon-btn" href="<?php echo base_url('userguide/view/' . $item['guide']); ?>" title="Show me how" aria-label="Show me how: <?php echo html_escape($item['label']); ?>"><i class="fas fa-book-open"></i></a>
+					<?php } ?>
+					<a class="gd-icon-btn" href="<?php echo base_url($item['url']); ?>" title="Open" aria-label="Open <?php echo html_escape($item['label']); ?>"><i class="fas fa-arrow-right"></i></a>
+				</span>
+			</li>
 			<?php } ?>
-		</p>
+		</ul>
+	</section>
+	<?php } ?>
 
-		<div class="callout callout-info" style="border-left:4px solid #4099ff;background:#f4f8ff;padding:15px 20px;margin-bottom:25px;border-radius:4px;">
-			<h4 class="mt-0"><i class="fas fa-rocket"></i> Quick Start</h4>
-			<ol class="mb-0">
-				<?php if (is_superadmin_loggedin()) { ?>
-				<li>Create a school under <strong>Branch</strong> and set its basic details.</li>
-				<li>Set up global defaults under <strong>Settings &rarr; Global Settings</strong>.</li>
-				<li>Create roles and assign permissions under <strong>Settings &rarr; Role &amp; Permission</strong>.</li>
-				<li>Open a school from the <strong>Dashboard</strong> branch switcher to configure or support it directly.</li>
-				<?php } else { ?>
-				<li>Finish your school profile under <strong>Settings &rarr; School Settings</strong>.</li>
-				<li>Add <strong>Classes</strong> and <strong>Sections</strong> under Academics.</li>
-				<li>Add teaching and non-teaching staff under <strong>Employee</strong>.</li>
-				<li>Admit students via <strong>Admission</strong>, or promote them from a previous session.</li>
-				<li>Set up fee groups and types, then start collecting payments under <strong>Fees</strong>.</li>
-				<li>Take daily <strong>Attendance</strong> and schedule <strong>Exams</strong> once classes are running.</li>
-				<?php } ?>
-			</ol>
-		</div>
-
-		<div class="panel-group" id="userguide-accordion">
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-admission">
-							<i class="fas fa-user-graduate"></i> Admission &amp; Student Management
-						</a>
-					</h4>
-				</div>
-				<div id="ug-admission" class="accordion-body collapse in">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Reception</strong> logs enquiries and visitor follow-ups before a student formally applies.</li>
-							<li><strong>Admission</strong> registers a new student, assigns them to a class/section and generates their admission number.</li>
-							<li><strong>Student</strong> lists every enrolled student &mdash; use it to edit profiles, view documents, deactivate/transfer a student, or print ID cards.</li>
-							<li><strong>Parents</strong> manages guardian accounts and which children are linked to them for portal access.</li>
-							<li><strong>Student Promotion</strong> moves a whole class up to the next session in one action at year end.</li>
-							<li><strong>Alumni</strong> keeps a record of students who have left or graduated.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-hr">
-							<i class="fas fa-users"></i> Employees &amp; HR
-						</a>
-					</h4>
-				</div>
-				<div id="ug-hr" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Employee</strong> holds every staff profile, their role, department and login access.</li>
-							<li><strong>Payroll</strong>, <strong>Advance Salary</strong> and <strong>Leave</strong> handle monthly pay runs, salary advances and leave requests/approvals.</li>
-							<li><strong>Award</strong> records staff or student recognitions.</li>
-							<li><strong>Certificate</strong> and <strong>Card Manage</strong> generate ID cards and certificates from templates.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-academics">
-							<i class="fas fa-chalkboard-teacher"></i> Academics
-						</a>
-					</h4>
-				</div>
-				<div id="ug-academics" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Classes</strong>, <strong>Sections</strong> and <strong>Subject</strong> define the structure every other module (attendance, exams, fees, timetable) is built on &mdash; set these up first.</li>
-							<li><strong>Timetable</strong> assigns subjects and teachers to periods for each class/section.</li>
-							<li><strong>Live Class</strong> schedules and links online classes.</li>
-							<li><strong>Homework</strong> lets teachers assign and grade take-home work; <strong>Attachments</strong> shares study material and notices with a class.</li>
-							<li><strong>Transfer</strong> moves a student between classes/sections mid-session.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-attendance">
-							<i class="fas fa-calendar-check"></i> Attendance
-						</a>
-					</h4>
-				</div>
-				<div id="ug-attendance" class="accordion-body collapse">
-					<div class="panel-body">
-						<p class="mb-0">Mark daily student attendance by class and section, or staff attendance separately. Attendance feeds directly into the Attendance Report and can trigger automatic SMS/email alerts to parents when enabled.</p>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-exam">
-							<i class="fas fa-file-alt"></i> Examinations
-						</a>
-					</h4>
-				</div>
-				<div id="ug-exam" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Exam</strong> defines exam terms, exam halls/seating and marksheet templates, then records marks.</li>
-							<li><strong>Online Exam</strong> builds question banks and runs exams students take directly on the portal, graded automatically.</li>
-							<li>Once marks are entered, mark sheets and report cards can be generated and published from the same module.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-fees">
-							<i class="fas fa-hand-holding-usd"></i> Fees, Accounting &amp; Wallet
-						</a>
-					</h4>
-				</div>
-				<div id="ug-fees" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Fees</strong> defines fee groups/types per class and collects payments; <strong>Offline Payments</strong> records cash/bank payments made outside the online gateway.</li>
-							<li><strong>Accounting</strong> tracks general income and expenses beyond student fees, with its own reports.</li>
-							<li><strong>Wallet</strong> is the school's prepaid balance used to send SMS and email through the platform &mdash; top it up before running large broadcasts.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-comms">
-							<i class="fas fa-comments"></i> Communication
-						</a>
-					</h4>
-				</div>
-				<div id="ug-comms" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Send SMS/Mail</strong> broadcasts a message to selected students, parents or staff, drawing on the school's wallet balance.</li>
-							<li><strong>Message</strong> is the internal inbox for direct messages between users on the portal.</li>
-							<li><strong>Event</strong> publishes school events and notices to the calendar.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-facilities">
-							<i class="fas fa-school"></i> Facilities
-						</a>
-					</h4>
-				</div>
-				<div id="ug-facilities" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<li><strong>Library</strong> catalogues books and tracks who has what checked out.</li>
-							<li><strong>Hostels</strong> manages hostel rooms and student allocations.</li>
-							<li><strong>Transport</strong> manages routes, vehicles and student pickup assignments.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-reports">
-							<i class="fas fa-chart-bar"></i> Reports
-						</a>
-					</h4>
-				</div>
-				<div id="ug-reports" class="accordion-body collapse">
-					<div class="panel-body">
-						<p>The Reports menu brings together read-only, filterable views for every module: student, fees, accounting, attendance, payroll, leave, exam and inventory reports. Use these instead of the module list views when you need totals, date-range filters, or an export.</p>
-					</div>
-				</div>
-			</div>
-
-			<div class="panel panel-accordion">
-				<div class="panel-heading">
-					<h4 class="panel-title">
-						<a class="accordion-toggle" data-toggle="collapse" data-parent="#userguide-accordion" href="#ug-settings">
-							<i class="fas fa-cogs"></i> Settings
-						</a>
-					</h4>
-				</div>
-				<div id="ug-settings" class="accordion-body collapse">
-					<div class="panel-body">
-						<ul>
-							<?php if (is_superadmin_loggedin()) { ?>
-							<li><strong>Global Settings</strong> control platform-wide defaults: site identity, mail/SMS gateways, payment gateways and language.</li>
-							<li><strong>Role &amp; Permission</strong> defines what each staff role can see and do, per module.</li>
-							<li><strong>Session Settings</strong> manages the academic sessions schools operate under.</li>
-							<?php } else { ?>
-							<li><strong>School Settings</strong> control this school's identity, session, and preferences.</li>
-							<?php } ?>
-							<li><strong>Custom Field</strong> adds extra fields to student/employee forms without any code changes.</li>
-							<li><strong>Translations</strong> edits or adds language wording used throughout the portal.</li>
-							<li><strong>Backup</strong> creates and restores full database backups.</li>
-							<li><strong>Audit Log</strong> shows a history of who changed what, for accountability.</li>
-						</ul>
-					</div>
-				</div>
-			</div>
-
-		</div>
-
-		<p class="text-muted mt-lg mb-0">
-			<i class="fas fa-info-circle"></i> Use the search box in the top bar to jump straight to a student, staff member or page by name. If a menu item mentioned here isn't visible to you, your role may not have permission for it &mdash; check with your administrator.
-		</p>
+	<?php if (count($groups) > 1) { ?>
+	<div class="gd-filter" role="group" aria-label="Filter guides by topic">
+		<button type="button" class="is-on" data-group="all" aria-pressed="true">All <span><?php echo count($guides); ?></span></button>
+		<?php foreach ($groups as $name => $list) { ?>
+		<button type="button" data-group="<?php echo html_escape($name); ?>" aria-pressed="false"><?php echo html_escape($name); ?> <span><?php echo count($list); ?></span></button>
+		<?php } ?>
 	</div>
-</section>
+	<?php } ?>
+
+	<?php foreach ($groups as $name => $list) { $tone = guide_group_tone($name); ?>
+	<section class="gd-group">
+		<h2><?php echo html_escape($name); ?></h2>
+		<div class="gd-cards">
+			<?php foreach ($list as $i => $g) {
+				$search = strtolower($g['title'] . ' ' . $g['group'] . ' ' . strip_tags($g['block']['summary']) . ' ' . implode(' ', array_map(function ($s) { return strip_tags($s[0] . ' ' . $s[1]); }, $g['block']['steps']))); ?>
+			<a class="gd-card tone-<?php echo $tone; ?> d3-reveal" style="--i: <?php echo $i % 4; ?>" data-tilt="7"
+				href="<?php echo base_url('userguide/view/' . $g['key']); ?>"
+				data-group="<?php echo html_escape($g['group']); ?>"
+				data-text="<?php echo html_escape($search); ?>"
+				data-steps="<?php echo count($g['block']['steps']); ?>"
+				data-store="skoolos-guide:<?php echo $audience . ':' . $g['key']; ?>">
+				<span class="gd-card-icon"><i class="fas <?php echo $g['icon']; ?>"></i></span>
+				<h3><?php echo html_escape($g['title']); ?></h3>
+				<p><?php echo $g['block']['summary']; ?></p>
+				<span class="gd-card-foot">
+					<span><?php echo count($g['block']['steps']); ?> steps</span>
+					<span class="gd-meter" aria-hidden="true"><i></i></span>
+					<span class="gd-go">Open <i class="fas fa-arrow-right"></i></span>
+				</span>
+			</a>
+			<?php } ?>
+		</div>
+	</section>
+	<?php } ?>
+
+	<div class="gd-empty" role="status"><i class="fas fa-search"></i> No guide matches that. Try a module name like "fees" or "attendance".</div>
+</div>

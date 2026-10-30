@@ -40,6 +40,9 @@
 
 	<!-- JS Script -->
 	<?php $this->load->view('layout/script.php');?>
+
+	<!-- "Guide" button and drawer for the current page -->
+	<?php $this->load->view('layout/guide_drawer'); ?>
 	
 	<?php
 	$alertclass = "";
