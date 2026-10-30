@@ -18,8 +18,9 @@ $m = new mysqli($dbConfig['hostname'], $dbConfig['username'], $dbConfig['passwor
 $m->set_charset('utf8');
 
 $BRANCH_NAME = 'SkoolOS Demo Academy';
-$SESSION_ID = 4; // confirmed active session, school_year "2025-2026"
-$SCHOOL_YEAR = '2025-2026';
+// the platform's current academic session, so the demo always shows up in it
+$SESSION_ID = (int) $m->query("SELECT session_id FROM global_settings WHERE id = 1")->fetch_assoc()['session_id'];
+$SCHOOL_YEAR = $m->query("SELECT school_year FROM schoolyear WHERE id = $SESSION_ID")->fetch_assoc()['school_year'];
 $DEMO_PASSWORD = 'Demo@2026';
 mt_srand(42); // reproducible demo data across resets
 
