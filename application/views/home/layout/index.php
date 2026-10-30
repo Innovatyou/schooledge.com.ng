@@ -7,6 +7,14 @@ $siteThemeMeta = website_themes()[$siteTheme];
 <html lang="en">
 	<head>
 		<meta charset="UTF-8">
+		<!-- the visitor's light / dark choice (shared with the sign-in page and panel); runs before paint -->
+		<script>
+			(function () {
+				var t;
+				try { t = localStorage.getItem('skoolos-theme'); } catch (e) {}
+				document.documentElement.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
+			})();
+		</script>
 		<meta http-equiv="X-UA-Compatible" content="IE=edge">
 		<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 		<meta name="keyword" content="<?php echo $page_data['meta_keyword']; ?>">
@@ -39,6 +47,7 @@ $siteThemeMeta = website_themes()[$siteTheme];
 		<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=<?php echo $siteThemeMeta['font']; ?>&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap">
 		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/site-themes.css?v=' . filemtime(FCPATH . 'assets/frontend/css/site-themes.css')); ?>">
 		<?php } ?>
+		<link rel="stylesheet" href="<?php echo base_url('assets/frontend/css/site-dark.css?v=' . filemtime(FCPATH . 'assets/frontend/css/site-dark.css')); ?>">
 		<script src="<?php echo base_url('assets/vendor/jquery/jquery.min.js'); ?>"></script>
 		<!-- If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF -->
 		<script type="text/javascript">

@@ -1,0 +1,124 @@
+/* =========================================================
+   School website dark mode, for every template.
+   <html data-theme="dark"> is set before paint by the layout from the
+   visitor's choice (localStorage 'skoolos-theme', shared with the panel
+   and sign-in page). Mostly re-points the colour tokens that
+   theme-modern.css and site-themes.css already use, then covers the
+   hard-coded whites in the older style.css.
+   ========================================================= */
+html[data-theme="dark"] {
+    color-scheme: dark;
+    --thm-surface: #141a2b;
+    --thm-surface-alt: #0e1322;
+    --thm-ink: #e9ecf6;
+    --thm-muted: #a6aec4;
+    --thm-border: rgba(255, 255, 255, .09);
+    --thm-primary-soft: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 22%, #141a2b);
+    --thm-primary-line: color-mix(in srgb, var(--thm-primary, var(--thm-primary-fallback)) 45%, #141a2b);
+    --thm-shadow-soft: 0 8px 25px rgba(0, 0, 0, .35);
+    --thm-shadow-lift: 0 24px 48px rgba(0, 0, 0, .5);
+}
+html[data-theme="dark"] body[class*="site-theme-"] {
+    --bg: #0b0f1c;
+    --surface: #141a2b;
+    --text: #e9ecf6;
+    --muted: #a6aec4;
+    --line: rgba(255, 255, 255, .09);
+    --shadow: 0 24px 60px rgba(0, 0, 0, .5);
+}
+html[data-theme="dark"] body { background: #0b0f1c !important; color: #c9cfe0; }
+html[data-theme="dark"] h1, html[data-theme="dark"] h2, html[data-theme="dark"] h3,
+html[data-theme="dark"] h4, html[data-theme="dark"] h5, html[data-theme="dark"] h6 { color: #f1f3fa; }
+html[data-theme="dark"] p, html[data-theme="dark"] li, html[data-theme="dark"] td, html[data-theme="dark"] label { color: #b4bcd2; }
+html[data-theme="dark"] a:not(.btn):not(.se-btn):not([class*="btn"]) { color: color-mix(in srgb, var(--thm-primary, #8b7bff) 55%, #fff); }
+html[data-theme="dark"] .text-dark, html[data-theme="dark"] .text-black { color: #e9ecf6 !important; }
+html[data-theme="dark"] .text-muted { color: #9aa3ba !important; }
+
+/* page surfaces that style.css paints white or light grey */
+html[data-theme="dark"] .bg-white, html[data-theme="dark"] .bg-light,
+html[data-theme="dark"] .card, html[data-theme="dark"] .panel, html[data-theme="dark"] .modal-content,
+html[data-theme="dark"] .dropdown-menu, html[data-theme="dark"] .list-group-item,
+html[data-theme="dark"] .se-card, html[data-theme="dark"] .se-glass {
+    background-color: #141a2b !important;
+    border-color: rgba(255, 255, 255, .09) !important;
+    color: #c9cfe0;
+}
+html[data-theme="dark"] section, html[data-theme="dark"] .main-container, html[data-theme="dark"] .container-fluid { border-color: rgba(255, 255, 255, .06); }
+html[data-theme="dark"] [style*="background-color: #fff"], html[data-theme="dark"] [style*="background:#fff"], html[data-theme="dark"] [style*="background: #fff"] { background-color: #141a2b !important; }
+html[data-theme="dark"] hr { border-color: rgba(255, 255, 255, .1); }
+
+/* header and menu */
+html[data-theme="dark"] .se-glass-nav, html[data-theme="dark"] .stricky.stricky-fixed { background: rgba(11, 15, 28, .86) !important; border-bottom-color: rgba(255, 255, 255, .08) !important; }
+html[data-theme="dark"] .se-glass-nav .navbar-style3 > li > a.nav-link { color: rgba(255, 255, 255, .85) !important; }
+html[data-theme="dark"] .se-glass-nav .navbar-style3 > li.active > a.nav-link, html[data-theme="dark"] .se-glass-nav .navbar-style3 > li > a.nav-link:hover { color: #fff !important; background: rgba(255, 255, 255, .08); }
+html[data-theme="dark"] .navbar-toggler, html[data-theme="dark"] .navbar-toggler .fa-bars { color: #fff !important; }
+html[data-theme="dark"] .dropdown-menu .dropdown-item { color: #c9cfe0 !important; }
+html[data-theme="dark"] .dropdown-menu .dropdown-item:hover { background: rgba(255, 255, 255, .06) !important; color: #fff !important; }
+html[data-theme="dark"] .navbar-brand img { padding: 4px 8px; border-radius: 10px; background: #fff; }
+@media (max-width: 991px) {
+    html[data-theme="dark"] .navbar-collapse { background: #11172a !important; }
+}
+
+/* forms and tables */
+html[data-theme="dark"] .form-control, html[data-theme="dark"] .form-select, html[data-theme="dark"] select,
+html[data-theme="dark"] textarea, html[data-theme="dark"] input:not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]),
+html[data-theme="dark"] .select2-container--default .select2-selection--single {
+    background-color: #0e1322 !important;
+    border-color: rgba(255, 255, 255, .12) !important;
+    color: #e9ecf6 !important;
+}
+html[data-theme="dark"] .form-control::placeholder, html[data-theme="dark"] textarea::placeholder { color: #7d869e; }
+html[data-theme="dark"] .select2-container--default .select2-selection--single .select2-selection__rendered { color: #e9ecf6; }
+html[data-theme="dark"] .select2-dropdown { background: #141a2b; border-color: rgba(255, 255, 255, .12); color: #e9ecf6; }
+html[data-theme="dark"] .table, html[data-theme="dark"] table { color: #c9cfe0; --bs-table-bg: transparent; --bs-table-color: #c9cfe0; border-color: rgba(255, 255, 255, .09); }
+html[data-theme="dark"] .table > :not(caption) > * > * { background-color: transparent; border-color: rgba(255, 255, 255, .09); color: #c9cfe0; }
+html[data-theme="dark"] .table-striped > tbody > tr:nth-of-type(odd) > * { --bs-table-accent-bg: rgba(255, 255, 255, .03); }
+
+/* keep photos and logos natural; soften pure-white illustrations */
+html[data-theme="dark"] img { filter: none; }
+
+/* ---------- the toggle ---------- */
+.se-theme-toggle { position: relative; display: inline-grid; place-items: center; flex: 0 0 auto; width: 42px; height: 42px; margin-left: 10px; padding: 0; overflow: hidden; border-radius: 13px; border: 1px solid var(--thm-border, #ececf3); background: var(--thm-surface, #fff); color: var(--thm-ink, #14213d); cursor: pointer; box-shadow: 0 6px 16px rgba(20, 33, 61, .08), inset 0 1px 0 rgba(255, 255, 255, .6); transition: transform .2s, box-shadow .2s; }
+.se-theme-toggle:hover { transform: translateY(-2px); box-shadow: 0 12px 22px rgba(20, 33, 61, .14); }
+.se-theme-toggle:focus-visible { outline: 3px solid color-mix(in srgb, var(--thm-primary, #6c55e0) 45%, transparent); outline-offset: 2px; }
+.se-theme-toggle i { position: absolute; font-size: 15px; transition: transform .45s cubic-bezier(.2, .8, .2, 1), opacity .3s; }
+.se-theme-toggle .fa-sun { color: #f59e0b; transform: translateY(26px) rotate(-90deg); opacity: 0; }
+html[data-theme="dark"] .se-theme-toggle { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14); color: #fff; box-shadow: none; }
+html[data-theme="dark"] .se-theme-toggle .fa-moon { transform: translateY(-26px) rotate(90deg); opacity: 0; }
+html[data-theme="dark"] .se-theme-toggle .fa-sun { transform: none; opacity: 1; }
+/* sit at the right end of the menu on desktop, beside the menu button on phones */
+#nav .navbar-brand { order: 0; }
+#nav .se-theme-toggle { order: 2; margin-left: auto; }
+#nav .navbar-toggler { order: 3; margin-left: 8px; }
+#nav .navbar-collapse { order: 4; }
+@media (min-width: 992px) {
+    #nav .navbar-collapse { order: 1; }
+    #nav .se-theme-toggle { order: 2; margin-left: 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .se-theme-toggle i { transition: none; } }
+
+/* ---------- things that paint with the ink colour, which turns light in dark mode ---------- */
+html[data-theme="dark"] .se-topbar { background: #070a14 !important; }
+html[data-theme="dark"] .se-btn.se-btn-ghost { background: rgba(255, 255, 255, .06); color: #e9ecf6; border-color: rgba(255, 255, 255, .14); }
+
+/* ---------- Classic template landing page (landing-modern.css) ---------- */
+html[data-theme="dark"] .modern-landing { --ink: #e9ecf6; --muted: #a6aec4; }
+html[data-theme="dark"] .modern-landing .se-hero { background: radial-gradient(700px 480px at 85% 20%, color-mix(in srgb, var(--violet) 38%, transparent), transparent 70%), radial-gradient(600px 400px at 0% 100%, color-mix(in srgb, var(--mint) 18%, transparent), transparent 70%), #0b0f1c; }
+html[data-theme="dark"] .modern-landing .eyebrow { background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .14); }
+html[data-theme="dark"] .modern-landing .se-btn.ghost { background: rgba(255, 255, 255, .06); color: #e9ecf6; border-color: rgba(255, 255, 255, .14); }
+html[data-theme="dark"] .modern-landing .avatars span { border-color: #0b0f1c; }
+html[data-theme="dark"] .modern-landing .feature-card,
+html[data-theme="dark"] .modern-landing .testimonial-grid article,
+html[data-theme="dark"] .modern-landing .module { background: #141a2b; border-color: rgba(255, 255, 255, .08); box-shadow: 0 12px 30px rgba(0, 0, 0, .35); }
+html[data-theme="dark"] .modern-landing .module:hover { background: #1a2136; border-color: color-mix(in srgb, var(--violet) 45%, transparent); }
+html[data-theme="dark"] .modern-landing .feature-card > span, html[data-theme="dark"] .modern-landing .module > span { background: color-mix(in srgb, var(--violet) 22%, #141a2b); }
+html[data-theme="dark"] .modern-landing .story, html[data-theme="dark"] .modern-landing .testimonials { background: #0e1322; }
+html[data-theme="dark"] .modern-landing .testimonial-grid blockquote { color: #c9cfe0; }
+html[data-theme="dark"] .modern-landing .checks i { background: rgba(16, 185, 129, .18); }
+/* the hero's dashboard picture stays light: it shows the product */
+html[data-theme="dark"] .modern-landing .dashboard h1, html[data-theme="dark"] .modern-landing .dashboard h2, html[data-theme="dark"] .modern-landing .dashboard h3,
+html[data-theme="dark"] .modern-landing .dashboard b, html[data-theme="dark"] .modern-landing .dashboard p,
+html[data-theme="dark"] .modern-landing .float b, html[data-theme="dark"] .modern-landing .float p { color: #14213d; }
+/* the footer falls back to the ink colour for its background; keep it dark */
+html[data-theme="dark"] .se-footer { --thm-ink: #070a14; }
+html[data-theme="dark"] .modern-landing .impact { background: linear-gradient(125deg, #0e1322, color-mix(in srgb, var(--violet) 45%, #0e1322) 55%, var(--violet)); }

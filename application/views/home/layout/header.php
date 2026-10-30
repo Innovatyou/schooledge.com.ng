@@ -44,6 +44,9 @@
 						<img src="<?php echo base_url('uploads/frontend/images/' . $cms_setting['logo'] . img_reload()); ?>" alt="Logo">
 					</a>
 					<!-- Logo Ends -->
+					<button type="button" class="se-theme-toggle" aria-label="Switch to dark mode" aria-pressed="false" title="Light / dark mode">
+						<i class="fas fa-moon"></i><i class="fas fa-sun"></i>
+					</button>
 					<!-- Collapse Button Starts -->
 					<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-controls="mainNav" aria-expanded="false" aria-label="Toggle navigation">
 						<span class="fa fa-bars"></span>
@@ -114,6 +117,26 @@
 	</div>
 	<!-- Navbar Ends -->
 </header>
+<script>
+	// light / dark switch for visitors, remembered in this browser
+	(function () {
+		var root = document.documentElement;
+		var btn = document.querySelector('.se-theme-toggle');
+		if (!btn) return;
+		var label = function () {
+			var dark = root.getAttribute('data-theme') === 'dark';
+			btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+			btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+		};
+		label();
+		btn.addEventListener('click', function () {
+			var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+			root.setAttribute('data-theme', next);
+			try { localStorage.setItem('skoolos-theme', next); } catch (e) {}
+			label();
+		});
+	})();
+</script>
 
 <?php
 $news_list = $this->home_model->getLatestNews($branchID);
