@@ -35,11 +35,24 @@ if (!function_exists('seed_demo_website')) {
         $phone = $branch['mobileno'] ?: '0800 000 0000';
         $address = $branch['address'] ?: 'Lekki Phase 1, Lagos';
 
-        // URL alias: 'demo_academy', unless another branch already owns it
+        // URL alias: 'demo_academy'. When an older or emptier demo school (or a
+        // school that no longer exists) holds it, it moves to demo_academy_<id> so
+        // /demo_academy always shows the demo with real students. A real school
+        // that owns the name keeps it, and this demo falls back to demo_academy_<id>.
         $alias = 'demo_academy';
-        $taken = $m->query("SELECT branch_id FROM front_cms_setting WHERE url_alias = " . $q($alias) . " AND branch_id <> $branchId")->num_rows;
-        if ($taken) {
-            $alias .= '_' . $branchId;
+        $students = function ($id) use ($m) {
+            return (int) $m->query("SELECT COUNT(*) AS n FROM enroll WHERE branch_id = " . (int) $id)->fetch_assoc()['n'];
+        };
+        $owner = $m->query("SELECT fs.branch_id, b.id AS still_there, b.is_demo FROM front_cms_setting fs
+            LEFT JOIN branch b ON b.id = fs.branch_id
+            WHERE fs.url_alias = " . $q($alias) . " AND fs.branch_id <> $branchId")->fetch_assoc();
+        if ($owner) {
+            $stale = empty($owner['still_there']) || ($owner['is_demo'] == 1 && $students($owner['branch_id']) < $students($branchId));
+            if ($stale) {
+                $m->query("UPDATE front_cms_setting SET url_alias = " . $q($alias . '_' . $owner['branch_id']) . " WHERE branch_id = " . (int) $owner['branch_id']);
+            } else {
+                $alias .= '_' . $branchId;
+            }
         }
         $site = function ($path = '') use ($alias) {
             return '/' . $alias . ($path === '' ? '' : '/' . $path);
