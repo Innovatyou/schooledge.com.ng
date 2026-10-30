@@ -1,4 +1,15 @@
 <head>
+	<!-- a person's own light / dark choice wins over the school's default skin; runs before paint -->
+	<script>
+		(function () {
+			var t;
+			try { t = localStorage.getItem('skoolos-theme'); } catch (e) {}
+			if (t !== 'light' && t !== 'dark') return;
+			var h = document.documentElement;
+			h.classList.toggle('dark', t === 'dark');
+			h.classList.toggle('sidebar-light', t !== 'dark');
+		})();
+	</script>
 	<meta charset="UTF-8">
 	<meta name="keywords" content="<?php echo $global_config['institute_name'] ?>">
 	<meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -34,6 +45,10 @@
 	<?php if ($theme_config["border_mode"] == 'false'): ?>
 		<link rel="stylesheet" href="<?php echo base_url('assets/css/skins/square-borders.css?v=' . version_combine());?>">
 	<?php endif; ?>
+
+	<!-- 3D menu, header and title bar -->
+	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@700;800&display=swap">
+	<link rel="stylesheet" href="<?php echo base_url('assets/css/panel-3d.css?v=' . filemtime(FCPATH . 'assets/css/panel-3d.css'));?>">
 
 	<!-- If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF -->
 	<script type="text/javascript">

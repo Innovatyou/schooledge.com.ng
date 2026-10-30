@@ -7,6 +7,9 @@
 		<div class="visible-xs toggle-sidebar-left" data-toggle-class="sidebar-left-opened" data-target="html" data-fire-event="sidebar-left-opened">
 			<i class="fa fa-bars" aria-label="Toggle sidebar"></i>
 		</div>
+		<button type="button" class="visible-xs pn-theme pn-theme-xs" aria-label="Switch to dark mode" aria-pressed="false" title="Light / dark mode">
+			<i class="fas fa-moon"></i><i class="fas fa-sun"></i>
+		</button>
 		<div class="visible-xs toggle-mobile-search" data-toggle-class="mobile-search-open" data-target="#mobileSearchBar">
 			<i class="fa fa-search" aria-label="<?php echo translate('search');?>"></i>
 		</div>
@@ -150,6 +153,12 @@ foreach ($multiClass as $key => $class):
 				</a>
 			</li>
 		<?php } ?>
+			<!-- light / dark mode, remembered per browser (same key as the sign-in page) -->
+			<li>
+				<button type="button" class="header-menu-icon pn-theme" aria-label="Switch to dark mode" aria-pressed="false" title="Light / dark mode">
+					<i class="fas fa-moon"></i><i class="fas fa-sun"></i>
+				</button>
+			</li>
 			<!-- session switcher box -->
 			<li>
 				<a href="#" class="dropdown-toggle header-menu-icon" data-toggle="dropdown">
@@ -326,3 +335,26 @@ foreach($languages as $lang) :
 		</div>
 	</form>
 </div>
+<script type="text/javascript">
+	// light / dark switch: swaps the panel's own skin classes and remembers the choice
+	(function () {
+		var root = document.documentElement;
+		var label = function (btn) {
+			var dark = root.classList.contains('dark');
+			btn.setAttribute('aria-label', dark ? 'Switch to light mode' : 'Switch to dark mode');
+			btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+		};
+		document.querySelectorAll('.pn-theme').forEach(function (btn) {
+			label(btn);
+			btn.addEventListener('click', function () {
+				var dark = !root.classList.contains('dark');
+				root.classList.toggle('dark', dark);
+				root.classList.toggle('sidebar-light', !dark);
+				try { localStorage.setItem('skoolos-theme', dark ? 'dark' : 'light'); } catch (e) {}
+				document.querySelectorAll('.pn-theme').forEach(label);
+				// charts pick their colours when drawn, so redraw pages that have them
+				if (document.querySelector('.d3 canvas, .d3 .d3-chart')) setTimeout(function () { location.reload(); }, 250);
+			});
+		});
+	})();
+</script>
