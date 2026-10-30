@@ -56,6 +56,17 @@ class Home extends Frontend_Controller
             $this->data['home_events'] = $this->home_model->getLatestEventList($branchID, array('limit' => 3));
             $this->data['home_gallery'] = array_slice($this->home_model->getGalleryList($branchID), 0, 6);
         }
+        // sections the school has switched off under Frontend > Setting
+        $hide = array('features' => array('features'), 'welcome' => array('wellcome'), 'services' => array('services'),
+            'teachers' => array('teachers', 'home_teachers'), 'updates' => array('home_news', 'home_events'),
+            'gallery' => array('home_gallery'), 'testimonials' => array('testimonial'));
+        foreach ($hide as $section => $keys) {
+            if (!website_section_on($this->data['cms_setting'], $section)) {
+                foreach ($keys as $key) {
+                    $this->data[$key] = array();
+                }
+            }
+        }
         $this->data['main_contents'] = $this->load->view($homeView, $this->data, true);
         $this->load->view('home/layout/index', $this->data);
     }

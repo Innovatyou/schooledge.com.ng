@@ -3,6 +3,7 @@
 	<header class="main-header se-modern">
 	<!-- Nested Container Starts -->
 	<!-- Top Bar Starts -->
+	<?php if (website_section_on($cms_setting, 'topbar')) { ?>
 		<div class="top-bar se-topbar d-none d-md-block">
 			<div class="container px-md-0">
 			<div class="row">
@@ -33,6 +34,7 @@
 			</div>
 			</div>
 		</div>
+	<?php } ?>
 	<!-- Top Bar Ends -->
 	<!-- Navbar Starts -->
 		<div class="stricky se-glass-nav" id="strickyMenu" style="--se-menu-color: <?php echo $cms_setting['menu_color'] ?>;">
@@ -140,7 +142,7 @@
 
 <?php
 $news_list = $this->home_model->getLatestNews($branchID);
-if (!empty($news_list)) {
+if (!empty($news_list) && website_section_on($cms_setting, 'news_ticker')) {
 	$url_alias = $cms_setting['url_alias'];
 	?>
 <div class="latest--news">

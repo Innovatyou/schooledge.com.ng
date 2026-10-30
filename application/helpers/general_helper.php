@@ -699,6 +699,37 @@ function website_themes()
     );
 }
 
+// Parts of a school website that can be hidden (front_cms_setting.hidden_sections, a JSON list).
+function website_sections()
+{
+    return array(
+        'topbar' => array('Top info bar', 'Opening hours, email, phone and login link above the menu.'),
+        'news_ticker' => array('Latest news strip', 'The scrolling headlines under the menu.'),
+        'hero_stats' => array('Numbers in the welcome banner', 'Students, teachers and classes counts at the top of the home page.'),
+        'features' => array('Why choose us', 'The feature cards on the home page.'),
+        'welcome' => array('Welcome / about', 'The welcome message and photo.'),
+        'statistics' => array('Numbers band', 'The "in numbers" counters section.'),
+        'services' => array('Programmes', 'The programmes / services list.'),
+        'teachers' => array('Meet the team', 'Teacher profiles on the home page.'),
+        'updates' => array('News & events', 'Latest news and upcoming events on the home page.'),
+        'gallery' => array('Gallery', 'Photo gallery on the home page.'),
+        'testimonials' => array('Testimonials', 'What parents and students say.'),
+        'cta' => array('Call to action', 'The closing admission banner.'),
+    );
+}
+
+// is a website section switched on for this school? (everything shows until a school hides it)
+function website_section_on($setting, $key)
+{
+    static $cache = array();
+    $raw = is_array($setting) && isset($setting['hidden_sections']) ? (string) $setting['hidden_sections'] : '';
+    if (!isset($cache[$raw])) {
+        $list = json_decode($raw, true);
+        $cache[$raw] = is_array($list) ? $list : array();
+    }
+    return !in_array($key, $cache[$raw], true);
+}
+
 // whitelist a stored theme value (or a front_cms_setting row) to a known template key
 function website_theme($setting = '')
 {

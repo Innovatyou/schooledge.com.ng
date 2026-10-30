@@ -1877,4 +1877,14 @@ if (columnExists($m, 'branch', 'is_demo')) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 749: schools can hide parts of their public website
+// (front_cms_setting.hidden_sections, a JSON list). Nothing is hidden
+// until a school switches a section off under Frontend > Setting.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'front_cms_setting') && !columnExists($m, 'front_cms_setting', 'hidden_sections')) {
+    $m->query("ALTER TABLE `front_cms_setting` ADD `hidden_sections` TEXT NULL");
+    echo "749: added front_cms_setting.hidden_sections\n";
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

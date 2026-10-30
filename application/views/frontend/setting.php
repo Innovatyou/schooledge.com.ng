@@ -160,6 +160,37 @@
 						</div>
 					</div>
 
+					<?php if (array_key_exists('hidden_sections', $setting)) { ?>
+					<div class="form-group">
+						<label class="col-md-3 control-label">Show on website</label>
+						<div class="col-md-9">
+							<style type="text/css">
+								.ws-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px; }
+								.ws-item { position: relative; display: flex; align-items: flex-start; gap: 12px; margin: 0; padding: 12px 14px; border-radius: 12px; border: 1px solid rgba(130, 140, 170, .25); cursor: pointer; font-weight: normal; transition: border-color .2s, background .2s; }
+								.ws-item:hover { border-color: rgba(124, 92, 255, .5); }
+								.ws-item input { position: absolute; opacity: 0; pointer-events: none; }
+								.ws-switch { position: relative; flex: 0 0 38px; width: 38px; height: 22px; margin-top: 1px; border-radius: 999px; background: #cfd4e2; transition: background .2s; }
+								.ws-switch::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0, 0, 0, .2); transition: transform .2s; }
+								.ws-item input:checked + .ws-switch { background: linear-gradient(120deg, #7c5cff, #4f8cff); }
+								.ws-item input:checked + .ws-switch::after { transform: translateX(16px); }
+								.ws-item input:focus-visible + .ws-switch { box-shadow: 0 0 0 3px rgba(124, 92, 255, .35); }
+								.ws-item b { display: block; font-size: 13px; }
+								.ws-item small { display: block; margin-top: 2px; color: #8a91a8; font-size: 11.5px; line-height: 1.4; }
+							</style>
+							<div class="ws-grid">
+							<?php foreach (website_sections() as $key => $meta) { $on = website_section_on($setting, $key); ?>
+								<label class="ws-item">
+									<input type="checkbox" name="show_sections[]" value="<?php echo $key; ?>"<?php echo $on ? ' checked' : ''; ?>>
+									<span class="ws-switch" aria-hidden="true"></span>
+									<span><b><?php echo $meta[0]; ?></b><small><?php echo $meta[1]; ?></small></span>
+								</label>
+							<?php } ?>
+							</div>
+							<p class="help-block mt-sm">Switch off anything you don't want visitors to see. Sections with no content stay hidden anyway.</p>
+						</div>
+					</div>
+					<?php } ?>
+
 					<div class="row theme_option">
 						<label class="col-md-3 control-label">Theme <span class="required">*</span></label>
 						<div class="col-md-6">

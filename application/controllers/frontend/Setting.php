@@ -109,6 +109,11 @@ class Setting extends Admin_Controller
                     'pinterest_url' => $this->input->post('pinterest_url'),
                     'instagram_url' => $this->input->post('instagram_url'),
                 );
+                // website sections the school switched off (migration 749)
+                if ($this->db->field_exists('hidden_sections', 'front_cms_setting')) {
+                    $shown = (array) $this->input->post('show_sections');
+                    $cms_setting['hidden_sections'] = json_encode(array_values(array_diff(array_keys(website_sections()), $shown)));
+                }
                 // upload logo
                 if (isset($_FILES["logo"]) && !empty($_FILES["logo"]['name'])) {
                     $imageNmae = $_FILES['logo']['name'];

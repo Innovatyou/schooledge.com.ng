@@ -60,7 +60,7 @@ $hero = array(
 	'btn1' => $lead['btn1'] ? $lead['btn1'] : ($admissionOpen ? array('Apply for admission', $siteUrl('admission')) : array('Contact us', $siteUrl('contact'))),
 	'btn2' => $lead['btn2'] ? $lead['btn2'] : array('About our school', $siteUrl('about')),
 	'photos' => $heroPhotos,
-	'counters' => $counters,
+	'counters' => website_section_on($cms_setting, 'hero_stats') ? $counters : array(),
 	'admission' => $admissionOpen,
 	'phone' => $cms_setting['mobile_no'],
 	'url' => $siteUrl,
@@ -118,7 +118,7 @@ $hero = array(
 	</section>
 	<?php } ?>
 
-	<?php if (!empty($counters)) { ?>
+	<?php if (!empty($counters) && website_section_on($cms_setting, 'statistics')) { ?>
 	<section class="st-stats">
 		<div class="container">
 			<div class="st-stats-grid">
@@ -275,7 +275,8 @@ $hero = array(
 	</section>
 	<?php } } ?>
 
-	<?php $ctaEl = !empty($cta_box['elements']) ? json_decode($cta_box['elements'], true) : array(); ?>
+	<?php if (website_section_on($cms_setting, 'cta')) {
+	$ctaEl = !empty($cta_box['elements']) ? json_decode($cta_box['elements'], true) : array(); ?>
 	<section class="st-cta">
 		<div class="container">
 			<div class="st-cta-card st-reveal">
@@ -290,4 +291,5 @@ $hero = array(
 			</div>
 		</div>
 	</section>
+	<?php } ?>
 </main>
