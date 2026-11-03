@@ -242,8 +242,8 @@ $config['search_index'] = array(
         'permission' => array('multiple_import', 'is_add'),
     ),
     array(
-        'label' => 'import_old_students',
-        'url'   => 'student/import_old',
+        'label' => 'import_all_students',
+        'url'   => 'student/import_all',
         'section' => 'admission',
         'permission' => array('multiple_import', 'is_add'),
     ),

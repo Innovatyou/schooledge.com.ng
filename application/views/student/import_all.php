@@ -5,14 +5,15 @@
 		<?php echo form_open_multipart($this->uri->uri_string(), array('class' => 'form-horizontal form-bordered validate')); ?>
 			<header class="panel-heading">
 				<h4 class="panel-title">
-					<i class="fas fa-user-graduate"></i> <?=translate('import_old_students')?>
+					<i class="fas fa-users"></i> <?=translate('import_all_students')?>
 				</h4>
 			</header>
 			<div class="panel-body">
 			<?php if ($report) { ?>
 				<?php if (!empty($report['file_error'])) { ?>
 				<div class="alert alert-danger"><i class="fas fa-times-circle"></i> <?=html_escape($report['file_error'])?></div>
-				<?php } elseif (!empty($report['errors'])) { ?>
+				<?php } ?>
+				<?php if (!empty($report['errors'])) { ?>
 				<div class="alert alert-danger">
 					<strong><i class="fas fa-times-circle"></i> Nothing was imported.</strong>
 					<?=count($report['errors'])?> of <?=$report['total']?> rows need fixing. Correct them in your file and upload it again.
@@ -29,39 +30,56 @@
 				</div>
 				<?php } elseif ($report['imported'] > 0) { ?>
 				<div class="alert alert-success">
-					<strong><i class="fas fa-check-circle"></i> <?=$report['imported']?> old student<?=$report['imported'] == 1 ? '' : 's'?> imported.</strong>
-					Find them under <a href="<?=base_url('alumni/index')?>"><b>Alumni › Manage Alumni</b></a> by choosing their class and last session.
+					<strong><i class="fas fa-check-circle"></i> <?=$report['imported']?> student<?=$report['imported'] == 1 ? '' : 's'?> imported.</strong>
+					See them in <a href="<?=base_url('student/view')?>"><b>Student Details › Student List</b></a>. Print their usernames and passwords from
+					<a href="<?=base_url('student/login_credential_reports')?>"><b>Reports › Student › Login Credential</b></a>.
 				</div>
 				<?php } ?>
 				<?php if (!empty($report['skipped'])) { ?>
 				<div class="alert alert-warning">
-					<strong><?=count($report['skipped'])?> row<?=count($report['skipped']) == 1 ? '' : 's'?> skipped</strong> because the admission number is already in the school:
+					<strong><?=count($report['skipped'])?> row<?=count($report['skipped']) == 1 ? '' : 's'?> skipped</strong> because the student is already in the school:
 					<?=html_escape(implode(', ', array_slice($report['skipped'], 0, 10)))?><?=count($report['skipped']) > 10 ? ' and ' . (count($report['skipped']) - 10) . ' more' : ''?>.
 				</div>
 				<?php } ?>
 			<?php } ?>
 				<div class="form-group mt-md">
 					<div class="col-md-12 mb-md">
-						<a class="btn btn-default pull-right" href="<?=base_url('student/import_old_template')?>">
+						<a class="btn btn-default pull-right" href="<?=base_url('student/import_all_template')?>">
 							<i class="fas fa-file-download"></i> Download Template
 						</a>
-						<p class="mb-none">Bring in all your former students at once: every class and every past session in one file. They are added as <b>alumni</b>, so they don't appear in current class lists, attendance or fees, and don't count towards your plan's student limit.</p>
+						<p class="mb-none">Just joined SkoolOS? Bring in your whole school at once: every class and section in one spreadsheet, instead of admitting students one by one.</p>
 					</div>
 					<div class="col-md-12">
 						<div class="alert alert-subl">
 							<strong>How to fill the template :</strong><br/>
 							1. Download the template and open it in Excel or Google Sheets. Replace the two example rows with your students, one per row.<br/>
-							2. <b>AdmissionNo</b>, <b>FirstName</b>, <b>LastName</b>, <b>Class</b> and <b>LastSession</b> are required. Every other column can be left blank.<br/>
-							3. <b>Class</b> and <b>Section</b> are the class the student was last in. Use the names listed below. A blank Section means the class's first section.<br/>
-							4. <b>LastSession</b> is the student's final session, e.g. <?=(date('Y') - 2) . '-' . (date('Y') - 1)?> (2019/2020 or just 2020 also work).<br/>
-							5. <b>Status</b> is Graduated or Left. Blank means Graduated.<br/>
-							6. Write dates as DD/MM/YYYY, e.g. 14/03/2003. <b>Gender</b> is Male or Female.<br/>
-							7. Students who share a <b>GuardianPhone</b> are linked to the same guardian.<br/>
-							8. Save as <b>CSV</b> (File › Save As › CSV) and upload it below. The whole file is checked first, so if any row has a problem nothing is saved and you'll see which lines to fix. Admission numbers already in the school are skipped, so you can safely upload the same file again.<br/>
-							9. Old students and their guardians get no working login. Their records are kept for history, transcripts and alumni contact only.
+							2. Only <b>FirstName</b>, <b>LastName</b> and <b>Class</b> are required<?=$rules['auto_admission_no'] ? '' : ', plus <b>AdmissionNo</b>'?>. Every other column can be left blank.<br/>
+							3. <b>Class</b> and <b>Section</b> must match the names listed below. A blank Section means the class's first section.<br/>
+							4. <?=$rules['auto_admission_no'] ? 'A blank <b>AdmissionNo</b> is given the next number automatically. A blank' : 'A blank'?> <b>Roll</b> is given the next number in the class.<br/>
+							5. Write dates as DD/MM/YYYY, e.g. 14/03/2012. A blank AdmissionDate means today. <b>Gender</b> is Male or Female. <b>Category</b> is optional, e.g. Day or Boarding; new ones are created.<br/>
+							6. Brothers and sisters with the same <b>GuardianPhone</b> share one parent account.<br/>
+							7. Save as <b>CSV</b> (File › Save As › CSV) and upload it below. The whole file is checked first, so if any row has a problem nothing is saved and you'll see which lines to fix. Students already in the school (same admission number, or same name in the same class) are skipped, so you can safely upload the same file again.
 						</div>
 					</div>
 				</div>
+				<div class="form-group">
+					<label class="control-label col-md-3">Logins</label>
+					<div class="col-md-6">
+						<p class="form-control-static">
+							Students: username <b><?=html_escape($rules['stu_prefix'])?></b> + their ID, password <b><?=$rules['stu_password'] !== '' ? html_escape($rules['stu_password']) : 'their admission number'?></b>.<br/>
+							Parents: username <b><?=html_escape($rules['grd_prefix'])?></b> + their ID, password <b><?=$rules['grd_password'] !== '' ? html_escape($rules['grd_password']) : 'their phone number'?></b>.<br/>
+							<span class="text-muted">Change these under School Settings before importing.</span>
+						</p>
+					</div>
+				</div>
+			<?php if ($rules['student_places'] !== null) { ?>
+				<div class="form-group">
+					<label class="control-label col-md-3">Plan</label>
+					<div class="col-md-6">
+						<p class="form-control-static">Room for <b><?=$rules['student_places']?></b> more students and <b><?=$rules['parent_places']?></b> more parents on your plan.</p>
+					</div>
+				</div>
+			<?php } ?>
 			<?php if (is_superadmin_loggedin()) { ?>
 				<div class="form-group">
 					<label class="control-label col-md-3"><?=translate('branch')?> <span class="required">*</span></label>
@@ -103,7 +121,7 @@
 			<?php } elseif (!is_superadmin_loggedin()) { ?>
 				<div class="form-group">
 					<div class="col-md-offset-3 col-md-6">
-						<div class="alert alert-warning mb-none">Create your classes first under <a href="<?=base_url('classes')?>"><b>Class & Section</b></a>; old students are matched to them by name.</div>
+						<div class="alert alert-warning mb-none">Create your classes and sections first under <a href="<?=base_url('classes')?>"><b>Class & Section</b></a>; students are matched to them by name.</div>
 					</div>
 				</div>
 			<?php } ?>

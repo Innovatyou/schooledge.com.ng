@@ -403,14 +403,16 @@ class Student extends Admin_Controller
         $this->load->view('layout/index', $this->data);
     }
 
-    /* one spreadsheet of former students (graduated or left) across every class and session */
-    public function import_old()
+
+    /* one spreadsheet of a school's current students across every class and section */
+    public function import_all()
     {
         if (!get_permission('multiple_import', 'is_add')) {
             access_denied();
         }
-        $this->load->model('old_student_import_model');
+        $this->load->model('student_bulk_import_model');
         $branchID = $this->application_model->get_branch_id();
+        $rules = $this->student_bulk_import_model->getRules($branchID);
 
         if (isset($_POST['save'])) {
             // set up rules only for what's missing; run() fails when there are none, so check directly
@@ -425,30 +427,38 @@ class Student extends Admin_Controller
                 $this->form_validation->run();
             } else {
                 set_time_limit(300);
-                $rows = $this->old_student_import_model->readFile($_FILES['userfile']['tmp_name']);
+                $rows = $this->student_bulk_import_model->readFile($_FILES['userfile']['tmp_name']);
                 if (is_string($rows)) {
                     $this->data['report'] = array('file_error' => $rows);
                 } else {
-                    $report = $this->old_student_import_model->validate($rows, $branchID);
+                    $report = $this->student_bulk_import_model->validate($rows, $branchID, $rules);
                     $report['total'] = count($rows);
                     $report['imported'] = 0;
                     if (empty($report['errors']) && !empty($report['ready'])) {
-                        $imported = $this->old_student_import_model->import($report['ready'], $branchID);
-                        if ($imported === false) {
-                            $report['file_error'] = 'Saving failed and nothing was imported. Please try again.';
+                        $newParents = $this->student_bulk_import_model->countNewParents($report['ready'], $branchID);
+                        if ($rules['student_places'] !== null && count($report['ready']) > $rules['student_places']) {
+                            $report['file_error'] = 'Your plan has room for ' . $rules['student_places'] . ' more students but the file has ' . count($report['ready']) . '. Upgrade your plan under Subscription, or split the file. Nothing was imported.';
+                        } elseif ($rules['parent_places'] !== null && $newParents > $rules['parent_places']) {
+                            $report['file_error'] = 'Your plan has room for ' . $rules['parent_places'] . ' more parents but the file would add ' . $newParents . '. Upgrade your plan under Subscription, or split the file. Nothing was imported.';
                         } else {
-                            $report['imported'] = $imported;
+                            $imported = $this->student_bulk_import_model->import($report['ready'], $branchID, $rules);
+                            if ($imported === false) {
+                                $report['file_error'] = 'Saving failed and nothing was imported. Please try again.';
+                            } else {
+                                $report['imported'] = $imported;
+                                $rules = $this->student_bulk_import_model->getRules($branchID);
+                            }
                         }
                     }
                     $this->data['report'] = $report;
                 }
             }
         }
-        $this->data['classes'] = $this->old_student_import_model->getClassList($branchID);
-        $this->data['columns'] = $this->old_student_import_model->columns;
-        $this->data['title'] = translate('import_old_students');
+        $this->data['rules'] = $rules;
+        $this->data['classes'] = $this->student_bulk_import_model->getClassList($branchID);
+        $this->data['title'] = translate('import_all_students');
         $this->data['branch_id'] = $branchID;
-        $this->data['sub_page'] = 'student/import_old';
+        $this->data['sub_page'] = 'student/import_all';
         $this->data['main_menu'] = 'admission';
         $this->data['headerelements'] = array(
             'css' => array(
@@ -461,16 +471,16 @@ class Student extends Admin_Controller
         $this->load->view('layout/index', $this->data);
     }
 
-    /* the old students template, with example rows using the school's own classes */
-    public function import_old_template()
+    /* the import template, with example rows using the school's own classes */
+    public function import_all_template()
     {
         if (!get_permission('multiple_import', 'is_add')) {
             access_denied();
         }
-        $this->load->model('old_student_import_model');
+        $this->load->model('student_bulk_import_model');
         $this->load->helper('download');
-        $csv = $this->old_student_import_model->templateCsv($this->application_model->get_branch_id());
-        force_download('old_students_template.csv', $csv);
+        $csv = $this->student_bulk_import_model->templateCsv($this->application_model->get_branch_id());
+        force_download('students_import_template.csv', $csv);
     }
 
     /* showing disable authentication student list */

@@ -3,13 +3,6 @@
 	<div class="col-md-12">
 		<section class="panel">
 			<header class="panel-heading">
-			<?php if (get_permission('multiple_import', 'is_add')) { ?>
-				<div class="panel-btn">
-					<a href="<?=base_url('student/import_old')?>" class="btn btn-default btn-circle">
-						<i class="fas fa-file-import"></i> <?=translate('import_old_students')?>
-					</a>
-				</div>
-			<?php } ?>
 				<h4 class="panel-title"><?php echo translate('select_ground'); ?></h4>
 			</header>
 			<?php echo form_open($this->uri->uri_string(), array('class' => 'validate'));?>

@@ -350,9 +350,9 @@
                                     <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('multiple_import')?></span>
                                 </a>
                             </li>
-                            <li class="<?php if ($sub_page == 'student/import_old') echo 'nav-active';?>">
-                                <a href="<?=base_url('student/import_old')?>">
-                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('import_old_students')?></span>
+                            <li class="<?php if ($sub_page == 'student/import_all') echo 'nav-active';?>">
+                                <a href="<?=base_url('student/import_all')?>">
+                                    <span><i class="fas fa-caret-right" aria-hidden="true"></i><?=translate('import_all_students')?></span>
                                 </a>
                             </li>
                         <?php } if(get_permission('student_category', 'is_view')){ ?>
