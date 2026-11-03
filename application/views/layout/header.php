@@ -49,6 +49,7 @@
 	<!-- 3D menu, header and title bar -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Sora:wght@700;800&display=swap">
 	<link rel="stylesheet" href="<?php echo base_url('assets/css/panel-3d.css?v=' . filemtime(FCPATH . 'assets/css/panel-3d.css'));?>">
+	<link rel="stylesheet" href="<?php echo base_url('assets/css/panel-dark.css?v=' . filemtime(FCPATH . 'assets/css/panel-dark.css'));?>">
 
 	<!-- If user have enabled CSRF proctection this function will take care of the ajax requests and append custom header for CSRF -->
 	<script type="text/javascript">

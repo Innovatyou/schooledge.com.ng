@@ -1,0 +1,115 @@
+/* One dark surface: in dark mode every background (top bar, page header,
+   content area, panels, inputs, menus, modals, dashboard and guide cards)
+   uses the sidebar colour, --pn-side, so the whole screen reads as one sheet.
+   Panels and fields are told apart by their borders instead of by shade.
+   Loaded after panel-3d.css. */
+html.dark {
+    --pn-card: var(--pn-side);
+    --pn-line: rgba(255, 255, 255, .09);
+}
+html.dark body .d3 { --d3-card: var(--pn-side); --d3-line: rgba(255, 255, 255, .09); }
+html.dark body .gd, html.dark body .gd-drawer, html.dark body .gd-fab { --gd-card: var(--pn-side); --gd-line: rgba(255, 255, 255, .09); }
+
+html.dark .content-body,
+html.dark .inner-wrapper,
+html.dark section[role="main"],
+html.dark .page-header,
+html.dark .image-content-center,
+html.dark .dropify-wrapper,
+html.dark .dropify-wrapper .dropify-preview,
+html.dark .daterangepicker,
+html.dark .daterangepicker .calendar-table,
+html.dark .session-top-hig,
+html.dark .panel-body.bg-attend,
+html.dark .note-editor.note-frame .note-editing-area .note-editable,
+html.dark .img-thumbnail,
+html.dark .thumbnail,
+html.dark .prog-subl,
+html.dark .popover,
+html.dark .invoice-summary ul.amounts li,
+html.dark .invoice-items td.group,
+html.dark .mobile-search-bar,
+html.dark .header,
+html.dark .header .logo-env,
+html.dark .header .header-right,
+html.dark .header .input-search input,
+html.dark .form-control,
+html.dark .form-control[readonly],
+html.dark .input-group-addon,
+html.dark .fileupload .uneditable-input,
+html.dark .btn-default,
+html.dark .header-menu .header-menubox,
+html.dark .userbox .dropdown-menu,
+html.dark .panel,
+html.dark .panel-heading,
+html.dark .panel-body,
+html.dark .panel-footer,
+html.dark .tab-content,
+html.dark .panel-group .panel-accordion .panel,
+html.dark .toggle > label,
+html.dark .modal-content,
+html.dark .white-popup-block,
+html.dark .dialog,
+html.dark .table > thead > tr > th,
+html.dark .table > thead > tr > td,
+html.dark .datepicker-dropdown,
+html.dark .datepicker.datepicker-primary,
+html.dark .select2-container--bootstrap .select2-selection,
+html.dark .select2-container--bootstrap .select2-dropdown,
+html.dark .select2-container--bootstrap .select2-choices .select2-search-field input,
+html.dark .select2-container--bootstrap .select2-choice,
+html.dark .select2-container--bootstrap .select2-choices,
+html.dark .select2-container--bootstrap .select2-search--dropdown .select2-search__field,
+html.dark .note-editor .note-toolbar,
+html.dark .note-editor .note-statusbar,
+html.dark .note-editor .note-editable,
+html.dark .md-editor > .md-header,
+html.dark .md-editor .md-footer,
+html.dark .md-editor > .md-preview,
+html.dark .md-editor > textarea,
+html.dark .bootstrap-tagsinput,
+html.dark .bootstrap-timepicker-widget,
+html.dark .bootstrap-timepicker-widget table td input,
+html.dark .colorpicker,
+html.dark .multiselect-container,
+html.dark .invoice table.table > thead:first-child > tr > th,
+html.dark .fc .fc-toolbar .fc-button,
+html.dark .timeline .tm-items > li .tm-box,
+html.dark .timeline .tm-title,
+html.dark .timeline.timeline-simple .tm-body .tm-title,
+html.dark .search-content .search-control-wrapper,
+html.dark .search-content .search-toolbar,
+html.dark,
+html.dark body,
+html.dark.boxed .content-body,
+html.dark .pagination > li > a,
+html.dark .pagination > li > span,
+html.dark .dropdown-menu,
+html.dark .whatsapp-popup .popup-content,
+html.dark .whatsapp-popup .whatsapp-content ul li,
+html.dark .whatsapp-popup .content-footer {
+    background-color: var(--pn-side) !important;
+}
+html.dark .header,
+html.dark .page-header { background: var(--pn-side) !important; }
+
+/* edges that used to come from the shade difference */
+html.dark .panel { border: 1px solid var(--pn-line) !important; box-shadow: none !important; }
+html.dark .panel-heading { border-bottom-color: var(--pn-line) !important; }
+html.dark .panel-footer { border-top-color: var(--pn-line) !important; }
+html.dark .form-control,
+html.dark .input-group-addon,
+html.dark .btn-default,
+html.dark .select2-container--bootstrap .select2-selection,
+html.dark .bootstrap-tagsinput,
+html.dark .note-editor.note-frame,
+html.dark .dropify-wrapper { border-color: rgba(255, 255, 255, .14) !important; }
+html.dark .dropdown-menu,
+html.dark .userbox .dropdown-menu,
+html.dark .header-menu .header-menubox,
+html.dark .modal-content,
+html.dark .popover,
+html.dark .select2-container--bootstrap .select2-dropdown { border: 1px solid rgba(255, 255, 255, .12) !important; box-shadow: 0 18px 40px rgba(0, 0, 0, .5) !important; }
+html.dark .table > thead > tr > th,
+html.dark .table > tbody > tr > td { border-color: var(--pn-line) !important; }
+html.dark .sidebar-left .nano { box-shadow: none !important; }
