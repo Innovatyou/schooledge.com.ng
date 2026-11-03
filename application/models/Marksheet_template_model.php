@@ -115,25 +115,13 @@ class Marksheet_template_model extends MY_Model
                 $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" height="' . $photo_size . '">';
                 $body = str_replace($tag, $photo, $body);
             } else if ($field == 'logo') {
-                if (!empty($template['logo'])) {
-                    $logo_ph = '<img src="' . base_url('uploads/marksheet/' . $template['logo']) . '">';
-                    $body = str_replace($tag, $logo_ph, $body);
-                }
+                $body = str_replace($tag, document_logo_html($template, isset($template['branch_id']) ? $template['branch_id'] : 0, 64, 'marksheet'), $body);
             } else if ($field == 'left_signature') {
-                if (!empty($template['left_signature'])) {
-                    $signature_ph = '<img src="' . base_url('uploads/marksheet/' . $template['left_signature']) . '">';
-                    $body = str_replace($tag, $signature_ph, $body);
-                }
+                $body = str_replace($tag, document_signature_html($template, 44, 'left_signature', 'marksheet'), $body);
             } else if ($field == 'middle_signature') {
-                if (!empty($template['middle_signature'])) {
-                    $signature_ph = '<img src="' . base_url('uploads/marksheet/' . $template['middle_signature']) . '">';
-                    $body = str_replace($tag, $signature_ph, $body);
-                }
+                $body = str_replace($tag, document_signature_html($template, 44, 'middle_signature', 'marksheet'), $body);
             } else if ($field == 'right_signature') {
-                if (!empty($template['right_signature'])) {
-                    $signature_ph = '<img src="' . base_url('uploads/marksheet/' . $template['right_signature']) . '">';
-                    $body = str_replace($tag, $signature_ph, $body);
-                }
+                $body = str_replace($tag, document_signature_html($template, 44, 'right_signature', 'marksheet'), $body);
             } else if ($field == 'present_address') {
                 $body = str_replace($tag, $userDetails['current_address'], $body);
             } else if ($field == 'academic_session') {
@@ -176,10 +164,11 @@ class Marksheet_template_model extends MY_Model
             } else if ($field == 'psychomotor_ratings') {
                 $body = str_replace($tag, $this->psychomotorRatingsTable($userDetails, $extendsData), $body);
             } else {
-                $body = str_replace($tag, $userDetails[$field], $body);
+                $body = str_replace($tag, isset($userDetails[$field]) ? $userDetails[$field] : '', $body);
             }
         }
-        return $body;
+        // blank any tag with no value (no session name yet, no print date...)
+        return document_strip_tags($body, $tags);
     }
 
     public function getTemplate($templateID = '', $branchID = '')

@@ -48,3 +48,5 @@
 	<?=$this->card_manage_model->admitCardTagsReplace($userID['id'], $template, $print_date, $exam_id)?>
 </div>
 
+
+<?php $this->load->view('layout/document_fit'); ?>

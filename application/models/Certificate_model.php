@@ -180,6 +180,9 @@ class Certificate_model extends MY_Model
         } else if ($roleID == 2) {
             $userDetails = $this->getStaff($userID);
         }
+        if (empty($userDetails)) {
+            return '';
+        }
         $arr = array('{', '}');
         foreach ($tags as $tag) {
             $field = str_replace($arr, '', $tag);
@@ -188,19 +191,13 @@ class Certificate_model extends MY_Model
                     $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" width="' . $photo_size . '">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
-                    if (!empty($templete['logo'])) {
-                        $logo_ph = '<img src="' . base_url('uploads/certificate/' . $templete['logo']) . '">';
-                        $body = str_replace($tag, $logo_ph, $body);
-                    }
+                    $body = str_replace($tag, document_logo_html($templete, $userDetails['branch_id'], 80), $body);
                 } else if ($field == 'signature') {
-                    if (!empty($templete['signature'])) {
-                        $signature_ph = '<img src="' . base_url('uploads/certificate/' . $templete['signature']) . '">';
-                        $body = str_replace($tag, $signature_ph, $body);
-                    }
+                    $body = str_replace($tag, document_signature_html($templete, 50), $body);
                 } else if ($field == 'qr_code') {
                     if (!empty($templete['qr_code'])) {
                         $qr_code = $templete['qr_code'];
-                        $params['savename'] = 'uploads/qr_code/stu_' . $userDetails['id'] . '.png';
+                        $params['savename'] = 'uploads/qr_code/cer_stu_' . $userDetails['id'] . '.png';
                         $params['level'] = 'M';
                         $params['size'] = 4;
                         $params['data'] = ucfirst($qr_code) . " - " . $userDetails[$qr_code];
@@ -213,7 +210,7 @@ class Certificate_model extends MY_Model
                 } else if ($field == 'print_date') {
                     $body = str_replace($tag, _d($print_date), $body);
                 } else {
-                    $body = str_replace($tag, $userDetails[$field], $body);
+                    $body = str_replace($tag, isset($userDetails[$field]) ? $userDetails[$field] : '', $body);
                 }
             }
 
@@ -222,21 +219,15 @@ class Certificate_model extends MY_Model
                     $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('staff', $userDetails['photo']) . '" width="' . $photo_size . '">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
-                    if (!empty($templete['logo'])) {
-                        $logo_ph = '<img src="' . base_url('uploads/certificate/' . $templete['logo']) . '">';
-                        $body = str_replace($tag, $logo_ph, $body);
-                    }
+                    $body = str_replace($tag, document_logo_html($templete, $userDetails['branch_id'], 80), $body);
                 } else if ($field == 'signature') {
-                    if (!empty($templete['signature'])) {
-                        $signature_ph = '<img src="' . base_url('uploads/certificate/' . $templete['signature']) . '">';
-                        $body = str_replace($tag, $signature_ph, $body);
-                    }
+                    $body = str_replace($tag, document_signature_html($templete, 50), $body);
                 } else if ($field == 'print_date') {
                     $body = str_replace($tag, _d($print_date), $body);
                 } else if ($field == 'qr_code') {
                     if (!empty($templete['qr_code'])) {
                         $qr_code = $templete['qr_code'];
-                        $params['savename'] = 'uploads/qr_code/sta_' . $userDetails['id'] . '.png';
+                        $params['savename'] = 'uploads/qr_code/cer_sta_' . $userDetails['id'] . '.png';
                         $params['level'] = 'M';
                         $params['size'] = 4;
                         $params['data'] = ucfirst($qr_code) . " - " . $userDetails[$qr_code];
@@ -247,11 +238,11 @@ class Certificate_model extends MY_Model
                 } else if ($field == 'gender') {
                     $body = str_replace($tag, $userDetails['sex'], $body);
                 } else {
-                    $body = str_replace($tag, $userDetails[$field], $body);
+                    $body = str_replace($tag, isset($userDetails[$field]) ? $userDetails[$field] : '', $body);
                 }
             }
         }
-        return $body;
+        return document_strip_tags($body, $tags);
     }
 
     public function getStudent($id)

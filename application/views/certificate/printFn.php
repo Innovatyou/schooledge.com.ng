@@ -48,3 +48,5 @@ if (!empty($user_array)) {
 </div>
 <div class="pagebreak"> </div> 
 <?php } } ?>
+
+<?php $this->load->view('layout/document_fit'); ?>

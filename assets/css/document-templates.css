@@ -557,3 +557,23 @@
         -webkit-print-color-adjust: exact !important;
     }
 }
+
+/* ======================== cards (every preset, classic too) ======================== */
+/* Admit-card subject list: sized for an A6/A5 card instead of inheriting the
+   page's 14px+ table text, so a full timetable fits on the card. */
+.certificate table.admit-subjects { width: 100%; margin: 0 !important; border-collapse: collapse; font-size: 9px !important; line-height: 1.3; background-color: #ffffff; }
+.certificate table.admit-subjects th,
+.certificate table.admit-subjects td { padding: 3px 5px !important; font-size: 9px !important; line-height: 1.3 !important; vertical-align: middle; }
+.certificate table.admit-subjects th { font-size: 7.5px !important; font-weight: bold; letter-spacing: .05em; text-transform: uppercase; }
+.certificate table.admit-subjects td.nw { white-space: nowrap; }
+/* nothing on a card may spill past its edges; document_fit.php shrinks long content to fit */
+.certificate.document-template, .certificate { overflow: hidden; box-sizing: border-box; }
+.certificate img { max-width: 100%; }
+
+/* Report cards (every preset, screen, print and PDF): compact tables so a
+   full term - subjects, summary, attendance, grading scale, psychomotor
+   ratings, comments and signatures - fits on one A4 page. */
+.mark-container table.table { margin-bottom: 10px; font-size: 11px; }
+.mark-container table.table th,
+.mark-container table.table td { padding: 4px 7px !important; font-size: 11px !important; line-height: 1.35 !important; }
+.mark-container table.table thead th { font-size: 9.5px !important; }

@@ -47,3 +47,4 @@
 <div class="certificate <?=document_template_class($template)?>" id="certificate">
 	<?=$this->card_manage_model->admitCardTagsReplace($userID, $template, $print_date, $exam_id)?>
 </div>
+<?php $this->load->view('layout/document_fit'); ?>

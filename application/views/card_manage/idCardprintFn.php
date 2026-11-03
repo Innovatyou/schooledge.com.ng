@@ -50,3 +50,5 @@ if (!empty($user_array)) {
 	<?=$this->card_manage_model->tagsReplace($user_type, $userID, $template, $print_date, $expiry_date)?>
 </div>
 <?php } } ?>
+
+<?php $this->load->view('layout/document_fit'); ?>

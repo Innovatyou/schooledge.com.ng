@@ -42,3 +42,5 @@
 	<?=$this->certificate_model->tagsReplace($user_type, $userID, $template, $print_date)?>
 </div>
 
+
+<?php $this->load->view('layout/document_fit'); ?>

@@ -944,6 +944,53 @@ function document_template_class($template = '')
     return 'document-template template-' . html_escape(document_template_style($template));
 }
 
+// {logo} on a card / certificate: the template's own logo, else the school's
+// printing logo, else its app logo. Capped so a large file can't push the
+// layout out of the card.
+function document_logo_html($template, $branchID, $maxHeight = 48, $folder = 'certificate')
+{
+    if (!empty($template['logo']) && is_file(FCPATH . 'uploads/' . $folder . '/' . $template['logo'])) {
+        $src = base_url('uploads/' . $folder . '/' . $template['logo']);
+    } else {
+        $src = '';
+        foreach (array('printing-logo', 'logo') as $type) {
+            if ($branchID && is_file(FCPATH . 'uploads/app_image/' . $type . '-' . (int) $branchID . '.png')) {
+                $src = base_url('uploads/app_image/' . $type . '-' . (int) $branchID . '.png');
+                break;
+            }
+        }
+        if ($src === '') {
+            $src = base_url('uploads/app_image/printing-logo.png');
+        }
+    }
+    return '<img src="' . $src . '" alt="" style="display:inline-block;width:auto;max-width:100%;max-height:' . (int) $maxHeight . 'px;vertical-align:middle;">';
+}
+
+// {signature}: the uploaded signature, or nothing (never the raw tag)
+function document_signature_html($template, $maxHeight = 40, $field = 'signature', $folder = 'certificate')
+{
+    if (empty($template[$field]) || !is_file(FCPATH . 'uploads/' . $folder . '/' . $template[$field])) {
+        return '';
+    }
+    return '<img src="' . base_url('uploads/' . $folder . '/' . $template[$field]) . '" alt="" style="display:inline-block;width:auto;max-width:100%;max-height:' . (int) $maxHeight . 'px;">';
+}
+
+// Print actions tidy uploads/qr_code before generating new codes. Only codes
+// older than an hour go, so two people printing at once don't delete each
+// other's images; the folder's index.html and the cached Mobile App codes stay.
+function qr_code_is_stale($file)
+{
+    $name = basename($file);
+    return $name !== 'index.html' && strpos($name, 'app_') !== 0 && filemtime($file) < time() - 3600;
+}
+
+// blank out any {tag} left in a finished document (a field with no value, a
+// QR code that is switched off, a tag from another template type)
+function document_strip_tags($body, array $tags)
+{
+    return str_replace($tags, '', $body);
+}
+
 // fixed set of psychomotor / affective-domain traits rated per student per exam
 function psychomotor_traits()
 {
@@ -1043,7 +1090,7 @@ HTML;
 <div style="position:relative;width:100%;height:100%;font-family:Arial,sans-serif;padding:14px 16px;">
 <table style="width:100%;border-collapse:collapse;border-bottom:2px solid #16233F;padding-bottom:10px;">
 <tr>
-<td style="width:40px;vertical-align:middle;">{logo}</td>
+<td style="width:64px;vertical-align:middle;">{logo}</td>
 <td style="vertical-align:middle;padding-left:10px;">
 <div style="font-size:14px;font-weight:bold;color:#16233F;">{institute_name}</div>
 <div style="font-size:9px;color:#5B6B84;">{institute_address} &middot; {institute_mobile_no}</div>
@@ -1080,20 +1127,20 @@ HTML;
 <div style="position:relative;height:100%;font-family:Arial,sans-serif;">
 <div style="position:absolute;top:0;right:0;bottom:0;left:0;border:2px solid #B08D3E;pointer-events:none;"></div>
 <div style="position:absolute;top:6px;right:6px;bottom:6px;left:6px;border:1px solid #E4DFD1;pointer-events:none;"></div>
-<div style="position:relative;height:100%;text-align:center;padding:30px 60px 0;">
+<div style="position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 70px;">
 {logo}
 <div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:#5B6B84;margin-top:10px;font-weight:600;">{institute_name}</div>
-<div style="font-family:Georgia,serif;font-size:36px;font-weight:bold;color:#16233F;margin-top:18px;letter-spacing:1px;">Certificate of Achievement</div>
+<div style="font-family:Georgia,serif;font-size:42px;font-weight:bold;color:#16233F;margin-top:20px;letter-spacing:1px;">Certificate of Achievement</div>
 <div style="font-size:13px;color:#5B6B84;margin-top:18px;">This certificate is proudly presented to</div>
-<div style="font-family:Georgia,serif;font-size:28px;font-style:italic;color:#16233F;margin-top:12px;border-bottom:2px solid #B08D3E;display:inline-block;padding-bottom:8px;">{name}</div>
+<div style="font-family:Georgia,serif;font-size:32px;font-style:italic;color:#16233F;margin-top:14px;border-bottom:2px solid #B08D3E;display:inline-block;padding-bottom:8px;">{name}</div>
 <div style="font-size:13px;color:#5B6B84;margin-top:18px;max-width:480px;margin-left:auto;margin-right:auto;line-height:1.6;">
 for outstanding performance in {class} {section}, {print_date}.
 </div>
-<table style="width:100%;max-width:520px;margin:40px auto 0;">
+<table style="width:100%;max-width:600px;margin:56px auto 0;">
 <tr>
-<td style="text-align:center;width:33%;"><div style="border-top:1px solid #16233F;padding-top:6px;font-size:11px;color:#5B6B84;">Class Teacher</div></td>
-<td style="text-align:center;width:33%;">{signature}<div style="border-top:1px solid #16233F;padding-top:6px;font-size:11px;color:#5B6B84;">Principal</div></td>
-<td style="text-align:center;width:33%;"><div style="border-top:1px solid #16233F;padding-top:6px;font-size:11px;color:#5B6B84;">{print_date}</div></td>
+<td style="text-align:center;width:33%;padding:0 14px;vertical-align:bottom;"><div style="border-top:1px solid #16233F;padding-top:6px;font-size:11px;color:#5B6B84;">Class Teacher</div></td>
+<td style="text-align:center;width:33%;padding:0 14px;vertical-align:bottom;">{signature}<div style="border-top:1px solid #16233F;padding-top:6px;font-size:11px;color:#5B6B84;">Principal</div></td>
+<td style="text-align:center;width:33%;padding:0 14px;vertical-align:bottom;"><div style="border-top:1px solid #16233F;padding-top:6px;font-size:11px;color:#5B6B84;">{print_date}</div></td>
 </tr>
 </table>
 </div>

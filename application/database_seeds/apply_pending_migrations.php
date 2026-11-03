@@ -1951,4 +1951,42 @@ if (tableExists($m, 'exam_mark_distribution') && !columnExists($m, 'exam_mark_di
     echo "752: added exam_mark_distribution.default_full_mark, default_pass_mark\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 753: tidier starter certificate (centred on the page, separate
+// signature lines) and admit card (room for a wide logo) on the demo
+// schools' saved templates. Schools' own templates are never touched;
+// re-running is a no-op.
+// ---------------------------------------------------------------------
+$templateFixes = array(
+    '<div style="position:relative;height:100%;text-align:center;padding:30px 60px 0;">'
+        => '<div style="position:relative;height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:40px 70px;">',
+    'font-size:36px;font-weight:bold;color:#16233F;margin-top:18px;letter-spacing:1px;">Certificate of Achievement'
+        => 'font-size:42px;font-weight:bold;color:#16233F;margin-top:20px;letter-spacing:1px;">Certificate of Achievement',
+    '<div style="font-family:Georgia,serif;font-size:28px;font-style:italic;color:#16233F;margin-top:12px;'
+        => '<div style="font-family:Georgia,serif;font-size:32px;font-style:italic;color:#16233F;margin-top:14px;',
+    '<table style="width:100%;max-width:520px;margin:40px auto 0;">'
+        => '<table style="width:100%;max-width:600px;margin:56px auto 0;">',
+    '<td style="text-align:center;width:33%;"><div style="border-top:1px solid #16233F;'
+        => '<td style="text-align:center;width:33%;padding:0 14px;vertical-align:bottom;"><div style="border-top:1px solid #16233F;',
+    '<td style="text-align:center;width:33%;">{signature}<div style="border-top:1px solid #16233F;'
+        => '<td style="text-align:center;width:33%;padding:0 14px;vertical-align:bottom;">{signature}<div style="border-top:1px solid #16233F;',
+    '<td style="width:40px;vertical-align:middle;">{logo}</td>'
+        => '<td style="width:64px;vertical-align:middle;">{logo}</td>'
+);
+foreach (array('card_templete', 'certificates_templete') as $table) {
+    if (!tableExists($m, $table) || !columnExists($m, 'branch', 'is_demo')) {
+        continue;
+    }
+    $rows = $m->query("SELECT t.id, t.content FROM `$table` t JOIN branch b ON b.id = t.branch_id WHERE b.is_demo = 1");
+    while ($row = $rows->fetch_assoc()) {
+        $content = strtr($row['content'], $templateFixes);
+        if ($content !== $row['content']) {
+            $stmt = $m->prepare("UPDATE `$table` SET content = ? WHERE id = ?");
+            $stmt->bind_param('si', $content, $row['id']);
+            $stmt->execute();
+            echo "753: updated demo $table #{$row['id']}\n";
+        }
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

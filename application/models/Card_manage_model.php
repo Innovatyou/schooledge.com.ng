@@ -194,6 +194,9 @@ class Card_manage_model extends MY_Model
         } else if ($roleID == 2) {
             $userDetails = $this->getStaff($userID);
         }
+        if (empty($userDetails)) {
+            return '';
+        }
         $arr = array('{', '}');
         foreach ($tags as $tag) {
             $field = str_replace($arr, '', $tag);
@@ -202,15 +205,9 @@ class Card_manage_model extends MY_Model
                     $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" style="width: auto; max-width: 100%; max-height: ' . (int) $photo_size . 'px;">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
-                    if (!empty($templete['logo'])) {
-                        $logo_ph = '<img src="' . base_url('uploads/certificate/' . $templete['logo']) . '">';
-                        $body = str_replace($tag, $logo_ph, $body);
-                    }
+                    $body = str_replace($tag, document_logo_html($templete, $userDetails['branch_id'], 40), $body);
                 } else if ($field == 'signature') {
-                    if (!empty($templete['signature'])) {
-                        $signature_ph = '<img src="' . base_url('uploads/certificate/' . $templete['signature']) . '">';
-                        $body = str_replace($tag, $signature_ph, $body);
-                    }
+                    $body = str_replace($tag, document_signature_html($templete, 36), $body);
                 } else if ($field == 'qr_code') {
                     if (!empty($templete['qr_code'])) {
                         $qr_code = $templete['qr_code'];
@@ -236,7 +233,7 @@ class Card_manage_model extends MY_Model
                 } else if ($field == 'birthday') {
                     $body = str_replace($tag, _d($userDetails[$field]), $body);
                 } else {
-                    $body = str_replace($tag, $userDetails[$field], $body);
+                    $body = str_replace($tag, isset($userDetails[$field]) ? $userDetails[$field] : '', $body);
                 }
             }
 
@@ -245,15 +242,9 @@ class Card_manage_model extends MY_Model
                     $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('staff', $userDetails['photo']) . '" style="width: auto; max-width: 100%; max-height: ' . (int) $photo_size . 'px;">';
                     $body = str_replace($tag, $photo, $body);
                 } else if ($field == 'logo') {
-                    if (!empty($templete['logo'])) {
-                        $logo_ph = '<img src="' . base_url('uploads/certificate/' . $templete['logo']) . '">';
-                        $body = str_replace($tag, $logo_ph, $body);
-                    }
+                    $body = str_replace($tag, document_logo_html($templete, $userDetails['branch_id'], 40), $body);
                 } else if ($field == 'signature') {
-                    if (!empty($templete['signature'])) {
-                        $signature_ph = '<img src="' . base_url('uploads/certificate/' . $templete['signature']) . '">';
-                        $body = str_replace($tag, $signature_ph, $body);
-                    }
+                    $body = str_replace($tag, document_signature_html($templete, 36), $body);
                 } else if ($field == 'print_date') {
                     $body = str_replace($tag, _d($print_date), $body);
                 } else if ($field == 'expiry_date') {
@@ -281,11 +272,11 @@ class Card_manage_model extends MY_Model
                 } else if ($field == 'birthday') {
                     $body = str_replace($tag, _d($userDetails[$field]), $body);
                 } else {
-                    $body = str_replace($tag, $userDetails[$field], $body);
+                    $body = str_replace($tag, isset($userDetails[$field]) ? $userDetails[$field] : '', $body);
                 }
             }
         }
-        return $body;
+        return document_strip_tags($body, $tags);
     }
 
     public function admitCardTagsReplace($userID, $templete, $print_date, $exam_id)
@@ -296,30 +287,27 @@ class Card_manage_model extends MY_Model
         $tags = $this->tagsList(1, true);
         $userDetails = $this->getStudent($userID);
 
+        if (empty($userDetails)) {
+            return '';
+        }
         $arr = array('{', '}');
         foreach ($tags as $tag) {
             $field = str_replace($arr, '', $tag);
             if ($field == 'student_photo') {
-                $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" width="' . $photo_size . '">';
+                $photo = '<img class="' . ($photo_style == 1 ? '' : 'rounded') . '" src="' . get_image_url('student', $userDetails['photo']) . '" style="width: auto; max-width: 100%; max-height: ' . (int) $photo_size . 'px;">';
                 $body = str_replace($tag, $photo, $body);
             } else if ($field == 'exam_name') {
                 $body = str_replace($tag, $this->application_model->exam_name_by_id($exam_id), $body);
             } else if ($field == 'subject_list_table') {
                 $body = str_replace($tag, $this->tableHtml($exam_id, $userDetails['class_id'], $userDetails['section_id'], $userDetails['branch_id']), $body);
             } else if ($field == 'logo') {
-                if (!empty($templete['logo'])) {
-                    $logo_ph = '<img src="' . base_url('uploads/certificate/' . $templete['logo']) . '">';
-                    $body = str_replace($tag, $logo_ph, $body);
-                }
-            } else if ($field == 'signature') {
-                if (!empty($templete['signature'])) {
-                    $signature_ph = '<img src="' . base_url('uploads/certificate/' . $templete['signature']) . '">';
-                    $body = str_replace($tag, $signature_ph, $body);
-                }
-            } else if ($field == 'qr_code') {
+                    $body = str_replace($tag, document_logo_html($templete, $userDetails['branch_id'], 40), $body);
+                } else if ($field == 'signature') {
+                    $body = str_replace($tag, document_signature_html($templete, 36), $body);
+                } else if ($field == 'qr_code') {
                 if (!empty($templete['qr_code'])) {
                     $qr_code = $templete['qr_code'];
-                    $params['savename'] = 'uploads/qr_code/stu_' . $userDetails['id'] . '.png';
+                    $params['savename'] = 'uploads/qr_code/adm_' . $userDetails['id'] . '.png';
                     $params['level'] = 'M';
                     $params['size'] = 2;
                     $params['data'] = ucfirst($qr_code) . " - " . $userDetails[$qr_code];
@@ -332,10 +320,10 @@ class Card_manage_model extends MY_Model
             } else if ($field == 'print_date') {
                 $body = str_replace($tag, _d($print_date), $body);
             } else {
-                $body = str_replace($tag, $userDetails[$field], $body);
+                $body = str_replace($tag, isset($userDetails[$field]) ? $userDetails[$field] : '', $body);
             }
         }
-        return $body;
+        return document_strip_tags($body, $tags);
     }
 
     public function getStudent($id)
@@ -369,13 +357,14 @@ class Card_manage_model extends MY_Model
     public function tableHtml($examID, $classID, $sectionID, $branchID = '')
     {
         $html = '';
-        $html .= '<table class="table table-bordered table-condensed">';
+        // compact, card-sized table (styled by .admit-subjects in document-templates.css)
+        $html .= '<table class="table table-bordered table-condensed admit-subjects">';
         $html .= '<thead>';
         $html .= '<tr>';
         $html .= '<th>Subject</th>';
         $html .= '<th>Date</th>';
         $html .= '<th>Time</th>';
-        $html .= '<th>Hall Room</th>';
+        $html .= '<th>Hall</th>';
         $html .= '</tr>';
         $html .= '</thead>';
         $html .= '<tbody>';
@@ -384,13 +373,13 @@ class Card_manage_model extends MY_Model
             foreach ($timetables->result_array() as $row):
                 $html .= '<tr>';
                 $html .= '<td>' . $row['subject_name'] . '</td>';
-                $html .= '<td>' . _d($row['exam_date']) . '</td>';
-                $html .= '<td>' . $row['time_start'] . ' To ' . $row['time_end'] . '</td>';
+                $html .= '<td class="nw">' . _d($row['exam_date']) . '</td>';
+                $html .= '<td class="nw">' . date('g:i A', strtotime($row['time_start'])) . ' &ndash; ' . date('g:i A', strtotime($row['time_end'])) . '</td>';
                 $html .= '<td>' . $row['hall_no'] . '</td>';
                 $html .= '</tr>';
             endforeach;
         } else {
-            $html .= '<tr> <td colspan="5"> <h5 class="text-danger text-center">' . translate('no_information_available') . '</h5> </td></tr>';
+            $html .= '<tr><td colspan="4" class="text-center">' . translate('no_information_available') . '</td></tr>';
         }
         $html .= '</tbody>';
         $html .= '</table>';

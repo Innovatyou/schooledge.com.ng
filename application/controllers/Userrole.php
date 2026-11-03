@@ -658,7 +658,7 @@ class Userrole extends User_Controller
                 //get all QR Code file
                 $files = glob('uploads/qr_code/*');
                 foreach ($files as $file) {
-                    if (is_file($file)) {
+                    if (is_file($file) && qr_code_is_stale($file)) {
                         unlink($file); //delete file
                     }
                 }
