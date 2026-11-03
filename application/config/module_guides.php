@@ -207,7 +207,7 @@ return array(
         'title' => 'Admission',
         'icon' => 'fa-user-plus',
         'group' => 'Students & parents',
-        'match' => array('student/add', 'student/csv_import', 'student/category', 'online_admission'),
+        'match' => array('student/add', 'student/csv_import', 'student/import_old', 'student/category', 'online_admission'),
         'perms' => array('student', 'online_admission', 'multiple_import', 'student_category'),
         'school' => array(
             'summary' => 'Admit students one at a time, in bulk from a spreadsheet, or through the online admission form on your website.',
@@ -216,6 +216,7 @@ return array(
                 array('Admit a student', 'Open <b>Admission › Create Admission</b>. Choose the class and section, fill in the student\'s details and photo, and add the parent or pick an existing one.', 'student/add'),
                 array('Logins are created for you', 'The student and parent each get a username and password using the rules in School Settings. Print them from <b>Reports › Student › Login Credential</b>.', 'student/login_credential_reports'),
                 array('Import many students', 'Download the sample file under <b>Multiple Import</b>, fill it in Excel, and upload it for a whole class at once.', 'student/csv_import'),
+                array('Bring in former students', 'Moving from paper or another system? <b>Import Old Students</b> takes every graduated or withdrawn student, from every class and session, in one spreadsheet and files them under Alumni.', 'student/import_old'),
                 array('Online admission', 'Switch on online admission in <b>Frontend › Setting</b>. Applications arrive under <b>Admission › Online Admission</b>; review them and approve to admit.', 'online_admission/index'),
             ),
             'tips' => array(

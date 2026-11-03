@@ -403,6 +403,76 @@ class Student extends Admin_Controller
         $this->load->view('layout/index', $this->data);
     }
 
+    /* one spreadsheet of former students (graduated or left) across every class and session */
+    public function import_old()
+    {
+        if (!get_permission('multiple_import', 'is_add')) {
+            access_denied();
+        }
+        $this->load->model('old_student_import_model');
+        $branchID = $this->application_model->get_branch_id();
+
+        if (isset($_POST['save'])) {
+            // set up rules only for what's missing; run() fails when there are none, so check directly
+            if (is_superadmin_loggedin()) {
+                $this->form_validation->set_rules('branch_id', translate('branch'), 'trim|required');
+            }
+            if (empty($_FILES['userfile']['name'])) {
+                $this->form_validation->set_rules('userfile', 'CSV File', 'required');
+            }
+            $missing = empty($_FILES['userfile']['name']) || (is_superadmin_loggedin() && !$this->input->post('branch_id'));
+            if ($missing) {
+                $this->form_validation->run();
+            } else {
+                set_time_limit(300);
+                $rows = $this->old_student_import_model->readFile($_FILES['userfile']['tmp_name']);
+                if (is_string($rows)) {
+                    $this->data['report'] = array('file_error' => $rows);
+                } else {
+                    $report = $this->old_student_import_model->validate($rows, $branchID);
+                    $report['total'] = count($rows);
+                    $report['imported'] = 0;
+                    if (empty($report['errors']) && !empty($report['ready'])) {
+                        $imported = $this->old_student_import_model->import($report['ready'], $branchID);
+                        if ($imported === false) {
+                            $report['file_error'] = 'Saving failed and nothing was imported. Please try again.';
+                        } else {
+                            $report['imported'] = $imported;
+                        }
+                    }
+                    $this->data['report'] = $report;
+                }
+            }
+        }
+        $this->data['classes'] = $this->old_student_import_model->getClassList($branchID);
+        $this->data['columns'] = $this->old_student_import_model->columns;
+        $this->data['title'] = translate('import_old_students');
+        $this->data['branch_id'] = $branchID;
+        $this->data['sub_page'] = 'student/import_old';
+        $this->data['main_menu'] = 'admission';
+        $this->data['headerelements'] = array(
+            'css' => array(
+                'vendor/dropify/css/dropify.min.css',
+            ),
+            'js' => array(
+                'vendor/dropify/js/dropify.min.js',
+            ),
+        );
+        $this->load->view('layout/index', $this->data);
+    }
+
+    /* the old students template, with example rows using the school's own classes */
+    public function import_old_template()
+    {
+        if (!get_permission('multiple_import', 'is_add')) {
+            access_denied();
+        }
+        $this->load->model('old_student_import_model');
+        $this->load->helper('download');
+        $csv = $this->old_student_import_model->templateCsv($this->application_model->get_branch_id());
+        force_download('old_students_template.csv', $csv);
+    }
+
     /* showing disable authentication student list */
     public function disable_authentication()
     {

@@ -69,7 +69,9 @@ function checkSaasLimit($prefix)
     }
 
     if ($prefix == 'student') {
+        // former students (alumni) don't take up a place on the plan
         $ci->db->where('branch_id', $branchID);
+        $ci->db->where('is_alumni', 0);
         $ci->db->group_by('student_id');
         $total_student = $ci->db->count_all_results('enroll');
         if ($total_student > $row->student_limit) {
