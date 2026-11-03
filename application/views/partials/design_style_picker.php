@@ -14,7 +14,7 @@ $selected = document_template_style(isset($selected) ? $selected : 'classic');
 $kind = (isset($kind) && $kind === 'card') ? 'card' : 'report';
 $pickerId = 'dsp' . substr(md5(uniqid('', true)), 0, 6);
 ?>
-<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . filemtime(FCPATH . 'assets/css/document-templates.css'))?>">
 <style type="text/css">
 	.dsp-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr)); gap: 12px; }
 	.dsp-tile { position: relative; display: block; margin: 0; cursor: pointer; border-radius: 12px; border: 2px solid #e3e6ee; background: #fff; overflow: hidden; transition: border-color .2s, box-shadow .2s, transform .2s; font-weight: normal; }

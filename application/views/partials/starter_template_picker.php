@@ -5,7 +5,7 @@ if (empty($starters)) {
     return;
 }
 ?>
-<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . filemtime(FCPATH . 'assets/css/document-templates.css'))?>">
 <style type="text/css">
 	.starter-picker { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
 	.starter-picker .starter-card { width: 240px; border: 1px solid #e4e7ed; border-radius: 6px; background: #fff; padding: 12px; }

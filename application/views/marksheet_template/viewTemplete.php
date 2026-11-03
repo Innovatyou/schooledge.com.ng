@@ -1,4 +1,4 @@
-<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . version_combine())?>">
+<link rel="stylesheet" href="<?=base_url('assets/css/document-templates.css?v=' . filemtime(FCPATH . 'assets/css/document-templates.css'))?>">
 <style type="text/css">
 	.mark-container {
 		height: 100%;
