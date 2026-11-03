@@ -281,6 +281,19 @@
 							<span class="error"><?php echo form_error('mobile_no'); ?></span>
 						</div>
 					</div>
+					<?php if (array_key_exists('hero_phone', $setting)) { ?>
+					<div class="form-group">
+						<label class="col-md-3 control-label">Banner Phone Badge</label>
+						<div class="col-md-3">
+							<input type="text" class="form-control" name="hero_phone" maxlength="50" placeholder="<?php echo html_escape($setting['mobile_no']); ?>" value="<?php echo html_escape($setting['hero_phone']); ?>" />
+							<span class="help-block">Number. Leave blank to use the mobile no.</span>
+						</div>
+						<div class="col-md-3">
+							<input type="text" class="form-control" name="hero_phone_label" maxlength="100" placeholder="Talk to our office" value="<?php echo html_escape($setting['hero_phone_label']); ?>" />
+							<span class="help-block">Text under the number.</span>
+						</div>
+					</div>
+					<?php } ?>
 					<div class="form-group">
 						<label  class="col-md-3 control-label"><?php echo translate('email'); ?> <span class="required">*</span></label>
 						<div class="col-md-6">

@@ -32,7 +32,7 @@ $photos = $hero['photos'];
 				<?php } ?>
 				<div class="st-glass-badge b1" data-depth="1.4"><i class="fas fa-graduation-cap"></i><span><b>Learn. Grow. Lead.</b><small><?php echo html_escape($hero['school']); ?></small></span></div>
 				<?php if (!empty($hero['phone'])) { ?>
-				<div class="st-glass-badge b2" data-depth="1.1"><i class="fas fa-phone-alt"></i><span><b><?php echo html_escape($hero['phone']); ?></b><small>Talk to our office</small></span></div>
+				<div class="st-glass-badge b2" data-depth="1.1"><i class="fas fa-phone-alt"></i><span><b><?php echo html_escape($hero['phone']); ?></b><small><?php echo html_escape($hero['phone_label']); ?></small></span></div>
 				<?php } ?>
 			</div>
 		</div>

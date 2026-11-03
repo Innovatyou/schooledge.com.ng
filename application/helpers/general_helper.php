@@ -706,6 +706,7 @@ function website_sections()
         'topbar' => array('Top info bar', 'Opening hours, email, phone and login link above the menu.'),
         'news_ticker' => array('Latest news strip', 'The scrolling headlines under the menu.'),
         'hero_stats' => array('Numbers in the welcome banner', 'Students, teachers and classes counts at the top of the home page.'),
+        'hero_phone' => array('Phone badge in the welcome banner', 'The floating phone number card (Aurora theme).'),
         'features' => array('Why choose us', 'The feature cards on the home page.'),
         'welcome' => array('Welcome / about', 'The welcome message and photo.'),
         'statistics' => array('Numbers band', 'The "in numbers" counters section.'),

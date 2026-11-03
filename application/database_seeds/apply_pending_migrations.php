@@ -1887,4 +1887,14 @@ if (tableExists($m, 'front_cms_setting') && !columnExists($m, 'front_cms_setting
     echo "749: added front_cms_setting.hidden_sections\n";
 }
 
+// ---------------------------------------------------------------------
+// Migration 750: the phone badge in the welcome banner gets its own
+// number (blank = the school's mobile no) and label, set under
+// Frontend > Setting.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'front_cms_setting') && !columnExists($m, 'front_cms_setting', 'hero_phone')) {
+    $m->query("ALTER TABLE `front_cms_setting` ADD `hero_phone` VARCHAR(50) NULL, ADD `hero_phone_label` VARCHAR(100) NULL");
+    echo "750: added front_cms_setting.hero_phone, hero_phone_label\n";
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

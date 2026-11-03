@@ -63,7 +63,8 @@ $hero = array(
 	// banner numbers only when switched on, and never a row of zeros
 	'counters' => website_section_on($cms_setting, 'hero_stats') && array_sum(array_column($counters, 'value')) > 0 ? $counters : array(),
 	'admission' => $admissionOpen,
-	'phone' => $cms_setting['mobile_no'],
+	'phone' => website_section_on($cms_setting, 'hero_phone') ? (!empty($cms_setting['hero_phone']) ? $cms_setting['hero_phone'] : $cms_setting['mobile_no']) : '',
+	'phone_label' => !empty($cms_setting['hero_phone_label']) ? $cms_setting['hero_phone_label'] : 'Talk to our office',
 	'url' => $siteUrl,
 );
 ?>

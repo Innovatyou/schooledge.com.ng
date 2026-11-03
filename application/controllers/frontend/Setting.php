@@ -114,6 +114,11 @@ class Setting extends Admin_Controller
                     $shown = (array) $this->input->post('show_sections');
                     $cms_setting['hidden_sections'] = json_encode(array_values(array_diff(array_keys(website_sections()), $shown)));
                 }
+                // phone badge in the welcome banner (migration 750)
+                if ($this->db->field_exists('hero_phone', 'front_cms_setting')) {
+                    $cms_setting['hero_phone'] = mb_substr(trim((string) $this->input->post('hero_phone')), 0, 50);
+                    $cms_setting['hero_phone_label'] = mb_substr(trim((string) $this->input->post('hero_phone_label')), 0, 100);
+                }
                 // upload logo
                 if (isset($_FILES["logo"]) && !empty($_FILES["logo"]['name'])) {
                     $imageNmae = $_FILES['logo']['name'];
