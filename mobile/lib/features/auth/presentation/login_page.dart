@@ -203,7 +203,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
                                         )
                                       : const Icon(Icons.arrow_forward_rounded),
                                   label: const Text(
-                                    'Enter SchoolEdge',
+                                    'Enter SkoolOS',
                                     style: TextStyle(
                                       fontWeight: FontWeight.w800,
                                     ),
@@ -320,7 +320,7 @@ class _BrandHero extends StatelessWidget {
       ),
       const SizedBox(height: 18),
       const Text(
-        'SchoolEdge',
+        'SkoolOS',
         style: TextStyle(
           color: Colors.white,
           fontSize: 38,

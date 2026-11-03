@@ -19,7 +19,7 @@ class ProfilePage extends ConsumerWidget {
   final VoidCallback onLogout;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final name = (data['name'] ?? 'SchoolEdge User').toString();
+    final name = (data['name'] ?? 'SkoolOS User').toString();
     final role = (data['membership']?['role']?['name'] ?? 'Member').toString();
     final school =
         (data['membership']?['school']?['school_name'] ?? 'My School')
@@ -127,7 +127,7 @@ class ProfilePage extends ConsumerWidget {
             context,
           ).push(moduleRoute<void>(const SecurityPage())),
         ),
-        const SectionTitle('SchoolEdge'),
+        const SectionTitle('SkoolOS'),
         InfoRow(
           icon: Icons.help_rounded,
           title: 'Help & support',

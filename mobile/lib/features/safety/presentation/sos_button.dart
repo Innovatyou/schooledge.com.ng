@@ -182,7 +182,7 @@ class _SafetyQuickActionsContentState
     builder: (context) => AlertDialog(
       title: const Text('Location needed'),
       content: const Text(
-        'Turn on location access for SchoolEdge to share your location or send an SOS. Location is only read when you tap these buttons - never in the background.',
+        'Turn on location access for SkoolOS to share your location or send an SOS. Location is only read when you tap these buttons - never in the background.',
       ),
       actions: [
         TextButton(

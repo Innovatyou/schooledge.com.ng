@@ -51,13 +51,13 @@ class _WelcomePageState extends State<WelcomePage> {
             child: Row(
               children: [
                 Image.asset(
-                  'assets/branding/schooledge_logo.png',
+                  'assets/branding/skoolos_logo.png',
                   width: 48,
                   height: 48,
                 ),
                 const SizedBox(width: 10),
                 const Text(
-                  'SchoolEdge',
+                  'SkoolOS',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 22,
@@ -164,7 +164,7 @@ class _WelcomePageState extends State<WelcomePage> {
                   ),
                   label: Text(
                     _page == _slides.length - 1
-                        ? 'Enter SchoolEdge'
+                        ? 'Enter SkoolOS'
                         : 'Continue',
                     style: const TextStyle(fontWeight: FontWeight.w900),
                   ),

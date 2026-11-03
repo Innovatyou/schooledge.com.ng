@@ -21,7 +21,7 @@ class TeacherAttendancePage extends ConsumerWidget {
       InfoRow(
         icon: Icons.qr_code_scanner_rounded,
         title: 'Scan attendance QR',
-        subtitle: 'Scan a student’s rotating SchoolEdge pass',
+        subtitle: 'Scan a student’s rotating SkoolOS pass',
         color: const Color(0xff6c5ce7),
         onTap: () => Navigator.of(
           context,

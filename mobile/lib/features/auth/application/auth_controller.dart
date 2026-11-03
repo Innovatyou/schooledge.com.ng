@@ -151,12 +151,12 @@ class AuthController extends StateNotifier<AuthState> {
         return body['error']['message'].toString();
       }
       if (error.type == DioExceptionType.connectionError) {
-        return 'Cannot reach SchoolEdge. Check your connection and try again.';
+        return 'Cannot reach SkoolOS. Check your connection and try again.';
       }
       if (error.type == DioExceptionType.connectionTimeout ||
           error.type == DioExceptionType.receiveTimeout ||
           error.type == DioExceptionType.sendTimeout) {
-        return 'SchoolEdge is taking too long to respond. Please try again.';
+        return 'SkoolOS is taking too long to respond. Please try again.';
       }
       final status = error.response?.statusCode;
       if (status != null) {

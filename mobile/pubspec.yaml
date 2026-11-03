@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 1.1.0+2
 
 environment:
   sdk: ^3.12.2
@@ -90,19 +90,19 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: assets/branding/schooledge_logo.png
-  adaptive_icon_background: "#102A56"
-  adaptive_icon_foreground: assets/branding/schooledge_logo.png
+  image_path: assets/branding/skoolos_logo.png
+  adaptive_icon_background: "#5B7CFA"
+  adaptive_icon_foreground: assets/branding/skoolos_logo.png
   remove_alpha_ios: true
 
 flutter_native_splash:
   color: "#071B3D"
-  image: assets/branding/schooledge_logo.png
+  image: assets/branding/skoolos_logo.png
   color_dark: "#071B3D"
-  image_dark: assets/branding/schooledge_logo.png
+  image_dark: assets/branding/skoolos_logo.png
   android_12:
     color: "#071B3D"
-    image: assets/branding/schooledge_logo.png
+    image: assets/branding/skoolos_logo.png
     icon_background_color: "#071B3D"
 
   # To add assets to your application, add an assets section, like this:

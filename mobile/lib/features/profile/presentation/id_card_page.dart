@@ -58,7 +58,7 @@ class _IdCardFace extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                (school['name'] ?? 'SchoolEdge').toString(),
+                (school['name'] ?? 'SkoolOS').toString(),
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,

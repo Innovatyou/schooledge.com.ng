@@ -47,7 +47,7 @@ class SchoolEdgeApp extends ConsumerWidget {
   const SchoolEdgeApp({super.key});
   @override
   Widget build(BuildContext context, WidgetRef ref) => MaterialApp.router(
-    title: 'SchoolEdge',
+    title: 'SkoolOS',
     theme: AppTheme.light(),
     darkTheme: AppTheme.dark(),
     themeMode: ref.watch(themeModeControllerProvider),
@@ -109,7 +109,7 @@ class _SplashPageState extends State<_SplashPage> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               Text(
-                'SchoolEdge',
+                'SkoolOS',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 38,

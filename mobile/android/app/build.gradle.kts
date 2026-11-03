@@ -48,10 +48,10 @@ android {
 
     flavorDimensions += "environment"
     productFlavors {
-        create("saas") { dimension = "environment"; resValue("string", "app_name", "SchoolEdge SaaS") }
-        create("development") { dimension = "environment"; resValue("string", "app_name", "SchoolEdge Dev") }
-        create("staging") { dimension = "environment"; resValue("string", "app_name", "SchoolEdge Staging") }
-        create("production") { dimension = "environment"; resValue("string", "app_name", "SchoolEdge") }
+        create("saas") { dimension = "environment"; resValue("string", "app_name", "SkoolOS SaaS") }
+        create("development") { dimension = "environment"; resValue("string", "app_name", "SkoolOS Dev") }
+        create("staging") { dimension = "environment"; resValue("string", "app_name", "SkoolOS Staging") }
+        create("production") { dimension = "environment"; resValue("string", "app_name", "SkoolOS") }
         create("sampleacademy") { dimension = "environment"; applicationId = "ng.com.sampleacademy.app"; resValue("string", "app_name", "Sample Academy") }
     }
 

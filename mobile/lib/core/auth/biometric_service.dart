@@ -24,7 +24,7 @@ class BiometricService {
   Future<bool> authenticate() async {
     try {
       return await _auth.authenticate(
-        localizedReason: 'Sign in to SchoolEdge',
+        localizedReason: 'Sign in to SkoolOS',
         options: const AuthenticationOptions(
           biometricOnly: true,
           stickyAuth: true,
