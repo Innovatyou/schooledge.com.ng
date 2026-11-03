@@ -1942,4 +1942,13 @@ if (tableExists($m, 'saas_settings')) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 752: default full / pass mark per assessment column, set by
+// Exam > Report Card Setup and prefilled in the exam timetable.
+// ---------------------------------------------------------------------
+if (tableExists($m, 'exam_mark_distribution') && !columnExists($m, 'exam_mark_distribution', 'default_full_mark')) {
+    $m->query("ALTER TABLE `exam_mark_distribution` ADD `default_full_mark` DECIMAL(6,2) NULL, ADD `default_pass_mark` DECIMAL(6,2) NULL");
+    echo "752: added exam_mark_distribution.default_full_mark, default_pass_mark\n";
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

@@ -66,8 +66,8 @@ class Userguide extends Dashboard_Controller
             array('Students', 'Students admitted this session', $count('enroll', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0, 'admission', 'student/add'),
             array('Timetable', 'Class periods for the week', $count('timetable_class', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0, 'timetable', 'timetable/viewclass'),
             array('Fees', 'A fee group allocated to students', $count('fee_allocation', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0, 'fees', 'fees/group'),
-            array('Grades', 'Your grading scale', $count('grade', array('branch_id' => $branchID)) > 0, 'exam_setup', 'exam/grade'),
-            array('Exams', 'An exam term and exam this session', $count('exam_term', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0 && $count('exam', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0, 'exam_setup', 'exam'),
+            array('Grades', 'Your grading scale', $count('grade', array('branch_id' => $branchID)) > 0, 'exam_setup', 'exam/setup'),
+            array('Exams', 'An exam term and exam this session', $count('exam_term', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0 && $count('exam', array('branch_id' => $branchID, 'session_id' => $sessionID)) > 0, 'exam_setup', 'exam/setup'),
             array('Report card design', 'A report card template', $templates > 0, 'results', 'marksheet_template/index'),
             array('School website', 'Public website switched on', $website > 0, 'website', 'frontend/setting'),
         );

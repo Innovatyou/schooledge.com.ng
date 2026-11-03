@@ -267,6 +267,110 @@ class Exam extends Admin_Controller
         $this->db->delete('exam_mark_distribution');
     }
 
+    // Report Card Setup wizard: pick a country preset, adjust the terms,
+    // assessment columns, mid-term test and grading, and create it all at once
+    public function setup()
+    {
+        if (!get_permission('exam', 'is_view')) {
+            access_denied();
+        }
+        $branchID = is_superadmin_loggedin() ? (int) $this->input->get('branch_id') : (int) get_loggedin_branch_id();
+        $this->config->load('report_card_presets');
+        $this->data['presets'] = $this->config->item('report_card_presets');
+        $this->data['branch_id'] = $branchID;
+        $this->data['state'] = $branchID ? $this->exam_model->reportCardSetupState($branchID, get_session_id()) : null;
+        $this->data['session_name'] = $this->db->select('school_year')->where('id', get_session_id())->get('schoolyear')->row('school_year');
+        $this->data['title'] = 'Report Card Setup';
+        $this->data['sub_page'] = 'exam/setup';
+        $this->data['main_menu'] = 'exam';
+        $this->load->view('layout/index', $this->data);
+    }
+
+    public function setup_save()
+    {
+        if (!get_permission('exam', 'is_add')) {
+            ajax_access_denied();
+        }
+        $branchID = is_superadmin_loggedin() ? (int) $this->input->post('branch_id') : (int) get_loggedin_branch_id();
+        $post = $this->input->post();
+        $clean = function ($value, $max = 100) {
+            return mb_substr(trim(strip_tags((string) $value)), 0, $max);
+        };
+        $errors = array();
+
+        $terms = array_values(array_unique(array_filter(array_map($clean, (array) $this->input->post('terms')), 'strlen')));
+        if (empty($terms)) {
+            $errors[] = 'Add at least one term.';
+        }
+
+        $assessments = array();
+        foreach ((array) $this->input->post('assessments') as $a) {
+            $name = $clean(isset($a['name']) ? $a['name'] : '');
+            if ($name === '') {
+                continue;
+            }
+            $full = (float) (isset($a['full']) ? $a['full'] : 0);
+            $pass = (float) (isset($a['pass']) ? $a['pass'] : 0);
+            if ($full <= 0 || $pass < 0 || $pass > $full) {
+                $errors[] = "Check the marks for \"$name\": the full mark must be above 0 and the pass mark between 0 and the full mark.";
+            }
+            $assessments[] = array('name' => $name, 'full' => $full, 'pass' => $pass);
+        }
+        if (empty($assessments)) {
+            $errors[] = 'Add at least one assessment column, for example "Exam".';
+        }
+
+        $midterm = array(
+            'on' => !empty($post['midterm_on']),
+            'name' => $clean(isset($post['midterm_name']) ? $post['midterm_name'] : '') ?: 'Mid-Term Test',
+            'full' => (float) (isset($post['midterm_full']) ? $post['midterm_full'] : 0),
+            'pass' => (float) (isset($post['midterm_pass']) ? $post['midterm_pass'] : 0),
+        );
+        if ($midterm['on'] && ($midterm['full'] <= 0 || $midterm['pass'] < 0 || $midterm['pass'] > $midterm['full'])) {
+            $errors[] = 'Check the mid-term test marks.';
+        }
+
+        $grades = array();
+        foreach ((array) $this->input->post('grades') as $g) {
+            $name = $clean(isset($g['name']) ? $g['name'] : '', 20);
+            if ($name === '') {
+                continue;
+            }
+            $low = (int) (isset($g['low']) ? $g['low'] : 0);
+            $high = (int) (isset($g['high']) ? $g['high'] : 0);
+            if ($low < 0 || $high > 100 || $low > $high) {
+                $errors[] = "Check the score range for grade \"$name\" (0 to 100, lowest first).";
+            }
+            $grades[] = array('name' => $name, 'point' => $clean(isset($g['point']) ? $g['point'] : '', 10), 'low' => $low, 'high' => $high, 'remark' => $clean(isset($g['remark']) ? $g['remark'] : ''));
+        }
+        if (empty($grades)) {
+            $errors[] = 'Add at least one grade.';
+        }
+        if (!$branchID) {
+            $errors[] = translate('select_branch_first');
+        }
+        if ($errors) {
+            echo json_encode(array('status' => 'fail', 'errors' => array_values(array_unique($errors))));
+            return;
+        }
+
+        $type = (int) $this->input->post('type_id');
+        $made = $this->exam_model->applyReportCardSetup($branchID, get_session_id(), array(
+            'terms' => $terms,
+            'assessments' => $assessments,
+            'midterm' => $midterm,
+            'grades' => $grades,
+            'type' => in_array($type, array(1, 2, 3), true) ? $type : 3,
+            'publish' => !empty($post['publish']),
+            'replace_grades' => !empty($post['replace_grades']),
+        ));
+        if ($made === false) {
+            echo json_encode(array('status' => 'fail', 'errors' => array('Something went wrong and nothing was saved. Please try again.')));
+            return;
+        }
+        echo json_encode(array('status' => 'success', 'made' => $made));
+    }
+
     public function seed_ca_distribution()
     {
         if (!get_permission('mark_distribution', 'is_add')) {

@@ -68,6 +68,13 @@
 
 <?php if(isset($subjectassign)):
 $examDistribution = $this->db->where('id', $exam_id)->get('exam')->row()->mark_distribution;
+// default full / pass mark per column (migration 752), trimmed of trailing zeros
+$markDefaults = array();
+if ($this->db->field_exists('default_full_mark', 'exam_mark_distribution')) {
+	foreach ($this->db->select('id, default_full_mark, default_pass_mark')->where('default_full_mark IS NOT NULL')->get('exam_mark_distribution')->result() as $d) {
+		$markDefaults[$d->id] = array('full' => $d->default_full_mark + 0, 'pass' => $d->default_pass_mark === null ? '' : $d->default_pass_mark + 0);
+	}
+}
 	?>
 	<section class="panel appear-animation" data-appear-animation="<?php echo $global_config['animations'];?>" data-appear-animation-delay="100">
 		<header class="panel-heading">
@@ -135,11 +142,11 @@ foreach ($distribution as $id) {
 								<td class="min-w-sm">
 									<div class="mark-inline">
 										<div class="form-group mb-none mr-xs">
-											<input type="text" class="form-control q_full_mark" data-id="<?php echo $id ?>" style="min-width: 87px" autocomplete="off" required placeholder="Full Mark" name="full_mark_<?php echo $id ?>" value="" />
+											<input type="text" class="form-control q_full_mark" data-id="<?php echo $id ?>" style="min-width: 87px" autocomplete="off" required placeholder="Full Mark" name="full_mark_<?php echo $id ?>" value="<?php echo isset($markDefaults[$id]) ? $markDefaults[$id]['full'] : '' ?>" />
 											<span class="error"></span>
 										</div>
 										<div class="form-group mb-none">
-											<input type="text" class="form-control" id="q_passMark<?php echo $id ?>" style="min-width: 87px" autocomplete="off" required placeholder="Pass Mark" name="pass_mark_<?php echo $id ?>" value="" />
+											<input type="text" class="form-control" id="q_passMark<?php echo $id ?>" style="min-width: 87px" autocomplete="off" required placeholder="Pass Mark" name="pass_mark_<?php echo $id ?>" value="<?php echo isset($markDefaults[$id]) ? $markDefaults[$id]['pass'] : '' ?>" />
 											<span class="error"></span>
 										</div>
 									</div>
@@ -245,6 +252,11 @@ $getMark = json_decode($row['mark_distribution'], true);
 foreach ($distribution as $id) {
 	$full_mark = isset($getMark[$id]['full_mark']) ? $getMark[$id]['full_mark'] : "";
 	$pass_mark = isset($getMark[$id]['pass_mark']) ? $getMark[$id]['pass_mark'] : "";
+	// a new paper starts with the column's default marks (Report Card Setup)
+	if ($full_mark === "" && isset($markDefaults[$id])) {
+		$full_mark = $markDefaults[$id]['full'];
+		$pass_mark = $markDefaults[$id]['pass'];
+	}
 	?>
 
 							<td>

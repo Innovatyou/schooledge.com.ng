@@ -895,7 +895,13 @@
                                     <i class="fas fa-flask"></i> <span><?=translate('exam')?></span>
                                 </a>
                                 <ul class="nav nav-children">
-                                    <?php if (get_permission('exam_term', 'is_view')) {  ?>
+                                    <?php if (get_permission('exam', 'is_view')) {  ?>
+                                    <li class="<?php if ($sub_page == 'exam/setup') echo 'nav-active';?>">
+                                        <a href="<?=base_url('exam/setup')?>">
+                                            <span>Report Card Setup</span>
+                                        </a>
+                                    </li>
+                                    <?php } if (get_permission('exam_term', 'is_view')) {  ?>
                                     <li class="<?php if ($sub_page == 'exam/term') echo 'nav-active';?>">
                                         <a href="<?=base_url('exam/term')?>">
                                             <span><?=translate('exam_term')?></span>

@@ -36,7 +36,7 @@ return array(
                 array('Admit students', 'Admit one student at a time under <b>Admission › Create Admission</b>, or upload a spreadsheet with <b>Multiple Import</b>. Parents are created at the same time.', 'student/add'),
                 array('Build the timetable', 'Set each class\'s periods under <b>Academic › Class Schedule</b>. Teachers and students then see their day on the dashboard.', 'timetable/viewclass'),
                 array('Set up fees', 'Create fee types, group them, then allocate the group to students under <b>Student Accounting</b>.', 'fees/type'),
-                array('Prepare exams', 'Add exam terms, grades and mark distribution, then create the exam under <b>Exam Master</b>. Teachers can then enter marks.', 'exam/term'),
+                array('Prepare exams and report cards', 'Open <b>Exam Master › Exam › Report Card Setup</b>, pick your country and click <b>Create my setup</b>. It adds your terms, mid-term tests, CA and exam columns and grading scale in one step.', 'exam/setup'),
             ),
             'tips' => array(
                 'The setup checklist at the top of the Guide Center ticks itself off as you go.',
@@ -386,11 +386,12 @@ return array(
         'title' => 'Exam setup',
         'icon' => 'fa-clipboard-list',
         'group' => 'Exams & results',
-        'match' => array('exam/term', 'exam/hall', 'exam/mark_distribution', 'exam/grade', 'exam', 'timetable/viewexam', 'timetable/set_examwise', 'userrole/exam_schedule'),
+        'match' => array('exam/setup', 'exam/term', 'exam/hall', 'exam/mark_distribution', 'exam/grade', 'exam', 'timetable/viewexam', 'timetable/set_examwise', 'userrole/exam_schedule'),
         'perms' => array('exam', 'exam_term', 'exam_hall', 'mark_distribution', 'exam_grade', 'exam_timetable'),
         'school' => array(
             'summary' => 'Set exams up once per session. After that, teachers enter marks and the system builds report cards for you.',
             'steps' => array(
+                array('Fastest way: Report Card Setup', 'Open <b>Exam › Report Card Setup</b>, choose a preset (Nigeria: First, Second and Third Term, 1st CA 20, 2nd CA 20, Exam 60, WAEC grades), change anything you like and click <b>Create my setup</b>. It does the next four steps for you.', 'exam/setup'),
                 array('Exam terms', 'Add the terms (First Term, Second Term…) and the next-term resumption date under <b>Exam Master › Exam › Exam Term</b>.', 'exam/term'),
                 array('Grades', 'Set your grading scale (A1 75–100, B2 70–74…) with remarks under <b>Marks › Grades Range</b>. WAEC-style grades work well.', 'exam/grade'),
                 array('Mark distribution', 'Create the parts each subject is scored in, for example CA 1 (20), CA 2 (20) and Exam (60), under <b>Distribution</b>.', 'exam/mark_distribution'),
@@ -398,7 +399,7 @@ return array(
                 array('Create the exam', 'Under <b>Exam Setup</b>, create the exam, link it to a term and choose which mark distributions it uses.', 'exam'),
                 array('Exam timetable', 'Add each paper\'s date, time, hall and full marks per class under <b>Exam › Add</b> (schedule).', 'timetable/set_examwise'),
             ),
-            'tips' => array('Teachers can only enter marks once the exam and its schedule exist for their class.'),
+            'tips' => array('Teachers can only enter marks once the exam and its schedule exist for their class.', 'Running Report Card Setup again is safe: it only adds what is missing.'),
         ),
         'student' => array(
             'summary' => 'Know when each paper is.',

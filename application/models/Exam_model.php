@@ -153,6 +153,105 @@ class Exam_model extends CI_Model
         return true;
     }
 
+    // What the Report Card Setup wizard finds already in place for a school's current session
+    public function reportCardSetupState($branchID, $sessionID)
+    {
+        return array(
+            'terms' => $this->db->where(array('branch_id' => $branchID, 'session_id' => $sessionID))->order_by('id')->get('exam_term')->result_array(),
+            'distributions' => $this->db->where('branch_id', $branchID)->order_by('id')->get('exam_mark_distribution')->result_array(),
+            'grades' => $this->db->where('branch_id', $branchID)->order_by('lower_mark', 'desc')->get('grade')->result_array(),
+            'exams' => $this->db->where(array('branch_id' => $branchID, 'session_id' => $sessionID))->order_by('id')->get('exam')->result_array(),
+        );
+    }
+
+    // Report Card Setup wizard: create the terms, assessment columns, exams and
+    // grading scale a school picked, in one go. Anything that already exists
+    // with the same name is reused, never duplicated or overwritten (except the
+    // grading scale, and only when the school asked to replace it).
+    public function applyReportCardSetup($branchID, $sessionID, $setup)
+    {
+        $made = array('terms' => 0, 'assessments' => 0, 'exams' => 0, 'grades' => 0, 'kept' => 0);
+        $hasDefaults = $this->db->field_exists('default_full_mark', 'exam_mark_distribution');
+        $this->db->trans_start();
+
+        // assessment columns (shared by every session of the school)
+        $column = function ($name, $full, $pass) use ($branchID, $hasDefaults, &$made) {
+            $row = $this->db->where(array('branch_id' => $branchID, 'name' => $name))->get('exam_mark_distribution')->row_array();
+            $data = array('name' => $name, 'branch_id' => $branchID);
+            if ($hasDefaults) {
+                $data['default_full_mark'] = $full;
+                $data['default_pass_mark'] = $pass;
+            }
+            if ($row) {
+                $this->db->where('id', $row['id'])->update('exam_mark_distribution', $data);
+                return (int) $row['id'];
+            }
+            $this->db->insert('exam_mark_distribution', $data);
+            $made['assessments']++;
+            return (int) $this->db->insert_id();
+        };
+        $termColumns = array();
+        foreach ($setup['assessments'] as $a) {
+            $termColumns[] = $column($a['name'], $a['full'], $a['pass']);
+        }
+        $midColumn = $setup['midterm']['on'] ? $column($setup['midterm']['name'], $setup['midterm']['full'], $setup['midterm']['pass']) : 0;
+
+        // terms and their exams (current session only)
+        $exam = function ($name, $termID, array $columns) use ($branchID, $sessionID, $setup, &$made) {
+            $exists = $this->db->where(array('branch_id' => $branchID, 'session_id' => $sessionID, 'name' => $name))->count_all_results('exam');
+            if ($exists) {
+                $made['kept']++;
+                return;
+            }
+            $this->db->insert('exam', array(
+                'name' => $name,
+                'term_id' => $termID,
+                'type_id' => $setup['type'],
+                'session_id' => $sessionID,
+                'branch_id' => $branchID,
+                'remark' => '',
+                'mark_distribution' => json_encode(array_map('strval', $columns)),
+                'status' => $setup['publish'] ? 1 : 0,
+                'publish_result' => 0,
+            ));
+            $made['exams']++;
+        };
+        foreach ($setup['terms'] as $termName) {
+            $term = $this->db->where(array('branch_id' => $branchID, 'session_id' => $sessionID, 'name' => $termName))->get('exam_term')->row_array();
+            if ($term) {
+                $termID = (int) $term['id'];
+            } else {
+                $this->db->insert('exam_term', array('name' => $termName, 'branch_id' => $branchID, 'session_id' => $sessionID));
+                $termID = (int) $this->db->insert_id();
+                $made['terms']++;
+            }
+            if ($midColumn) {
+                $exam($termName . ' ' . $setup['midterm']['name'], $termID, array($midColumn));
+            }
+            $exam($termName . ' Examination', $termID, $termColumns);
+        }
+
+        // grading scale
+        $hasGrades = $this->db->where('branch_id', $branchID)->count_all_results('grade') > 0;
+        if (!$hasGrades || $setup['replace_grades']) {
+            $this->db->where('branch_id', $branchID)->delete('grade');
+            foreach ($setup['grades'] as $g) {
+                $this->db->insert('grade', array(
+                    'name' => $g['name'],
+                    'grade_point' => $g['point'],
+                    'lower_mark' => $g['low'],
+                    'upper_mark' => $g['high'],
+                    'remark' => $g['remark'],
+                    'branch_id' => $branchID,
+                ));
+                $made['grades']++;
+            }
+        }
+
+        $this->db->trans_complete();
+        return $this->db->trans_status() ? $made : false;
+    }
+
     public function get_grade($mark, $branch_id)
     {
         $this->db->where('branch_id', $branch_id);
