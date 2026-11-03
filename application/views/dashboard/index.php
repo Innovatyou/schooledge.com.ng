@@ -141,9 +141,9 @@ if ($showFees) { ?>
 					<div class="d3-ring-val"><b data-count="<?php echo $feeRate; ?>" data-suffix="%">0%</b><small><?php echo translate('collected'); ?></small></div>
 				</div>
 				<div class="d3-ring-row">
-					<div class="tone-violet"><b><?php echo $symbol . number_format($feeBilled); ?></b><small>Billed</small></div>
-					<div class="tone-mint"><b><?php echo $symbol . number_format($feePaid); ?></b><small><?php echo translate('collected'); ?></small></div>
-					<div class="tone-rose"><b><?php echo $symbol . number_format($feeDue); ?></b><small>Outstanding</small></div>
+					<div class="tone-violet" title="<?php echo $symbol . number_format($feeBilled); ?>"><b><?php echo $symbol . number_format($feeBilled); ?></b><small>Billed</small></div>
+					<div class="tone-mint" title="<?php echo $symbol . number_format($feePaid); ?>"><b><?php echo $symbol . number_format($feePaid); ?></b><small><?php echo translate('collected'); ?></small></div>
+					<div class="tone-rose" title="<?php echo $symbol . number_format($feeDue); ?>"><b><?php echo $symbol . number_format($feeDue); ?></b><small>Outstanding</small></div>
 				</div>
 			</div>
 		</section>

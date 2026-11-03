@@ -4,6 +4,7 @@
    Follows the panel's own dark skin (html.dark).
    ========================================================= */
 .d3 {
+    clear: both; /* start below the floated page title on phones (the alert used to squeeze in beside it) */
     --d3-card: #ffffff;
     --d3-text: #1d2440;
     --d3-muted: #6b7290;
@@ -131,9 +132,11 @@ html.dark .d3 {
 .d3-ring-val { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; }
 .d3-ring-val b { font: 800 32px/1 var(--d3-head); color: var(--d3-text); }
 .d3-ring-val small { display: block; margin-top: 5px; color: var(--d3-muted); font-size: 12px; font-weight: 600; }
-.d3-ring-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 18px; text-align: center; }
-.d3-ring-row div { padding: 10px 6px; border-radius: 14px; background: var(--d3-soft); }
-.d3-ring-row b { display: block; font: 800 17px var(--d3-head); color: var(--tone); }
+/* columns may shrink below their content (1fr alone won't), and the amounts
+   scale with the card's width so long naira figures never run off the edge */
+.d3-ring-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin-top: 18px; text-align: center; container-type: inline-size; }
+.d3-ring-row div { min-width: 0; padding: 10px 4px; border-radius: 14px; background: var(--d3-soft); }
+.d3-ring-row b { display: block; font: 800 clamp(11px, 4.4cqi, 17px) var(--d3-head); color: var(--tone); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; }
 .d3-ring-row small { color: var(--d3-muted); font-size: 11.5px; font-weight: 600; }
 
 /* ---------- lists: today's classes, homework, exams, events ---------- */
@@ -165,10 +168,10 @@ html.dark .d3 {
 .d3-kid-photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 22px; }
 .d3-kid h3 { margin: 0 0 2px; font-size: 19px; font-weight: 800; color: var(--d3-text); }
 .d3-kid p { margin: 0 0 16px; color: var(--d3-muted); font-size: 13px; }
-.d3-kid-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+.d3-kid-facts { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 8px; margin-bottom: 18px; }
 .d3-kid-facts div { padding: 9px 11px; border-radius: 13px; background: var(--d3-soft); }
 .d3-kid-facts small { display: block; color: var(--d3-muted); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-.d3-kid-facts b { font-size: 14px; color: var(--d3-text); }
+.d3-kid-facts b { display: block; font-size: 14px; color: var(--d3-text); overflow-wrap: anywhere; }
 .d3-kid .d3-go { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; border-radius: 14px; background: linear-gradient(120deg, var(--tone), var(--tone-2)); color: #fff !important; font-weight: 700; text-decoration: none !important; box-shadow: 0 12px 24px color-mix(in srgb, var(--tone) 35%, transparent); transform: translateZ(30px); transition: filter .2s; }
 .d3-kid .d3-go:hover { filter: brightness(1.08); }
 .d3-switch { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 16px; }
@@ -177,6 +180,7 @@ html.dark .d3 {
 .d3-switch img { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; }
 
 /* ---------- alerts + calendar polish ---------- */
+.d3-alert span { min-width: 0; flex: 1; }
 .d3-alert { display: flex; align-items: center; gap: 12px; margin-bottom: 18px; padding: 14px 18px; border-radius: 16px; background: color-mix(in srgb, var(--rose) 10%, var(--d3-card)); border: 1px solid color-mix(in srgb, var(--rose) 30%, transparent); color: var(--d3-text); }
 .d3-alert i { color: var(--rose); font-size: 18px; }
 .d3 .fc-toolbar h2 { font-family: var(--d3-head); font-size: 18px; font-weight: 700; }
