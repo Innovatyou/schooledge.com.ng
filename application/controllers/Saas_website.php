@@ -34,6 +34,30 @@ class Saas_website extends MY_Controller
         $this->load->view('saas_website/index', $this->data);
     }
 
+    // /sitemap.xml: the public marketing pages plus every live school website,
+    // so search engines find them without waiting for links
+    public function sitemap()
+    {
+        $urls = array(base_url() => '1.0', base_url('saas_website/demo') => '0.6');
+        $schools = $this->db->select('url_alias')->where('cms_active', 1)->where('url_alias !=', '')->get('front_cms_setting')->result();
+        foreach ($schools as $school) {
+            $urls[base_url($school->url_alias)] = '0.5';
+        }
+        $this->output->set_content_type('application/xml', 'utf-8');
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>' . "\n" . '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . "\n";
+        foreach ($urls as $loc => $priority) {
+            $xml .= '  <url><loc>' . htmlspecialchars($loc, ENT_XML1) . '</loc><priority>' . $priority . "</priority></url>\n";
+        }
+        $this->output->set_output($xml . "</urlset>\n");
+    }
+
+    // /robots.txt: allow everything public, keep crawlers out of the portal, point at the sitemap
+    public function robots()
+    {
+        $this->output->set_content_type('text/plain', 'utf-8');
+        $this->output->set_output("User-agent: *\nAllow: /\nDisallow: /authentication\nDisallow: /dashboard\n\nSitemap: " . base_url('sitemap.xml') . "\n");
+    }
+
     public function demo()
     {
         $this->data['getSettings'] = $this->saas_model->getSettings();

@@ -52,9 +52,11 @@ foreach (['card_templete', 'certificates_templete', 'marksheet_template'] as $ta
 }
 
 // ---------------------------------------------------------------------
-// Migration 711: SchoolEdge FAQ content
+// Migration 711: SchoolEdge FAQ content. Only seeds an empty list: 743
+// later renames these titles, so matching on them again re-inserted the
+// whole set on every run (the duplicates are cleaned up by 751).
 // ---------------------------------------------------------------------
-if (tableExists($m, 'saas_cms_faq_list')) {
+if (tableExists($m, 'saas_cms_faq_list') && (int) $m->query("SELECT COUNT(*) AS n FROM saas_cms_faq_list")->fetch_assoc()['n'] === 0) {
     $faqs = [
         'What is SchoolEdge.com.ng?' => 'SchoolEdge.com.ng is a school management platform that helps schools manage academic, administrative, financial, and communication activities in one place.',
         'Who can use SchoolEdge?' => 'School owners, administrators, teachers, accountants, parents, and students can use SchoolEdge. Each user receives access to the tools and information relevant to their role.',
@@ -1895,6 +1897,49 @@ if (tableExists($m, 'front_cms_setting') && !columnExists($m, 'front_cms_setting
 if (tableExists($m, 'front_cms_setting') && !columnExists($m, 'front_cms_setting', 'hero_phone')) {
     $m->query("ALTER TABLE `front_cms_setting` ADD `hero_phone` VARCHAR(50) NULL, ADD `hero_phone_label` VARCHAR(100) NULL");
     echo "750: added front_cms_setting.hero_phone, hero_phone_label\n";
+}
+
+// ---------------------------------------------------------------------
+// Migration 751: search-friendly landing copy (landing_copy.php), applied
+// once - saas_settings.landing_copy_version records it, so later edits in
+// Website Settings are kept. Also removes the duplicate FAQs 711 used to
+// add on every run, and adds the results / fees / setup FAQs.
+// ---------------------------------------------------------------------
+$copy = require __DIR__ . '/landing_copy.php';
+if (tableExists($m, 'saas_cms_faq_list')) {
+    $m->query("DELETE f FROM saas_cms_faq_list f JOIN saas_cms_faq_list k ON k.title = f.title AND k.id < f.id");
+    if ($m->affected_rows > 0) {
+        echo "751: removed {$m->affected_rows} duplicate FAQs\n";
+    }
+}
+if (tableExists($m, 'saas_settings')) {
+    if (!columnExists($m, 'saas_settings', 'landing_copy_version')) {
+        $m->query("ALTER TABLE `saas_settings` ADD `landing_copy_version` TINYINT NOT NULL DEFAULT 0");
+    }
+    $row = $m->query("SELECT landing_copy_version FROM saas_settings WHERE id = 1")->fetch_assoc();
+    if ($row && (int) $row['landing_copy_version'] < 1) {
+        foreach ($copy['settings'] as $column => $value) {
+            if (columnExists($m, 'saas_settings', $column)) {
+                $stmt = $m->prepare("UPDATE saas_settings SET `$column` = ? WHERE id = 1");
+                $stmt->bind_param('s', $value);
+                $stmt->execute();
+            }
+        }
+        if (tableExists($m, 'saas_cms_faq_list')) {
+            foreach ($copy['faqs'] as $title => $description) {
+                $stmt = $m->prepare("SELECT id FROM saas_cms_faq_list WHERE title = ?");
+                $stmt->bind_param('s', $title);
+                $stmt->execute();
+                if (!$stmt->get_result()->fetch_assoc()) {
+                    $stmt = $m->prepare("INSERT INTO saas_cms_faq_list (title, description) VALUES (?, ?)");
+                    $stmt->bind_param('ss', $title, $description);
+                    $stmt->execute();
+                }
+            }
+        }
+        $m->query("UPDATE saas_settings SET landing_copy_version = 1 WHERE id = 1");
+        echo "751: applied the new landing-page copy and FAQs\n";
+    }
 }
 
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

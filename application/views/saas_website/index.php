@@ -41,6 +41,48 @@ $moduleMeta = array(
     'website'            => array('fa-desktop', 'A ready-made public website for your school.'),
 );
 $moduleCount = count($modules);
+
+// Search-engine details: one canonical address, a share image, and
+// schema.org data (the product, the company, and the FAQs as rich results)
+$canonical = base_url();
+$shareImage = base_url('assets/frontend/images/skoolos/mark-1024.png');
+$faqSchema = array();
+foreach ($faqs as $faq) {
+    $faqSchema[] = array(
+        '@type' => 'Question',
+        'name' => strip_tags($faq->title),
+        'acceptedAnswer' => array('@type' => 'Answer', 'text' => trim(strip_tags($faq->description))),
+    );
+}
+$structuredData = array(
+    '@context' => 'https://schema.org',
+    '@graph' => array(
+        array(
+            '@type' => 'Organization',
+            '@id' => $canonical . '#org',
+            'name' => $brand,
+            'url' => $canonical,
+            'logo' => $shareImage,
+            'email' => $global_config['institute_email'],
+            'telephone' => $global_config['mobileno'],
+            'address' => array('@type' => 'PostalAddress', 'streetAddress' => $global_config['address'], 'addressCountry' => 'NG'),
+        ),
+        array(
+            '@type' => 'SoftwareApplication',
+            'name' => $brand,
+            'url' => $canonical,
+            'applicationCategory' => 'EducationalApplication',
+            'applicationSubCategory' => 'School management software',
+            'operatingSystem' => 'Web, Android, iOS',
+            'description' => strip_tags($getSettings->seo_description),
+            'image' => $shareImage,
+            'areaServed' => array('Nigeria', 'Ghana', 'Kenya', 'South Africa', 'United Kingdom', 'United States'),
+            'featureList' => 'Result computation and report cards, CA and exam scores, school fees and online payment, attendance, CBT exams, parent and student portals, SMS and email, admissions, payroll, library, transport, hostel',
+            'publisher' => array('@id' => $canonical . '#org'),
+        ),
+        array('@type' => 'FAQPage', 'mainEntity' => $faqSchema),
+    ),
+);
 ?>
 <!DOCTYPE html>
 <html class="no-js" lang="en">
@@ -48,13 +90,24 @@ $moduleCount = count($modules);
     <meta charset="utf-8" />
     <meta http-equiv="x-ua-compatible" content="ie=edge" />
     <title><?php echo $getSettings->seo_title; ?></title>
-    <meta name="keyword" content="<?php echo $getSettings->seo_keyword; ?>" />
-    <meta name="description" content="<?php echo $getSettings->seo_description; ?>" />
+    <meta name="keywords" content="<?php echo html_escape($getSettings->seo_keyword); ?>" />
+    <meta name="description" content="<?php echo html_escape($getSettings->seo_description); ?>" />
     <meta name="author" content="<?php echo $brand ?>">
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <link rel="canonical" href="<?php echo $canonical; ?>" />
+    <meta property="og:site_name" content="<?php echo html_escape($brand); ?>" />
     <meta property="og:title" content="<?php echo html_escape($getSettings->seo_title); ?>" />
     <meta property="og:description" content="<?php echo html_escape($getSettings->seo_description); ?>" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="<?php echo $canonical; ?>" />
+    <meta property="og:image" content="<?php echo $shareImage; ?>" />
+    <meta property="og:locale" content="en_NG" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="<?php echo html_escape($getSettings->seo_title); ?>" />
+    <meta name="twitter:description" content="<?php echo html_escape($getSettings->seo_description); ?>" />
+    <meta name="twitter:image" content="<?php echo $shareImage; ?>" />
+    <script type="application/ld+json"><?php echo json_encode($structuredData, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_HEX_TAG); ?></script>
     <?php $this->load->view('saas_website/_head'); ?>
 
     <?php if ($getSettings->pwa_enable == 1) {  ?>
@@ -91,7 +144,7 @@ $moduleCount = count($modules);
         <div class="hero-grid" aria-hidden="true"></div>
         <div class="container-xl hero-inner">
             <div class="hero-copy">
-                <span class="eyebrow reveal"><span class="pulse"></span> The all-in-one school operating system</span>
+                <span class="eyebrow reveal"><span class="pulse"></span> School management software for Nigerian schools</span>
                 <h1 class="reveal"><?php echo $heroTitle; ?></h1>
                 <p class="lead reveal"><?php echo $getSettings->slider_description; ?></p>
                 <div class="hero-cta reveal">
@@ -158,6 +211,56 @@ $moduleCount = count($modules);
             </div>
         </div>
     </section>
+
+    <!-- Start Why (the search-friendly write-up) -->
+    <section id="why" class="why section">
+        <div class="container-xl">
+            <div class="section-head center">
+                <span class="tag">Why <?php echo $brand ?></span>
+                <h2 class="reveal">The school management software <span class="grad-text">built for Nigerian schools</span></h2>
+                <p class="reveal"><?php echo $brand ?> is a modern school management app that brings student records, results, attendance, school fees and parent communication into one secure online portal. Nursery, primary and secondary schools use it to cut paperwork, publish results on time and get paid faster.</p>
+            </div>
+            <div class="why-grid">
+                <article class="why-card reveal">
+                    <i class="fas fa-file-signature"></i>
+                    <h3>Results and report cards in minutes</h3>
+                    <p>Teachers enter 1st CA, 2nd CA and exam scores once. <?php echo $brand ?> adds them up, applies your grading scale (WAEC A1&ndash;F9 or your own), works out class positions and prints a branded report card for <strong>first term, second term and third term</strong>, with a cumulative average for the session.</p>
+                </article>
+                <article class="why-card reveal">
+                    <i class="fas fa-wand-magic-sparkles"></i>
+                    <h3>Report card setup in one step</h3>
+                    <p>The Report Card Setup wizard creates your terms, mid-term tests, CA and exam columns and grading scale in a single click. Choose the Nigerian preset, or Ghana, Kenya, South Africa, the UK or the US, and change anything to match your school.</p>
+                </article>
+                <article class="why-card reveal">
+                    <i class="fas fa-wallet"></i>
+                    <h3>School fees without the chase</h3>
+                    <p>Create fee groups for each class, send invoices and let parents pay online in naira. Every payment lands on the right invoice with a receipt, and the bursar sees who owes what at a glance.</p>
+                </article>
+                <article class="why-card reveal">
+                    <i class="fas fa-comments"></i>
+                    <h3>Parents always in the loop</h3>
+                    <p>The parent portal and mobile app show results, attendance, fees and homework. Send SMS, email and push notifications to a class, a parent or the whole school from one screen.</p>
+                </article>
+                <article class="why-card reveal">
+                    <i class="fas fa-qrcode"></i>
+                    <h3>Attendance, CBT and the school day</h3>
+                    <p>Take QR or class attendance in seconds, run computer-based tests with automatic marking, publish timetables and homework, and keep the school calendar in one place.</p>
+                </article>
+                <article class="why-card reveal">
+                    <i class="fas fa-earth-africa"></i>
+                    <h3>Made in Nigeria, ready for anywhere</h3>
+                    <p>Sessions and terms, grading, currency, time zone and language are set per school, and one account can run several branches. Schools across Africa and beyond use the same <?php echo $brand ?> they see here.</p>
+                </article>
+            </div>
+            <div class="who-strip reveal">
+                <span><i class="fas fa-baby"></i> Nursery &amp; primary schools</span>
+                <span><i class="fas fa-school"></i> Secondary schools (JSS &amp; SSS)</span>
+                <span><i class="fas fa-church"></i> Private &amp; mission schools</span>
+                <span><i class="fas fa-sitemap"></i> School groups with many branches</span>
+            </div>
+        </div>
+    </section>
+    <!-- End Why -->
 
     <!-- Start Modules Orbit -->
     <section id="modules" class="modules3d">
@@ -285,8 +388,8 @@ $moduleCount = count($modules);
             </div>
             <div class="steps-grid">
                 <div class="step reveal"><span class="step-no">01</span><i class="fas fa-calendar-check"></i><h4>Book a demo</h4><p>Tell us about your school and we will walk you through <?php echo $brand ?> with your own workflows.</p></div>
-                <div class="step reveal"><span class="step-no">02</span><i class="fas fa-school"></i><h4>We set you up</h4><p>We create your school account with your logo, classes, sessions and grading system.</p></div>
-                <div class="step reveal"><span class="step-no">03</span><i class="fas fa-rocket"></i><h4>Go live</h4><p>Import students, invite staff and parents, and start collecting fees online.</p></div>
+                <div class="step reveal"><span class="step-no">02</span><i class="fas fa-school"></i><h4>We set you up</h4><p>We create your school account with your logo, classes and session, and the setup wizard prepares your terms, CA and exam columns and grading in one click.</p></div>
+                <div class="step reveal"><span class="step-no">03</span><i class="fas fa-rocket"></i><h4>Go live</h4><p>Import students, invite staff and parents, collect fees online and publish your first term results.</p></div>
             </div>
         </div>
     </section>

@@ -228,6 +228,21 @@ body.x3d {
 .feature-card h3 { font-size: 19px; font-weight: 700; margin: 0 0 12px; transform: translateZ(25px); }
 .feature-card p { font-size: 14.5px; line-height: 1.7; color: var(--muted); margin: 0; transform: translateZ(15px); }
 
+/* ---------- why (search-friendly write-up) ---------- */
+.why { background: var(--surface); }
+.why-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+.why-card { position: relative; padding: 30px 28px; border-radius: var(--radius); background: var(--card); border: 1px solid var(--line); transition: transform .3s ease, box-shadow .3s ease, border-color .3s; }
+.why-card:hover { transform: translateY(-6px); box-shadow: var(--shadow); border-color: var(--accent-line); }
+.why-card > i { display: grid; place-items: center; width: 52px; height: 52px; margin-bottom: 20px; border-radius: 16px; font-size: 21px; color: var(--violet); background: var(--tint); }
+.why-card:nth-child(3n+2) > i { color: #0ea5e9; background: rgba(14, 165, 233, .1); }
+.why-card:nth-child(3n+3) > i { color: #f43f5e; background: rgba(251, 113, 133, .12); }
+.why-card h3 { font-size: 18px; font-weight: 700; margin: 0 0 10px; }
+.why-card p { font-size: 14.5px; line-height: 1.75; color: var(--muted); margin: 0; }
+.why-card strong { color: var(--text); font-weight: 700; }
+.who-strip { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px; margin-top: 44px; }
+.who-strip span { display: inline-flex; align-items: center; gap: 9px; padding: 11px 18px; border-radius: 40px; background: var(--chip); color: var(--text); font-size: 14px; font-weight: 600; }
+.who-strip i { color: var(--violet); }
+
 /* ---------- portals ---------- */
 .portals { background: var(--surface-2); overflow: hidden; }
 .portals-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 70px; align-items: center; }
@@ -462,7 +477,7 @@ body.x3d {
 
 /* ---------- responsive ---------- */
 @media (max-width: 1199px) {
-    .feature-grid { grid-template-columns: repeat(2, 1fr); }
+    .feature-grid, .why-grid { grid-template-columns: repeat(2, 1fr); }
     .footer-grid { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 991px) {
@@ -488,7 +503,7 @@ body.x3d {
     .steps-grid::before { display: none; }
 }
 @media (max-width: 767px) {
-    .feature-grid, .steps-grid { grid-template-columns: 1fr; }
+    .feature-grid, .steps-grid, .why-grid { grid-template-columns: 1fr; }
     .solar { --planet: 40px; }
     .modules3d { padding: 84px 0; }
     .footer-grid { grid-template-columns: 1fr; gap: 30px; }
