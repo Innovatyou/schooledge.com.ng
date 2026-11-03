@@ -57,6 +57,7 @@
 <?php
 $extINTL = extension_loaded('intl');
 if (!empty($student_array)) {
+	$student_array = array_values($student_array);
 	foreach ($student_array as $sc => $studentID) {
 		$result = $this->exam_progress_model->getStudentReportCard($studentID, $sessionID, $class_id, $section_id);
 		$student = $result['student'];
@@ -73,6 +74,38 @@ if (!empty($student_array)) {
 	<div class="background"></div>
 	<div class="mark-container <?=document_template_class($marksheet_template)?>" data-layout="<?=$marksheet_template['page_layout'] == 1 ? 'portrait' : 'landscape'?>">
 		<?php echo $header_content; ?>
+		<?php
+		// position in each term, shown at the top; left out when no term has positions yet
+		$termPositions = array();
+		if ($marksheet_template['term_position'] == 1) {
+			foreach ($examArray as $id) {
+				$termRank = $this->db->where(array('exam_id' => $id, 'enroll_id' => $student['enrollID']))->get('exam_rank')->row();
+				if (!empty($termRank->rank)) {
+					$termPositions[$id] = $termRank->rank . ' / ' . $this->db->where('exam_id', $id)->count_all_results('exam_rank');
+				}
+			}
+		}
+		if (!empty($termPositions)) { ?>
+		<div class="marksheet-summary-panel" style="margin-top: 12px;">
+			<table class="table table-condensed table-bordered" style="margin-bottom: 0;">
+				<tbody>
+					<tr>
+						<th colspan="<?=count($examArray)?>" class="text-center">Position Per Term</th>
+					</tr>
+					<tr>
+					<?php foreach ($examArray as $id) { ?>
+						<th class="text-center"><?php echo get_type_name_by_id('exam', $id) ?></th>
+					<?php } ?>
+					</tr>
+					<tr>
+					<?php foreach ($examArray as $id) { ?>
+						<td class="text-center"><?php echo isset($termPositions[$id]) ? $termPositions[$id] : '&ndash;'; ?></td>
+					<?php } ?>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+		<?php } ?>
 		<table class="table table-condensed table-bordered mt-lg">
 			<thead>
 				<tr>
@@ -223,33 +256,11 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 			</div>
 	<?php } ?>
 		</div>
-	<?php if ($marksheet_template['term_position'] == 1) { ?>
-		<div class="marksheet-summary-panel" style="margin-top: 15px;">
-			<table class="table table-condensed table-bordered">
-				<tbody>
-					<tr>
-						<th colspan="<?=count($examArray)?>" class="text-center">Position Per Term</th>
-					</tr>
-					<tr>
-					<?php foreach ($examArray as $id) { ?>
-						<th class="text-center"><?php echo get_type_name_by_id('exam', $id) ?></th>
-					<?php } ?>
-					</tr>
-					<tr>
-					<?php foreach ($examArray as $id) {
-						$termRank = $this->db->where(array('exam_id' => $id, 'enroll_id' => $student['enrollID']))->get('exam_rank')->row();
-						$termClassSize = $this->db->where('exam_id', $id)->count_all_results('exam_rank');
-					?>
-						<td class="text-center"><?php echo (!empty($termRank->rank) ? $termRank->rank . ($termClassSize > 0 ? ' / ' . $termClassSize : '') : translate("not_generated")); ?></td>
-					<?php } ?>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-	<?php } ?>
 		<?php echo $footer_content; ?>
 	</div>
 </div>
-	<div class="pagebreak"> </div> 
+<?php if ($sc < count($student_array) - 1) { ?>
+	<div class="pagebreak"> </div>
+<?php } ?>
 <?php } } ?>
 <?php $this->load->view('layout/report_fit'); ?>
