@@ -577,3 +577,24 @@
 .mark-container table.table th,
 .mark-container table.table td { padding: 4px 7px !important; font-size: 11px !important; line-height: 1.35 !important; }
 .mark-container table.table thead th { font-size: 9.5px !important; }
+
+/* A report card is never clipped. The views size .mark-container to
+   height:100% (one page) and the presets add overflow:hidden, so anything
+   taller - a long subject list, big ratings table, comments, signatures -
+   used to be cut off at the bottom of page 1 with a blank page 2. It now
+   grows and carries on to the next page, without splitting a table row. */
+.mark-container,
+.mark-container.document-template { height: auto !important; overflow: visible !important; box-sizing: border-box; }
+.mark-container tr { page-break-inside: avoid; break-inside: avoid; }
+@media print {
+    .mark-container,
+    .mark-container.document-template { height: auto !important; overflow: visible !important; box-shadow: none !important; }
+}
+/* With clipping gone, the corner shapes (which hang off the edges) would
+   spill onto an extra blank page; on report cards they sit just inside. */
+.mark-container.document-template::before { top: 0 !important; right: 0 !important; width: 40% !important; height: 22% !important; border-radius: 0 0 0 100% !important; transform: none !important; }
+.mark-container.document-template::after { bottom: 0 !important; left: 0 !important; width: 34% !important; height: 16% !important; border-radius: 0 100% 0 0 !important; transform: none !important; }
+/* set by layout/report_fit.php when a report card is a little taller than one page */
+@media print {
+    .mark-container[data-fit] { zoom: var(--fit); }
+}

@@ -18,7 +18,7 @@
 
 	@page {
 		margin: -2px;
-		size: <?php echo $marksheet_template['page_layout'] == 1 ? 'portrait' : 'landscape'; ?>;
+		size: A4 <?php echo $marksheet_template['page_layout'] == 1 ? 'portrait' : 'landscape'; ?>;
 	}
 
 	@media print {
@@ -75,7 +75,7 @@ if (!empty($studentID)) {
 		?>
 <div style="position: relative; width: 100%; height: 100%;"> 
 	<div class="background"></div>
-	<div class="mark-container <?=document_template_class($marksheet_template)?>">
+	<div class="mark-container <?=document_template_class($marksheet_template)?>" data-layout="<?=$marksheet_template['page_layout'] == 1 ? 'portrait' : 'landscape'?>">
 		<?php echo $header_content ?>
 		<table class="table table-condensed table-bordered mt-lg">
 			<thead>
@@ -301,3 +301,4 @@ if ($marksheet_template['attendance_percentage'] == 1) {
 	</div>
 </div>
 <?php } ?>
+<?php $this->load->view('layout/report_fit'); ?>
