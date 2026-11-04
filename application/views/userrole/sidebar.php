@@ -39,6 +39,14 @@
                         </ul>
                     </li>
 <?php } ?>
+                    <!-- celebrations -->
+                    <?php if (get_permission('celebrations', 'is_view')) { ?>
+                    <li class="<?php if ($main_menu == 'celebrations') echo 'nav-active'; ?>">
+                        <a href="<?=base_url('celebration')?>">
+                            <i class="fas fa-glass-cheers"></i><span><?=translate('celebrations')?></span>
+                        </a>
+                    </li>
+                    <?php } ?>
                     <!-- guides -->
                     <li class="<?php if ($main_menu == 'userguide') echo 'nav-active'; ?>">
                         <a href="<?=base_url('userguide')?>">

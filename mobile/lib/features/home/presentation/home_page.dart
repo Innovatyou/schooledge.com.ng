@@ -13,6 +13,9 @@ import '../../admin/presentation/admin_dashboard_page.dart';
 import '../../auth/application/auth_controller.dart';
 import '../../attendance/data/attendance_repository.dart';
 import '../../attendance/presentation/attendance_page.dart';
+import '../../celebrations/data/celebrations_repository.dart';
+import '../../celebrations/presentation/celebration_popup.dart';
+import '../../celebrations/presentation/celebrations_page.dart';
 import '../../fees/presentation/fees_page.dart';
 import '../../gamification/presentation/gamification_page.dart';
 import '../../homework/data/homework_repository.dart';
@@ -127,6 +130,7 @@ class _HomeDashboard extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 0, 20, 28),
         sliver: SliverList.list(
           children: [
+            const _CelebrationGate(),
             const SizedBox(height: 20),
             _TodayCard(role: _role(data)),
             const SizedBox(height: 24),
@@ -279,6 +283,34 @@ class _Header extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Pops up the celebrations about this member (birthday, top of the class,
+/// best teacher...) and school-wide ones, each only the first time.
+class _CelebrationGate extends ConsumerStatefulWidget {
+  const _CelebrationGate();
+
+  @override
+  ConsumerState<_CelebrationGate> createState() => _CelebrationGateState();
+}
+
+class _CelebrationGateState extends ConsumerState<_CelebrationGate> {
+  @override
+  void initState() {
+    super.initState();
+    ref
+        .read(celebrationsProvider.future)
+        .then((data) {
+          final mine = asMaps(data['for_me']);
+          if (mine.isNotEmpty && mounted) {
+            showCelebrations(context, mine, once: true);
+          }
+        })
+        .catchError((_) {}); // never in the way of the home screen
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 class _TodayCard extends ConsumerWidget {
@@ -440,11 +472,7 @@ class _ModuleGridState extends State<_ModuleGrid> {
         label: 'Fees',
         color: module.fees,
       ),
-      (
-        icon: Icons.savings_rounded,
-        label: 'Wallet',
-        color: module.wallet,
-      ),
+      (icon: Icons.savings_rounded, label: 'Wallet', color: module.wallet),
       (icon: Icons.forum_rounded, label: 'Messages', color: module.messages),
       (
         icon: Icons.local_library_rounded,
@@ -463,6 +491,11 @@ class _ModuleGridState extends State<_ModuleGrid> {
           label: 'Rewards',
           color: module.rewards,
         ),
+      (
+        icon: Icons.celebration_rounded,
+        label: 'Celebrations',
+        color: const Color(0xffff5d8f),
+      ),
       if (role.toLowerCase().contains('admin'))
         (
           icon: Icons.admin_panel_settings_rounded,
@@ -522,6 +555,7 @@ class _ModuleGridState extends State<_ModuleGrid> {
               'Library' => const LibraryPage(),
               'Online Class' => const LiveClassesPage(),
               'Rewards' => const GamificationPage(),
+              'Celebrations' => const CelebrationsPage(),
               'Admin' => const AdminDashboardPage(),
               _ => const MessagesPage(),
             };

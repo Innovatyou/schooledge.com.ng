@@ -1989,4 +1989,57 @@ foreach (array('card_templete', 'certificates_templete') as $table) {
     }
 }
 
+// ---------------------------------------------------------------------
+// Migration 754: celebrations (best teachers, star students, school-wide
+// celebrations) plus the "Celebrations" permission, and sample ones for
+// the demo schools. Birthdays and top exam performers need no table.
+// Re-running is a no-op.
+// ---------------------------------------------------------------------
+if (!tableExists($m, 'celebration')) {
+    $m->query("CREATE TABLE celebration (id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY, branch_id INT NOT NULL, session_id INT NOT NULL DEFAULT 0, type VARCHAR(20) NOT NULL, title VARCHAR(255) NOT NULL, message TEXT NULL, staff_id INT NULL, student_id INT NULL, theme VARCHAR(20) NOT NULL DEFAULT 'fireworks', start_date DATE NOT NULL, end_date DATE NOT NULL, created_by INT NOT NULL DEFAULT 0, created_at DATETIME NOT NULL, KEY idx_branch_dates (branch_id, start_date, end_date)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    echo "754: created celebration\n";
+}
+$row = $m->query("SELECT id FROM permission WHERE prefix = 'celebrations'")->fetch_assoc();
+if ($row) {
+    $celebrationPermission = (int) $row['id'];
+} else {
+    $m->query("INSERT INTO permission (module_id, name, prefix, show_view, show_add, show_edit, show_delete) VALUES (1, 'Celebrations', 'celebrations', 1, 1, 0, 1)");
+    $celebrationPermission = $m->insert_id;
+    echo "754: added Celebrations permission\n";
+}
+foreach (array(2 => array(1, 1, 0, 1), 3 => array(1, 0, 0, 0), 4 => array(1, 0, 0, 0), 5 => array(1, 0, 0, 0), 6 => array(1, 0, 0, 0), 7 => array(1, 0, 0, 0), 8 => array(1, 0, 0, 0)) as $roleId => $g) {
+    if (!$m->query("SELECT id FROM staff_privileges WHERE role_id = $roleId AND permission_id = $celebrationPermission")->fetch_assoc()) {
+        $m->query("INSERT INTO staff_privileges (role_id, permission_id, is_view, is_add, is_edit, is_delete) VALUES ($roleId, $celebrationPermission, {$g[0]}, {$g[1]}, {$g[2]}, {$g[3]})");
+    }
+}
+if (columnExists($m, 'branch', 'is_demo')) {
+    $sessionID = (int) $m->query("SELECT session_id FROM global_settings WHERE id = 1")->fetch_assoc()['session_id'];
+    $demos = $m->query("SELECT id FROM branch WHERE is_demo = 1");
+    while ($branch = $demos->fetch_assoc()) {
+        $bid = (int) $branch['id'];
+        if ($m->query("SELECT id FROM celebration WHERE branch_id = $bid LIMIT 1")->fetch_assoc()) {
+            continue;
+        }
+        $teacher = $m->query("SELECT staff.id FROM staff JOIN login_credential l ON l.user_id = staff.id AND l.role = 3 WHERE staff.branch_id = $bid ORDER BY staff.id LIMIT 1")->fetch_assoc();
+        $student = $m->query("SELECT s.id FROM enroll e JOIN student s ON s.id = e.student_id WHERE e.branch_id = $bid AND e.is_alumni = 0 ORDER BY s.id LIMIT 1")->fetch_assoc();
+        $rows = array();
+        if ($teacher) {
+            $rows[] = array('best_teacher', 'Teacher of the Term', 'For outstanding results in class and going the extra mile for every student.', (int) $teacher['id'], null, 'fireworks');
+        }
+        if ($student) {
+            $rows[] = array('star_student', 'Star Student of the Week', 'For kindness, leadership and helping classmates with their studies.', null, (int) $student['id'], 'fireworks');
+        }
+        $rows[] = array('custom', "Founders' Day", "Happy Founders' Day to our whole school family! Thank you for making our school a great place to learn.", null, null, 'balloons');
+        $start = date('Y-m-d');
+        $end = date('Y-m-d', strtotime('+1 year'));
+        $now = date('Y-m-d H:i:s');
+        $stmt = $m->prepare("INSERT INTO celebration (branch_id, session_id, type, title, message, staff_id, student_id, theme, start_date, end_date, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        foreach ($rows as $r) {
+            $stmt->bind_param('iisssiissss', $bid, $sessionID, $r[0], $r[1], $r[2], $r[3], $r[4], $r[5], $start, $end, $now);
+            $stmt->execute();
+        }
+        echo "754: demo celebrations for branch #$bid\n";
+    }
+}
+
 echo "\nSchema sync complete. Now run: php application/database_seeds/seed_demo_school.php\n";

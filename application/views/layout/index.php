@@ -30,6 +30,7 @@
 					<a class="page-title-icon" href="<?php echo base_url('dashboard');?>"><i class="fas fa-home"></i></a>
 					<h2><?php echo $title;?></h2>
 				</header>
+				<?php if ($sub_page == 'dashboard/index' || $sub_page == 'userrole/dashboard') { $this->load->view('layout/celebrate'); } ?>
 				<?php $this->load->view($sub_page); ?>
 			</section>
 		</div>

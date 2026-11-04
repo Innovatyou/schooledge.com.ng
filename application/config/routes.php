@@ -150,6 +150,7 @@ $route['api/v1/mobile/homework/(:num)/submissions']['get'] = 'api/v1/homework/su
 $route['api/v1/mobile/homework/(:num)/submissions/(:num)/download']['get'] = 'api/v1/homework/download_submission/$1/$2';
 $route['api/v1/mobile/gamification/me']['get'] = 'api/v1/gamification/me';
 $route['api/v1/mobile/gamification/leaderboard']['get'] = 'api/v1/gamification/leaderboard';
+$route['api/v1/mobile/celebrations']['get'] = 'api/v1/celebrations/index';
 $route['api/v1/mobile/safety/alerts']['get'] = 'api/v1/safety/index';
 $route['api/v1/mobile/safety/alerts']['post'] = 'api/v1/safety/submit';
 $route['api/v1/mobile/safety/alerts/(:num)/acknowledge']['post'] = 'api/v1/safety/acknowledge/$1';
@@ -264,6 +265,8 @@ $route['veltrixwallet'] = 'veltrixwallet/index';
 // Schooledge_qr_attendance::index() - this is why the QR scanner page looked
 // like it was "redirecting back to dashboard".
 $route['schooledge_qr_attendance'] = 'schooledge_qr_attendance/index';
+// Same for the bare /celebration link in the sidebars
+$route['celebration'] = 'celebration/index';
 // search engines: generated so they always carry the live domain
 $route['sitemap\.xml'] = 'saas_website/sitemap';
 $route['robots\.txt'] = 'saas_website/robots';
